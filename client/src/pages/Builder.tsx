@@ -350,36 +350,7 @@ export default function Builder() {
 
   // ── Preview mode ──────────────────────────────────────────────────────────
   if (previewing) {
-    return (
-      <div className="builder-page">
-        <div className="mobile-container">
-          {/* Preview banner */}
-          <div className="sticky top-0 z-50 bg-dark-mid border-b border-gold/20 px-4 py-3 flex items-center justify-between">
-            <span className="font-sans text-xs uppercase tracking-widest text-gold">
-              Preview Mode
-            </span>
-            <div className="flex gap-3">
-              <button
-                className="btn-outline text-xs py-2 px-4"
-                onClick={() => setPreviewing(false)}
-              >
-                ← Edit
-              </button>
-              <button
-                className="btn-gold text-xs py-2 px-4"
-                onClick={handlePublish}
-                disabled={createMutation.isPending}
-              >
-                {createMutation.isPending ? "Publishing…" : "Publish"}
-              </button>
-            </div>
-          </div>
-
-          {/* Preview content */}
-          <PreviewContent data={data} />
-        </div>
-      </div>
-    );
+    return <PreviewWithEnvelope data={data} onEdit={() => setPreviewing(false)} onPublish={handlePublish} isPublishing={createMutation.isPending} />;
   }
 
   // ── Builder mode ──────────────────────────────────────────────────────────
@@ -602,6 +573,221 @@ export default function Builder() {
           </button>
         </div>
       </div>
+    </div>
+  );
+}
+
+// ── Preview With Envelope (full guest experience in preview mode) ────────────
+function PreviewWithEnvelope({
+  data,
+  onEdit,
+  onPublish,
+  isPublishing,
+}: {
+  data: InvitationData;
+  onEdit: () => void;
+  onPublish: () => void;
+  isPublishing: boolean;
+}) {
+  const [animStage, setAnimStage] = useState<"idle" | "shake" | "opening" | "risen" | "done">("idle");
+  const [showInvitation, setShowInvitation] = useState(false);
+  const [particles, setParticles] = useState<{ id: number; x: number; y: number; delay: number; angle: number }[]>([]);
+
+  const brideName = [data.brideFirstName, data.brideLastName].filter(Boolean).join(" ");
+  const groomName = [data.groomFirstName, data.groomLastName].filter(Boolean).join(" ");
+  const envStyle = ENVELOPE_STYLES.find((s) => s.id === (data.envelopeStyle ?? "ivory-gold")) ?? ENVELOPE_STYLES[0];
+  const isOpening = animStage === "opening" || animStage === "risen" || animStage === "done";
+  const isShaking = animStage === "shake";
+
+  const handleOpenEnvelope = () => {
+    if (animStage !== "idle") return;
+    setAnimStage("shake");
+    setTimeout(() => {
+      setAnimStage("opening");
+      setParticles(
+        Array.from({ length: 16 }, (_, i) => ({
+          id: i,
+          x: 20 + Math.random() * 60,
+          y: 10 + Math.random() * 70,
+          delay: Math.random() * 0.4,
+          angle: Math.random() * 360,
+        }))
+      );
+      setTimeout(() => {
+        setAnimStage("risen");
+        setTimeout(() => {
+          setAnimStage("done");
+          setTimeout(() => setShowInvitation(true), 500);
+        }, 600);
+      }, 900);
+    }, 350);
+  };
+
+  const resetEnvelope = () => {
+    setAnimStage("idle");
+    setShowInvitation(false);
+    setParticles([]);
+  };
+
+  return (
+    <div className="builder-page">
+      <div className="mobile-container">
+        {/* Sticky banner */}
+        <div className="sticky top-0 z-50 bg-dark-mid border-b border-gold/20 px-4 py-3 flex items-center justify-between">
+          <span className="font-sans text-xs uppercase tracking-widest text-gold">
+            👁 Preview
+          </span>
+          <div className="flex gap-2">
+            {showInvitation && (
+              <button className="btn-outline text-xs py-2 px-3" onClick={resetEnvelope}>
+                💌 Envelope
+              </button>
+            )}
+            <button className="btn-outline text-xs py-2 px-3" onClick={onEdit}>
+              ← Edit
+            </button>
+            <button className="btn-gold text-xs py-2 px-3" onClick={onPublish} disabled={isPublishing}>
+              {isPublishing ? "Publishing…" : "Publish"}
+            </button>
+          </div>
+        </div>
+
+        {/* Envelope scene */}
+        {!showInvitation && (
+          <div
+            className="envelope-scene"
+            style={{ opacity: animStage === "done" ? 0 : 1, transition: "opacity 0.5s ease" }}
+            onClick={handleOpenEnvelope}
+          >
+            <FloatingPetals />
+            <div className="text-center animate-fade-in-up mobile-container px-6">
+              <p className="font-sans text-xs uppercase tracking-widest text-gold opacity-60 mb-2">You are invited to</p>
+              <h2 className="font-script text-4xl gold-shimmer mb-8 leading-tight">
+                {brideName && groomName ? `${brideName} & ${groomName}` : "A Wedding Celebration"}
+              </h2>
+              <div
+                className="photo-envelope mx-auto"
+                style={{
+                  animation: isShaking ? "envelopeShake 0.35s ease" : isOpening ? "none" : "float 3s ease-in-out infinite",
+                  transform: animStage === "done" ? "scale(0.9)" : "scale(1)",
+                  transition: "transform 0.5s ease",
+                }}
+              >
+                <div className="photo-envelope-img-wrap">
+                  <img
+                    src={envStyle.img}
+                    alt="Wedding Envelope"
+                    className="photo-envelope-img"
+                    style={{
+                      transformOrigin: "top center",
+                      transform: isOpening ? "perspective(800px) rotateX(-160deg)" : "perspective(800px) rotateX(0deg)",
+                      transition: isOpening ? "transform 0.85s cubic-bezier(0.4,0,0.2,1)" : "none",
+                      backfaceVisibility: "hidden",
+                    }}
+                  />
+                  <div
+                    className="photo-wax-seal"
+                    style={{
+                      background: `radial-gradient(circle at 35% 35%, ${envStyle.sealColor}dd, ${envStyle.sealColor}88)`,
+                      opacity: isOpening ? 0 : 1,
+                      transform: isOpening ? "scale(1.4) rotate(15deg)" : "scale(1) rotate(0deg)",
+                      transition: "opacity 0.4s ease, transform 0.4s ease",
+                    }}
+                  >
+                    <span style={{ fontFamily: "'Great Vibes', cursive", fontSize: 22, color: "rgba(255,255,255,0.9)" }}>
+                      {(brideName[0] || "H")}&{(groomName[0] || "S")}
+                    </span>
+                  </div>
+                </div>
+                <div
+                  className="photo-card-rising"
+                  style={{
+                    transform: isOpening
+                      ? animStage === "risen" || animStage === "done"
+                        ? "translateX(-50%) translateY(-130%)"
+                        : "translateX(-50%) translateY(-80%)"
+                      : "translateX(-50%) translateY(10%)",
+                    opacity: isOpening ? 1 : 0,
+                    transition: "transform 0.9s cubic-bezier(0.34,1.56,0.64,1), opacity 0.3s ease",
+                    transitionDelay: isOpening ? "0.2s" : "0s",
+                  }}
+                >
+                  <div className="photo-card-inner">
+                    <p style={{ fontFamily: "'Great Vibes', cursive", fontSize: 22, color: "#9a7a2e", lineHeight: 1.3 }}>{brideName || "Bride"}</p>
+                    <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 14, color: "#9a7a2e", opacity: 0.6, margin: "4px 0" }}>&amp;</p>
+                    <p style={{ fontFamily: "'Great Vibes', cursive", fontSize: 22, color: "#9a7a2e", lineHeight: 1.3 }}>{groomName || "Groom"}</p>
+                  </div>
+                </div>
+                {isOpening && particles.map((p) => (
+                  <div
+                    key={p.id}
+                    style={{
+                      position: "absolute",
+                      left: `${p.x}%`,
+                      top: `${p.y}%`,
+                      animationDelay: `${p.delay}s`,
+                      animation: "sparkle 0.8s ease forwards",
+                      pointerEvents: "none",
+                      color: "var(--gold)",
+                      fontSize: 14 + Math.random() * 10,
+                      transform: `rotate(${p.angle}deg)`,
+                    }}
+                  >
+                    ❆
+                  </div>
+                ))}
+              </div>
+              {animStage === "idle" && (
+                <div className="mt-8 animate-fade-in">
+                  <p className="font-sans text-xs uppercase tracking-widest opacity-40">Tap to open</p>
+                  <div className="mt-2 flex justify-center">
+                    <span className="text-gold opacity-40 text-lg animate-bounce">↑</span>
+                  </div>
+                </div>
+              )}
+              {isOpening && animStage !== "done" && (
+                <div className="mt-8 animate-fade-in">
+                  <p className="font-script text-2xl gold-shimmer">Opening your invitation…</p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Invitation content after envelope opens */}
+        {showInvitation && <PreviewContent data={data} />}
+      </div>
+    </div>
+  );
+}
+
+// ── Floating petals (shared) ───────────────────────────────────────────────────────────────────
+function FloatingPetals() {
+  const petals = Array.from({ length: 8 }, (_, i) => ({
+    id: i,
+    left: `${10 + i * 11}%`,
+    delay: `${i * 0.7}s`,
+    duration: `${4 + (i % 3)}s`,
+    size: 6 + (i % 4) * 2,
+  }));
+  return (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      {petals.map((p) => (
+        <div
+          key={p.id}
+          style={{
+            position: "absolute",
+            left: p.left,
+            top: "-20px",
+            width: p.size,
+            height: p.size,
+            borderRadius: "50% 0 50% 0",
+            background: "rgba(201,168,76,0.15)",
+            animation: `float ${p.duration} ease-in-out infinite`,
+            animationDelay: p.delay,
+          }}
+        />
+      ))}
     </div>
   );
 }
