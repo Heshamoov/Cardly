@@ -142,9 +142,18 @@ export const invitationsRouter = router({
 
       if (result.length === 0) return null;
 
+      let parsedData;
+      try {
+        parsedData = JSON.parse(result[0].data);
+        // Guard against "[object Object]" stored by old buggy code
+        if (typeof parsedData !== "object" || parsedData === null) return null;
+      } catch {
+        return null;
+      }
+
       return {
         ...result[0],
-        data: JSON.parse(result[0].data),
+        data: parsedData,
       };
     }),
 });

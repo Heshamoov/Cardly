@@ -8,6 +8,13 @@
       "when": 1778872824488,
       "tag": "0000_brief_chat",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1778882415744,
+      "tag": "0001_past_junta",
+      "breakpoints": true
     }
   ]
 }
