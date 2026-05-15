@@ -601,21 +601,17 @@ function PreviewWithEnvelope({
 
   const handleOpenEnvelope = () => {
     if (animStage !== "idle") return;
-    // Stage 1: shake (400ms)
-    setAnimStage("shake");
+    // Stage 1: both flaps open + card rises (2000ms)
+    setAnimStage("opening");
     setTimeout(() => {
-      // Stage 2: both flaps open + card rises (2000ms)
-      setAnimStage("opening");
+      // Stage 2: expand overlay (700ms)
+      setAnimStage("expand");
       setTimeout(() => {
-        // Stage 3: expand overlay (700ms)
-        setAnimStage("expand");
-        setTimeout(() => {
-          setAnimStage("done");
-          setShowInvitation(true);
-          requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: "instant" }));
-        }, 700);
-      }, 2000);
-    }, 400);
+        setAnimStage("done");
+        setShowInvitation(true);
+        requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: "instant" }));
+      }, 700);
+    }, 2000);
   };
 
   const resetEnvelope = () => {
@@ -668,19 +664,8 @@ function PreviewWithEnvelope({
               />
             )}
 
-            {/* Top text */}
-            <div className="absolute top-0 left-0 right-0 flex flex-col items-center pt-10 px-6 z-10 pointer-events-none">
-              <p className="invite-label text-gold opacity-60 mb-2">You are invited to</p>
-              <h2 className="font-script gold-shimmer leading-tight text-center" style={{ fontSize: "clamp(2rem, 8vw, 3.5rem)" }}>
-                {brideName && groomName ? `${brideName} & ${groomName}` : "A Wedding Celebration"}
-              </h2>
-            </div>
-
             {/* Full-screen envelope */}
-            <div
-              className="fs-envelope"
-              style={{ animation: isShaking ? "envelopeShake 0.4s ease" : "none" }}
-            >
+            <div className="fs-envelope">
               <img src={envStyle.img} alt="Wedding Envelope" className="fs-envelope-img" draggable={false} />
 
               {/* Top flap — opens upward (hinge at bottom edge, rotates backward) */}
