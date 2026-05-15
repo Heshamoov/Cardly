@@ -1,4 +1,5 @@
 import { COOKIE_NAME } from "@shared/const";
+import { invitationsRouter } from "./invitationsRouter";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, router } from "./_core/trpc";
@@ -17,6 +18,7 @@ export const appRouter = router({
     }),
   }),
 
+  invitations: invitationsRouter,
   // TODO: add feature routers here, e.g.
   // todo: router({
   //   list: protectedProcedure.query(({ ctx }) =>
