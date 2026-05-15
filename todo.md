@@ -33,3 +33,8 @@
 - [x] Royal Gold theme: deep navy/dark background, gold accents, serif fonts
 - [x] Smooth animations throughout
 - [x] Responsive for desktop too
+
+## Venue Improvement
+- [x] Replace map query field with smart venue input: search by name OR paste a Google Maps link
+- [x] Parse Google Maps link to extract embed URL automatically
+- [x] Show live map preview inside the builder venue section

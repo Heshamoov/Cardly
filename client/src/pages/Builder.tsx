@@ -38,6 +38,102 @@ const defaultData: InvitationData = {
   },
 };
 
+// ── Helpers for venue map URL parsing ───────────────────────────────────────
+function extractGoogleMapsEmbedUrl(input: string): string | null {
+  if (!input.trim()) return null;
+
+  // If user pasted a full Google Maps URL, convert to embed
+  // Handles: https://maps.google.com/..., https://www.google.com/maps/..., https://goo.gl/maps/...
+  if (input.includes("google.com/maps") || input.includes("goo.gl/maps") || input.includes("maps.app.goo.gl")) {
+    // Try to extract place query from URL
+    const qMatch = input.match(/[?&]q=([^&]+)/);
+    const placeMatch = input.match(/place\/([^/@]+)/);
+    const query = qMatch ? decodeURIComponent(qMatch[1]) : placeMatch ? decodeURIComponent(placeMatch[1].replace(/\+/g, " ")) : null;
+    if (query) {
+      return `https://maps.google.com/maps?q=${encodeURIComponent(query)}&output=embed`;
+    }
+    // Fallback: use the whole URL as a search
+    return `https://maps.google.com/maps?q=${encodeURIComponent(input)}&output=embed`;
+  }
+
+  // Plain text search query
+  return `https://maps.google.com/maps?q=${encodeURIComponent(input)}&output=embed`;
+}
+
+function VenueLocationInput({
+  data,
+  set,
+}: {
+  data: InvitationData;
+  set: (field: keyof InvitationData, value: string) => void;
+}) {
+  const embedUrl = extractGoogleMapsEmbedUrl(data.venueMapQuery);
+
+  return (
+    <div className="space-y-3">
+      <div>
+        <label className="font-sans text-xs opacity-50 block mb-1">Venue Name</label>
+        <input
+          className="wedding-input"
+          placeholder="e.g. Al Rekab Restaurant"
+          value={data.venueName}
+          onChange={(e) => set("venueName", e.target.value)}
+        />
+      </div>
+      <div>
+        <label className="font-sans text-xs opacity-50 block mb-1">Address</label>
+        <input
+          className="wedding-input"
+          placeholder="e.g. Al Ain, Abu Dhabi, UAE"
+          value={data.venueAddress}
+          onChange={(e) => set("venueAddress", e.target.value)}
+        />
+      </div>
+      <div>
+        <label className="font-sans text-xs opacity-50 block mb-1">
+          Search Location or Paste Google Maps Link
+        </label>
+        <input
+          className="wedding-input"
+          placeholder="Type a place name or paste a Google Maps link"
+          value={data.venueMapQuery}
+          onChange={(e) => set("venueMapQuery", e.target.value)}
+        />
+        <p className="font-sans text-xs opacity-30 mt-1">
+          Type a place name to search, or paste any Google Maps link (e.g. from the Share button)
+        </p>
+      </div>
+
+      {/* Live map preview */}
+      {embedUrl && (
+        <div className="mt-3">
+          <p className="font-sans text-xs opacity-40 mb-2 uppercase tracking-wider">Map Preview</p>
+          <div className="rounded-xl overflow-hidden border border-gold/20">
+            <iframe
+              src={embedUrl}
+              width="100%"
+              height="200"
+              style={{ border: 0 }}
+              loading="lazy"
+              allowFullScreen
+              referrerPolicy="no-referrer-when-downgrade"
+              title="Venue Map Preview"
+            />
+          </div>
+          <a
+            href={`https://maps.google.com/maps?q=${encodeURIComponent(data.venueMapQuery)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-sans text-xs text-gold opacity-50 underline mt-1 inline-block"
+          >
+            Open in Google Maps →
+          </a>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function Toggle({ on, onToggle }: { on: boolean; onToggle: () => void }) {
   return (
     <button
@@ -327,44 +423,7 @@ export default function Builder() {
           sections={data.sections}
           onToggle={toggleSection}
         >
-          <div className="space-y-3">
-            <div>
-              <label className="font-sans text-xs opacity-50 block mb-1">
-                Venue Name
-              </label>
-              <input
-                className="wedding-input"
-                placeholder="e.g. Al Rekab Restaurant"
-                value={data.venueName}
-                onChange={(e) => set("venueName", e.target.value)}
-              />
-            </div>
-            <div>
-              <label className="font-sans text-xs opacity-50 block mb-1">
-                Address
-              </label>
-              <input
-                className="wedding-input"
-                placeholder="e.g. Al Ain, Abu Dhabi, UAE"
-                value={data.venueAddress}
-                onChange={(e) => set("venueAddress", e.target.value)}
-              />
-            </div>
-            <div>
-              <label className="font-sans text-xs opacity-50 block mb-1">
-                Map Search Query (for Google Maps)
-              </label>
-              <input
-                className="wedding-input"
-                placeholder="e.g. Al Rekab Restaurant Al Ain"
-                value={data.venueMapQuery}
-                onChange={(e) => set("venueMapQuery", e.target.value)}
-              />
-              <p className="font-sans text-xs opacity-30 mt-1">
-                This is used to pin the location on the map
-              </p>
-            </div>
-          </div>
+          <VenueLocationInput data={data} set={set} />
         </SectionCard>
 
         {/* ── Section: Message ── */}
