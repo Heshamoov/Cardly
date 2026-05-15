@@ -78,3 +78,9 @@
 - [x] White/cream background revealed underneath as halves slide apart
 - [x] Wax seal stays centered and fades out during opening
 - [x] Same animation in both Builder preview and InvitationView guest page
+
+## Mobile-First Fixes
+- [ ] Envelope fills full screen on mobile — use object-fit: cover on the image halves
+- [ ] Top banner buttons compact and mobile-friendly (smaller, icon-only or short labels)
+- [ ] TAP TO OPEN hint visible inside the envelope viewport
+- [ ] Envelope image covers full portrait screen without cropping the wax seal

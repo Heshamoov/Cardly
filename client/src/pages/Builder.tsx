@@ -620,26 +620,34 @@ function PreviewWithEnvelope({
 
   return (
     <div className="builder-page" style={{ position: "relative" }}>
-      {/* Floating banner — always on top of envelope and invitation */}
-      <div className="fixed top-0 left-0 right-0 z-50" style={{ background: "rgba(10,8,24,0.92)", borderBottom: "1px solid rgba(201,168,76,0.25)", backdropFilter: "blur(8px)" }}>
-        <div className="mobile-container">
-          <div className="px-4 py-3 flex items-center justify-between">
-            <span className="font-sans text-xs uppercase tracking-widest text-gold">
-              👁 Preview
-            </span>
-            <div className="flex gap-2">
-              {showInvitation && (
-                <button className="btn-outline text-xs py-2 px-3" onClick={resetEnvelope}>
-                  💌 Envelope
-                </button>
-              )}
-              <button className="btn-outline text-xs py-2 px-3" onClick={onEdit}>
-                ← Edit
+      {/* Floating banner — compact mobile-first bar */}
+      <div className="fixed top-0 left-0 right-0 z-50" style={{ background: "rgba(10,8,24,0.88)", borderBottom: "1px solid rgba(201,168,76,0.2)", backdropFilter: "blur(10px)" }}>
+        <div style={{ maxWidth: 480, margin: "0 auto", padding: "6px 12px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <span style={{ fontFamily: "'Montserrat', sans-serif", fontSize: 10, letterSpacing: "0.15em", color: "rgba(201,168,76,0.8)", textTransform: "uppercase" }}>
+            Preview
+          </span>
+          <div style={{ display: "flex", gap: 6 }}>
+            {showInvitation && (
+              <button
+                onClick={resetEnvelope}
+                style={{ fontFamily: "'Montserrat', sans-serif", fontSize: 10, letterSpacing: "0.1em", padding: "5px 10px", borderRadius: 20, border: "1px solid rgba(201,168,76,0.5)", background: "transparent", color: "rgba(201,168,76,0.9)", cursor: "pointer", textTransform: "uppercase" }}
+              >
+                💌 Envelope
               </button>
-              <button className="btn-gold text-xs py-2 px-3" onClick={onPublish} disabled={isPublishing}>
-                {isPublishing ? "Publishing…" : "Publish"}
-              </button>
-            </div>
+            )}
+            <button
+              onClick={onEdit}
+              style={{ fontFamily: "'Montserrat', sans-serif", fontSize: 10, letterSpacing: "0.1em", padding: "5px 10px", borderRadius: 20, border: "1px solid rgba(201,168,76,0.5)", background: "transparent", color: "rgba(201,168,76,0.9)", cursor: "pointer", textTransform: "uppercase" }}
+            >
+              ← Edit
+            </button>
+            <button
+              onClick={onPublish}
+              disabled={isPublishing}
+              style={{ fontFamily: "'Montserrat', sans-serif", fontSize: 10, letterSpacing: "0.1em", padding: "5px 12px", borderRadius: 20, background: "linear-gradient(135deg, #c9a84c, #e8d48b)", color: "#1a1a2e", border: "none", cursor: "pointer", fontWeight: 700, textTransform: "uppercase" }}
+            >
+              {isPublishing ? "⏳" : "Publish"}
+            </button>
           </div>
         </div>
       </div>
