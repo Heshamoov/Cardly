@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useRoute } from "wouter";
 import { trpc } from "@/lib/trpc";
 
@@ -53,6 +53,25 @@ export default function InvitationView() {
   const [animStage, setAnimStage] = useState<AnimStage>("idle");
   const [showInvitation, setShowInvitation] = useState(false);
   const invitationRef = useRef<HTMLDivElement>(null);
+  const sceneRef = useRef<HTMLDivElement>(null);
+
+  // Calculate split point based on actual rendered image size
+  const updateSplitPoint = useCallback(() => {
+    const img = sceneRef.current?.querySelector<HTMLImageElement>(".fs-half-top .fs-half-img");
+    if (!img || !img.complete || img.naturalWidth === 0) return;
+    const renderedH = img.getBoundingClientRect().height;
+    const vpH = window.innerHeight;
+    const imgTop = Math.max(0, (vpH - renderedH) / 2);
+    const splitY = imgTop + renderedH / 2;
+    sceneRef.current?.style.setProperty("--img-top", `${imgTop}px`);
+    sceneRef.current?.style.setProperty("--split-y", `${splitY}px`);
+    document.documentElement.style.setProperty("--split-y", `${splitY}px`);
+  }, []);
+
+  useEffect(() => {
+    window.addEventListener("resize", updateSplitPoint);
+    return () => window.removeEventListener("resize", updateSplitPoint);
+  }, [updateSplitPoint]);
 
   const handleOpenEnvelope = () => {
     if (animStage !== "idle") return;
@@ -118,10 +137,16 @@ export default function InvitationView() {
   }
 
   return (
-    <div className="envelope-scene" onClick={handleOpenEnvelope}>
+    <div ref={sceneRef} className="envelope-scene" onClick={handleOpenEnvelope}>
       {/* Top half — shows top portion of envelope photo, slides UP */}
       <div className={`fs-half fs-half-top ${isOpen ? "open" : ""}`}>
-        <img src={envStyle.img} alt="" className="fs-half-img" draggable={false} />
+        <img
+          src={envStyle.img}
+          alt=""
+          className="fs-half-img"
+          draggable={false}
+          onLoad={updateSplitPoint}
+        />
       </div>
 
       {/* Bottom half — shows bottom portion of envelope photo, slides DOWN */}

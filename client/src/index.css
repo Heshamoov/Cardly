@@ -52,64 +52,79 @@ html, body {
   -webkit-tap-highlight-color: transparent;
 }
 
-/* ── The two photo halves that split apart ── */
-/* Both halves show the SAME full-screen envelope photo,
-   clipped to top/bottom 50%. When opened they slide away
-   revealing the cream invitation page underneath.
+/* Radial glow behind envelope area for atmospheric look on portrait mobile */
+.envelope-scene::before {
+  content: '';
+  position: absolute;
+  top: var(--split-y, 50vh);
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 120vw;
+  height: 60vw;
+  background: radial-gradient(ellipse at center, rgba(201,168,76,0.12) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 1;
+}
 
-   The image uses object-fit: cover to fill the full screen.
-   Each half is exactly 50vh tall.
-   The top half shows the top 50% of the image (object-position: center top).
-   The bottom half shows the bottom 50% of the image (object-position: center bottom).
-   The image is 100vw × 100vh so object-fit: cover scales it to fill the screen.
-   On portrait phones, the sides are cropped (marble background only — envelope is centered). */
+/* ── The two photo halves that split apart ── */
+/* Strategy: the envelope image is landscape (1408×1056).
+   On portrait phones it renders much shorter than the screen.
+   We use object-fit: contain so the FULL envelope is always visible.
+   JS measures the rendered image and sets:
+     --img-top  : vertical offset to center the image on screen
+     --img-h    : rendered image height
+     --split-y  : midpoint of the image (where the halves split)
+   The top half covers from 0 to --split-y.
+   The bottom half covers from --split-y to bottom of screen.
+   Each half's image is positioned so the correct half of the envelope shows. */
 
 .fs-half {
   position: absolute;
   left: 0;
   right: 0;
-  height: 50vh;
   overflow: hidden;
   z-index: 10;
   will-change: transform;
   transition: transform 2s cubic-bezier(0.77, 0, 0.175, 1);
 }
 
+/* Top half: from top of screen to the split point */
 .fs-half-top {
   top: 0;
+  height: var(--split-y, 50vh);
   transform-origin: top center;
 }
 
+/* Bottom half: from split point to bottom of screen */
 .fs-half-bottom {
+  top: var(--split-y, 50vh);
   bottom: 0;
   transform-origin: bottom center;
 }
 
-/* Each image fills the full viewport (100vw × 100vh) with object-fit: cover.
-   The top half clips the top portion; the bottom half clips the bottom portion. */
+/* The image fills the full viewport width with natural height.
+   This ensures the FULL envelope is always visible without any cropping.
+   On portrait phones the image is shorter than the screen — JS centers it
+   vertically and sets --img-top and --split-y for the correct split. */
 .fs-half-img {
   position: absolute;
   left: 0;
   width: 100vw;
-  height: 100vh;
-  object-fit: cover;
+  height: auto;
   display: block;
   pointer-events: none;
   user-select: none;
 }
 
-/* Top half: show the top 50% of the image */
+/* Top half: image starts at --img-top so top of envelope aligns with top of image area */
 .fs-half-top .fs-half-img {
-  top: 0;
-  object-position: center top;
+  top: var(--img-top, 0px);
 }
 
-/* Bottom half: show the bottom 50% of the image.
-   The image is 100vh tall; this half is 50vh tall starting at bottom:0.
-   We offset the image up by 50vh so the bottom half of the image shows. */
+/* Bottom half: image is offset upward by --split-y so the bottom half of the envelope shows.
+   The image top within this half = --img-top - --split-y */
 .fs-half-bottom .fs-half-img {
-  top: -50vh;
-  object-position: center bottom;
+  top: calc(var(--img-top, 0px) - var(--split-y, 50vh));
 }
 
 /* Open state — top slides up, bottom slides down */
@@ -121,10 +136,11 @@ html, body {
   transform: translateY(100%);
 }
 
-/* Wax seal — centered over the split line, fades on open */
+/* Wax seal — centered over the split line, fades on open.
+   Uses --split-y (set by JS) so it sits exactly at the image midpoint on all screen sizes. */
 .fs-wax-seal {
   position: fixed;
-  top: 50%;
+  top: var(--split-y, 50vh);
   left: 50%;
   transform: translate(-50%, -50%);
   width: 80px;

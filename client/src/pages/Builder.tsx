@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 
@@ -591,12 +591,32 @@ function PreviewWithEnvelope({
 }) {
   const [animStage, setAnimStage] = useState<"idle" | "opening" | "expand" | "done">("idle");
   const [showInvitation, setShowInvitation] = useState(false);
+  const sceneRef = useRef<HTMLDivElement>(null);
 
   const brideName = [data.brideFirstName, data.brideLastName].filter(Boolean).join(" ");
   const groomName = [data.groomFirstName, data.groomLastName].filter(Boolean).join(" ");
   const envStyle = ENVELOPE_STYLES.find((s) => s.id === (data.envelopeStyle ?? "ivory-gold")) ?? ENVELOPE_STYLES[0];
   const isOpen = animStage === "opening" || animStage === "expand" || animStage === "done";
   const isExpanding = animStage === "expand" || animStage === "done";
+
+  // Calculate split point based on actual rendered image size
+  const updateSplitPoint = useCallback(() => {
+    const img = sceneRef.current?.querySelector<HTMLImageElement>(".fs-half-top .fs-half-img");
+    if (!img || !img.complete || img.naturalWidth === 0) return;
+    const renderedH = img.getBoundingClientRect().height;
+    const vpH = window.innerHeight;
+    const imgTop = Math.max(0, (vpH - renderedH) / 2);
+    const splitY = imgTop + renderedH / 2;
+    // Set on scene (for halves) and on document root (for fixed wax seal)
+    sceneRef.current?.style.setProperty("--img-top", `${imgTop}px`);
+    sceneRef.current?.style.setProperty("--split-y", `${splitY}px`);
+    document.documentElement.style.setProperty("--split-y", `${splitY}px`);
+  }, []);
+
+  useEffect(() => {
+    window.addEventListener("resize", updateSplitPoint);
+    return () => window.removeEventListener("resize", updateSplitPoint);
+  }, [updateSplitPoint]);
 
   const handleOpenEnvelope = () => {
     if (animStage !== "idle") return;
@@ -654,11 +674,17 @@ function PreviewWithEnvelope({
 
       {/* Envelope scene — OUTSIDE mobile-container so it fills the full screen */}
       {!showInvitation && (
-        <div className="envelope-scene" onClick={handleOpenEnvelope}>
+        <div ref={sceneRef} className="envelope-scene" onClick={handleOpenEnvelope}>
 
           {/* Top half — shows top portion of envelope photo, slides UP */}
           <div className={`fs-half fs-half-top ${isOpen ? "open" : ""}`}>
-            <img src={envStyle.img} alt="" className="fs-half-img" draggable={false} />
+            <img
+              src={envStyle.img}
+              alt=""
+              className="fs-half-img"
+              draggable={false}
+              onLoad={updateSplitPoint}
+            />
           </div>
 
           {/* Bottom half — shows bottom portion of envelope photo, slides DOWN */}
