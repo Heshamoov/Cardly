@@ -119,12 +119,12 @@ export default function InvitationView() {
 
   return (
     <div className="envelope-scene" onClick={handleOpenEnvelope}>
-      {/* Top half — shows top 50% of envelope photo, slides UP */}
+      {/* Top half — shows top portion of envelope photo, slides UP */}
       <div className={`fs-half fs-half-top ${isOpen ? "open" : ""}`}>
         <img src={envStyle.img} alt="" className="fs-half-img" draggable={false} />
       </div>
 
-      {/* Bottom half — shows bottom 50% of envelope photo, slides DOWN */}
+      {/* Bottom half — shows bottom portion of envelope photo, slides DOWN */}
       <div className={`fs-half fs-half-bottom ${isOpen ? "open" : ""}`}>
         <img src={envStyle.img} alt="" className="fs-half-img" draggable={false} />
       </div>

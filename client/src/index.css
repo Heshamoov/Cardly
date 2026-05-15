@@ -55,13 +55,20 @@ html, body {
 /* ── The two photo halves that split apart ── */
 /* Both halves show the SAME full-screen envelope photo,
    clipped to top/bottom 50%. When opened they slide away
-   revealing the cream invitation page underneath. */
+   revealing the cream invitation page underneath.
+
+   The image uses object-fit: cover to fill the full screen.
+   Each half is exactly 50vh tall.
+   The top half shows the top 50% of the image (object-position: center top).
+   The bottom half shows the bottom 50% of the image (object-position: center bottom).
+   The image is 100vw × 100vh so object-fit: cover scales it to fill the screen.
+   On portrait phones, the sides are cropped (marble background only — envelope is centered). */
 
 .fs-half {
   position: absolute;
   left: 0;
   right: 0;
-  height: 50%;
+  height: 50vh;
   overflow: hidden;
   z-index: 10;
   will-change: transform;
@@ -78,30 +85,30 @@ html, body {
   transform-origin: bottom center;
 }
 
-/* Each half contains the full-size photo, positioned so
-   the correct half is visible through the clip */
+/* Each image fills the full viewport (100vw × 100vh) with object-fit: cover.
+   The top half clips the top portion; the bottom half clips the bottom portion. */
 .fs-half-img {
   position: absolute;
-  left: 50%;
-  top: 0;
-  width: 100%;
-  height: 200%; /* 2× so full image fits inside each half */
+  left: 0;
+  width: 100vw;
+  height: 100vh;
   object-fit: cover;
-  object-position: center center;
-  transform: translateX(-50%);
   display: block;
   pointer-events: none;
   user-select: none;
 }
 
+/* Top half: show the top 50% of the image */
 .fs-half-top .fs-half-img {
   top: 0;
   object-position: center top;
 }
 
+/* Bottom half: show the bottom 50% of the image.
+   The image is 100vh tall; this half is 50vh tall starting at bottom:0.
+   We offset the image up by 50vh so the bottom half of the image shows. */
 .fs-half-bottom .fs-half-img {
-  bottom: 0;
-  top: auto;
+  top: -50vh;
   object-position: center bottom;
 }
 
