@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef } from "react";
 import { useRoute } from "wouter";
 import { trpc } from "@/lib/trpc";
 
@@ -40,9 +40,7 @@ interface InvitationData {
   envelopeStyle?: string;
 }
 
-// ── Animation stages ──────────────────────────────────────────────────────────
-// idle → shake (0.4s) → opening (2s: flaps open + card rises) → expand (0.7s) → done
-type AnimStage = "idle" | "shake" | "opening" | "expand" | "done";
+type AnimStage = "idle" | "opening" | "expand" | "done";
 
 export default function InvitationView() {
   const [, params] = useRoute("/invite/:slug");
@@ -59,10 +57,10 @@ export default function InvitationView() {
   const handleOpenEnvelope = () => {
     if (animStage !== "idle") return;
 
-    // Stage 1: both flaps open + card rises (2000ms)
+    // Stage 1: both halves slide apart (2000ms)
     setAnimStage("opening");
     setTimeout(() => {
-      // Stage 2: expand overlay covers screen (700ms)
+      // Stage 2: cream overlay fades in (500ms)
       setAnimStage("expand");
       setTimeout(() => {
         // Stage 3: show invitation, scroll to top
@@ -74,16 +72,17 @@ export default function InvitationView() {
             invitationRef.current.scrollTop = 0;
           }
         });
-      }, 700);
+      }, 500);
     }, 2000);
   };
 
   if (isLoading) {
     return (
-      <div className="envelope-scene">
+      <div className="envelope-scene" style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
         <div className="text-center">
-          <div className="font-script text-4xl gold-shimmer mb-4">Loading…</div>
-          <div className="w-8 h-8 border-2 border-gold border-t-transparent rounded-full animate-spin mx-auto opacity-60" />
+          <div className="font-script text-4xl gold-shimmer mb-4" style={{ color: "#c9a84c" }}>Loading…</div>
+          <div className="w-8 h-8 border-2 border-t-transparent rounded-full animate-spin mx-auto"
+            style={{ borderColor: "#c9a84c", borderTopColor: "transparent" }} />
         </div>
       </div>
     );
@@ -91,10 +90,10 @@ export default function InvitationView() {
 
   if (!invitation || error) {
     return (
-      <div className="envelope-scene">
+      <div className="envelope-scene" style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
         <div className="text-center px-8">
-          <div className="font-script text-5xl gold-shimmer mb-4">Oops…</div>
-          <p className="font-sans text-sm opacity-50">
+          <div className="font-script text-5xl gold-shimmer mb-4" style={{ color: "#c9a84c" }}>Oops…</div>
+          <p className="font-sans text-sm" style={{ color: "#9a7a2e", opacity: 0.7 }}>
             This invitation could not be found. Please check the link.
           </p>
         </div>
@@ -107,11 +106,9 @@ export default function InvitationView() {
   const groomName = [invData.groomFirstName, invData.groomLastName].filter(Boolean).join(" ");
   const envStyle = ENVELOPE_STYLES[invData.envelopeStyle ?? "ivory-gold"] ?? ENVELOPE_STYLES["ivory-gold"];
 
-  const isOpening = animStage === "opening" || animStage === "expand" || animStage === "done";
-  const isShaking = animStage === "shake";
-  const isExpanding = animStage === "expand";
+  const isOpen = animStage === "opening" || animStage === "expand" || animStage === "done";
+  const isExpanding = animStage === "expand" || animStage === "done";
 
-  // ── Invitation page (after envelope opens) ───────────────────────────────
   if (showInvitation) {
     return (
       <div ref={invitationRef}>
@@ -120,112 +117,43 @@ export default function InvitationView() {
     );
   }
 
-  // ── Envelope scene ────────────────────────────────────────────────────────
   return (
-    <div
-      className="envelope-scene"
-      onClick={handleOpenEnvelope}
-      style={{ opacity: isExpanding ? 0 : 1, transition: "opacity 0.5s ease" }}
-    >
-      <FloatingPetals />
-
-      {/* Expand overlay — slides up to cover screen before showing invitation */}
-      {isExpanding && (
-        <div
-          className="fs-expand-overlay expanding"
-          style={{ pointerEvents: "none" }}
-        />
-      )}
-
-      {/* Full-screen envelope */}
-      <div className="fs-envelope">
-        {/* Envelope photo */}
-        <img
-          src={envStyle.img}
-          alt="Wedding Envelope"
-          className="fs-envelope-img"
-          draggable={false}
-        />
-
-        {/* Top flap — opens upward (hinge at bottom edge, rotates backward) */}
-        <div
-          className="fs-flap-top"
-          style={{
-            transform: isOpening
-              ? "perspective(1200px) rotateX(175deg)"
-              : "perspective(1200px) rotateX(0deg)",
-            transition: isOpening
-              ? "transform 2s cubic-bezier(0.4, 0, 0.2, 1)"
-              : "none",
-          }}
-        >
-          <div className="fs-flap-top-face" />
-        </div>
-
-        {/* Bottom flap — opens downward (hinge at top edge, rotates forward) */}
-        <div
-          className="fs-flap-bottom"
-          style={{
-            transform: isOpening
-              ? "perspective(1200px) rotateX(-175deg)"
-              : "perspective(1200px) rotateX(0deg)",
-            transition: isOpening
-              ? "transform 2s cubic-bezier(0.4, 0, 0.2, 1)"
-              : "none",
-          }}
-        >
-          <div className="fs-flap-bottom-face" />
-        </div>
-
-        {/* Wax seal — cracks and flies off */}
-        <div
-          className="fs-wax-seal"
-          style={{
-            background: `radial-gradient(circle at 35% 35%, ${envStyle.sealColor}ee, ${envStyle.sealColor}88)`,
-            opacity: isOpening ? 0 : 1,
-            transform: isOpening
-              ? "translate(-50%, -50%) scale(1.6) rotate(20deg)"
-              : "translate(-50%, -50%) scale(1) rotate(0deg)",
-            transition: "opacity 0.5s ease 0.2s, transform 0.5s ease 0.2s",
-          }}
-        >
-          <span style={{ fontFamily: "'Great Vibes', cursive", fontSize: 26, color: "rgba(255,255,255,0.92)" }}>
-            {(brideName[0] || "H")}&{(groomName[0] || "S")}
-          </span>
-        </div>
-
-        {/* Invitation card rising from inside */}
-        <div
-          className={`fs-card-rising ${isOpening ? "risen" : ""}`}
-          style={{
-            transitionDelay: isOpening ? "0.3s" : "0s",
-          }}
-        >
-          <div style={{ textAlign: "center" }}>
-            <p style={{ fontFamily: "'Great Vibes', cursive", fontSize: 28, color: "#9a7a2e", lineHeight: 1.3 }}>
-              {brideName || "Bride"}
-            </p>
-            <p style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: "italic", fontSize: 18, color: "#9a7a2e", opacity: 0.6, margin: "6px 0" }}>
-              &amp;
-            </p>
-            <p style={{ fontFamily: "'Great Vibes', cursive", fontSize: 28, color: "#9a7a2e", lineHeight: 1.3 }}>
-              {groomName || "Groom"}
-            </p>
-          </div>
-        </div>
+    <div className="envelope-scene" onClick={handleOpenEnvelope}>
+      {/* Top half — shows top 50% of envelope photo, slides UP */}
+      <div className={`fs-half fs-half-top ${isOpen ? "open" : ""}`}>
+        <img src={envStyle.img} alt="" className="fs-half-img" draggable={false} />
       </div>
+
+      {/* Bottom half — shows bottom 50% of envelope photo, slides DOWN */}
+      <div className={`fs-half fs-half-bottom ${isOpen ? "open" : ""}`}>
+        <img src={envStyle.img} alt="" className="fs-half-img" draggable={false} />
+      </div>
+
+      {/* Wax seal — centered at the split line */}
+      <div
+        className={`fs-wax-seal ${isOpen ? "open" : ""}`}
+        style={{
+          background: `radial-gradient(circle at 35% 35%, ${envStyle.sealColor}ee, ${envStyle.sealColor}88)`,
+        }}
+      >
+        <span style={{ fontFamily: "'Great Vibes', cursive", fontSize: 24, color: "rgba(255,255,255,0.92)", lineHeight: 1 }}>
+          {(brideName[0] || "H")}&amp;{(groomName[0] || "S")}
+        </span>
+      </div>
+
+      {/* Expand overlay — cream fade before invitation appears */}
+      <div
+        className="fs-expand-overlay"
+        style={{ opacity: isExpanding ? 1 : 0 }}
+      />
 
       {/* Tap hint */}
       {animStage === "idle" && (
-        <div className="absolute bottom-0 left-0 right-0 flex flex-col items-center pb-10 pointer-events-none animate-fade-in">
-          <p className="invite-label opacity-40 mb-2">Tap to open</p>
-          <span className="text-gold opacity-40 text-2xl animate-bounce">↑</span>
-        </div>
-      )}
-
-      {animStage === "opening" && (
-        <div className="absolute bottom-0 left-0 right-0 flex flex-col items-center pb-10 pointer-events-none animate-fade-in">
-          <p className="font-script text-2xl gold-shimmer">Opening your invitation…</p>
+        <div className="fs-tap-hint">
+          <p style={{ fontFamily: "'Montserrat', sans-serif", fontSize: 11, letterSpacing: "0.2em", color: "rgba(201,168,76,0.7)", textTransform: "uppercase" }}>
+            Tap to open
+          </p>
+          <span style={{ color: "rgba(201,168,76,0.5)", fontSize: 18, animation: "bounce 1s infinite" }}>↑</span>
         </div>
       )}
     </div>
@@ -397,19 +325,19 @@ function InvitationPage({ data }: { data: InvitationData }) {
         {data.sections?.map !== false && mapSrc && (
           <div className="invitation-section py-8 px-4">
             <div className="divider-ornament mb-5">
-              <span className="text-gold">❧</span>
+              <span className="text-gold">📍</span>
             </div>
-            <p className="invite-label text-gold opacity-50 mb-5">Find Us</p>
-            <div className="rounded-2xl overflow-hidden border border-gold/20 shadow-2xl">
+            <p className="invite-label text-gold opacity-50 mb-4">Find Us</p>
+            <div style={{ borderRadius: 12, overflow: "hidden", border: "1px solid rgba(201,168,76,0.3)", boxShadow: "0 8px 32px rgba(0,0,0,0.4)" }}>
               <iframe
                 src={mapSrc}
                 width="100%"
-                height="300"
-                style={{ border: 0 }}
+                height="260"
+                style={{ border: 0, display: "block" }}
                 allowFullScreen
                 loading="lazy"
                 referrerPolicy="no-referrer-when-downgrade"
-                title="Venue Map"
+                title="Wedding Venue Map"
               />
             </div>
             {directionsUrl && (
@@ -417,8 +345,23 @@ function InvitationPage({ data }: { data: InvitationData }) {
                 href={directionsUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="btn-gold w-full mt-4 text-center block"
-                style={{ textDecoration: "none" }}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 8,
+                  marginTop: 16,
+                  padding: "12px 28px",
+                  background: "linear-gradient(135deg, #c9a84c, #9a7a2e)",
+                  color: "#1a1a2e",
+                  borderRadius: 50,
+                  fontFamily: "'Montserrat', sans-serif",
+                  fontSize: 13,
+                  fontWeight: 700,
+                  letterSpacing: "0.08em",
+                  textDecoration: "none",
+                  boxShadow: "0 4px 16px rgba(201,168,76,0.4)",
+                }}
+                onClick={(e) => e.stopPropagation()}
               >
                 📍 Get Directions
               </a>
@@ -432,12 +375,11 @@ function InvitationPage({ data }: { data: InvitationData }) {
             <span className="text-gold text-xl">✦</span>
           </div>
           <p className="font-script gold-shimmer" style={{ fontSize: "clamp(2rem, 10vw, 3rem)" }}>
-            {[data.brideFirstName, "&", data.groomFirstName].filter(Boolean).join(" ") || "Bride & Groom"}
+            {[data.brideFirstName, "&", data.groomFirstName].filter(Boolean).join(" ")}
           </p>
-          <p className="invite-label opacity-25 mt-4">With love</p>
-          <div className="flex justify-center mt-6">
-            <div className="w-16 h-px bg-gradient-to-r from-transparent via-gold to-transparent" />
-          </div>
+          <p className="invite-label opacity-30 mt-4">
+            {formattedDate || ""}
+          </p>
         </div>
 
       </div>
@@ -445,56 +387,50 @@ function InvitationPage({ data }: { data: InvitationData }) {
   );
 }
 
+// ── Countdown Timer ───────────────────────────────────────────────────────────
 function CountdownTimer({ targetDate }: { targetDate: string }) {
-  const [timeLeft, setTimeLeft] = useState(() => getTimeLeft(targetDate));
+  const [timeLeft, setTimeLeft] = useState(() => calcTimeLeft(targetDate));
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setTimeLeft(getTimeLeft(targetDate));
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [targetDate]);
-
-  if (!timeLeft) {
-    return (
-      <div>
-        <p className="font-script text-3xl gold-shimmer">Today is the Day! 🎉</p>
-      </div>
-    );
+  function calcTimeLeft(date: string) {
+    const diff = new Date(date).getTime() - Date.now();
+    if (diff <= 0) return { days: 0, hours: 0, minutes: 0, seconds: 0 };
+    return {
+      days: Math.floor(diff / 86400000),
+      hours: Math.floor((diff % 86400000) / 3600000),
+      minutes: Math.floor((diff % 3600000) / 60000),
+      seconds: Math.floor((diff % 60000) / 1000),
+    };
   }
 
   return (
     <div>
-      <p className="invite-label text-gold opacity-50 mb-5">Counting Down</p>
-      <div className="flex justify-center gap-3">
-        {[
-          { value: timeLeft.days, label: "Days" },
-          { value: timeLeft.hours, label: "Hours" },
-          { value: timeLeft.minutes, label: "Mins" },
-          { value: timeLeft.seconds, label: "Secs" },
-        ].map(({ value, label }) => (
-          <div key={label} className="text-center">
-            <div
-              className="invite-heading text-3xl text-gold font-light flex items-center justify-center border border-gold/25 rounded-xl"
-              style={{ width: 64, height: 64 }}
-            >
-              {String(value).padStart(2, "0")}
+      <p className="invite-label text-gold opacity-50 mb-6">Counting Down</p>
+      <div style={{ display: "flex", justifyContent: "center", gap: 16 }}>
+        {(["days", "hours", "minutes", "seconds"] as const).map((unit) => (
+          <div key={unit} style={{ textAlign: "center" }}>
+            <div style={{
+              fontFamily: "'Cormorant Garamond', serif",
+              fontSize: "clamp(2rem, 8vw, 3rem)",
+              color: "#c9a84c",
+              fontWeight: 300,
+              lineHeight: 1,
+              minWidth: 56,
+            }}>
+              {String(timeLeft[unit]).padStart(2, "0")}
             </div>
-            <p className="invite-label opacity-35 mt-2">{label}</p>
+            <div style={{
+              fontFamily: "'Montserrat', sans-serif",
+              fontSize: 9,
+              letterSpacing: "0.15em",
+              color: "rgba(201,168,76,0.5)",
+              textTransform: "uppercase",
+              marginTop: 6,
+            }}>
+              {unit}
+            </div>
           </div>
         ))}
       </div>
     </div>
   );
-}
-
-function getTimeLeft(targetDate: string) {
-  const diff = new Date(targetDate).getTime() - Date.now();
-  if (diff <= 0) return null;
-  return {
-    days: Math.floor(diff / (1000 * 60 * 60 * 24)),
-    hours: Math.floor((diff / (1000 * 60 * 60)) % 24),
-    minutes: Math.floor((diff / (1000 * 60)) % 60),
-    seconds: Math.floor((diff / 1000) % 60),
-  };
 }

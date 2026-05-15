@@ -589,28 +589,27 @@ function PreviewWithEnvelope({
   onPublish: () => void;
   isPublishing: boolean;
 }) {
-  const [animStage, setAnimStage] = useState<"idle" | "shake" | "opening" | "expand" | "done">("idle");
+  const [animStage, setAnimStage] = useState<"idle" | "opening" | "expand" | "done">("idle");
   const [showInvitation, setShowInvitation] = useState(false);
 
   const brideName = [data.brideFirstName, data.brideLastName].filter(Boolean).join(" ");
   const groomName = [data.groomFirstName, data.groomLastName].filter(Boolean).join(" ");
   const envStyle = ENVELOPE_STYLES.find((s) => s.id === (data.envelopeStyle ?? "ivory-gold")) ?? ENVELOPE_STYLES[0];
-  const isOpening = animStage === "opening" || animStage === "expand" || animStage === "done";
-  const isShaking = animStage === "shake";
-  const isExpanding = animStage === "expand";
+  const isOpen = animStage === "opening" || animStage === "expand" || animStage === "done";
+  const isExpanding = animStage === "expand" || animStage === "done";
 
   const handleOpenEnvelope = () => {
     if (animStage !== "idle") return;
-    // Stage 1: both flaps open + card rises (2000ms)
+    // Stage 1: both halves slide apart (2000ms)
     setAnimStage("opening");
     setTimeout(() => {
-      // Stage 2: expand overlay (700ms)
+      // Stage 2: cream overlay fades in (500ms)
       setAnimStage("expand");
       setTimeout(() => {
         setAnimStage("done");
         setShowInvitation(true);
         requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: "instant" }));
-      }, 700);
+      }, 500);
     }, 2000);
   };
 
@@ -647,87 +646,45 @@ function PreviewWithEnvelope({
 
       <div className="mobile-container">
 
-        {/* Envelope scene — full screen */}
+        {/* Envelope scene — full screen split-photo animation */}
         {!showInvitation && (
-          <div
-            className="envelope-scene"
-            style={{ opacity: isExpanding ? 0 : 1, transition: "opacity 0.5s ease" }}
-            onClick={handleOpenEnvelope}
-          >
-            <FloatingPetals />
+          <div className="envelope-scene" onClick={handleOpenEnvelope}>
 
-            {/* Expand overlay — covers screen before showing invitation */}
-            {isExpanding && (
-              <div
-                className="fs-expand-overlay expanding"
-                style={{ pointerEvents: "none" }}
-              />
-            )}
-
-            {/* Full-screen envelope */}
-            <div className="fs-envelope">
-              <img src={envStyle.img} alt="Wedding Envelope" className="fs-envelope-img" draggable={false} />
-
-              {/* Top flap — opens upward (hinge at bottom edge, rotates backward) */}
-              <div
-                className="fs-flap-top"
-                style={{
-                  transform: isOpening ? "perspective(1200px) rotateX(175deg)" : "perspective(1200px) rotateX(0deg)",
-                  transition: isOpening ? "transform 2s cubic-bezier(0.4, 0, 0.2, 1)" : "none",
-                }}
-              >
-                <div className="fs-flap-top-face" />
-              </div>
-
-              {/* Bottom flap — opens downward (hinge at top edge, rotates forward) */}
-              <div
-                className="fs-flap-bottom"
-                style={{
-                  transform: isOpening ? "perspective(1200px) rotateX(-175deg)" : "perspective(1200px) rotateX(0deg)",
-                  transition: isOpening ? "transform 2s cubic-bezier(0.4, 0, 0.2, 1)" : "none",
-                }}
-              >
-                <div className="fs-flap-bottom-face" />
-              </div>
-
-              {/* Wax seal */}
-              <div
-                className="fs-wax-seal"
-                style={{
-                  background: `radial-gradient(circle at 35% 35%, ${envStyle.sealColor}ee, ${envStyle.sealColor}88)`,
-                  opacity: isOpening ? 0 : 1,
-                  transform: isOpening ? "translate(-50%, -50%) scale(1.6) rotate(20deg)" : "translate(-50%, -50%) scale(1) rotate(0deg)",
-                  transition: "opacity 0.5s ease 0.2s, transform 0.5s ease 0.2s",
-                }}
-              >
-                <span style={{ fontFamily: "'Great Vibes', cursive", fontSize: 26, color: "rgba(255,255,255,0.92)" }}>
-                  {(brideName[0] || "H")}&{(groomName[0] || "S")}
-                </span>
-              </div>
-
-              {/* Card rising */}
-              <div
-                className={`fs-card-rising ${isOpening ? "risen" : ""}`}
-                style={{ transitionDelay: isOpening ? "0.3s" : "0s" }}
-              >
-                <div style={{ textAlign: "center" }}>
-                  <p style={{ fontFamily: "'Great Vibes', cursive", fontSize: 28, color: "#9a7a2e", lineHeight: 1.3 }}>{brideName || "Bride"}</p>
-                  <p style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: "italic", fontSize: 18, color: "#9a7a2e", opacity: 0.6, margin: "6px 0" }}>&amp;</p>
-                  <p style={{ fontFamily: "'Great Vibes', cursive", fontSize: 28, color: "#9a7a2e", lineHeight: 1.3 }}>{groomName || "Groom"}</p>
-                </div>
-              </div>
+            {/* Top half — shows top 50% of envelope photo, slides UP */}
+            <div className={`fs-half fs-half-top ${isOpen ? "open" : ""}`}>
+              <img src={envStyle.img} alt="" className="fs-half-img" draggable={false} />
             </div>
+
+            {/* Bottom half — shows bottom 50% of envelope photo, slides DOWN */}
+            <div className={`fs-half fs-half-bottom ${isOpen ? "open" : ""}`}>
+              <img src={envStyle.img} alt="" className="fs-half-img" draggable={false} />
+            </div>
+
+            {/* Wax seal — centered at the split line */}
+            <div
+              className={`fs-wax-seal ${isOpen ? "open" : ""}`}
+              style={{
+                background: `radial-gradient(circle at 35% 35%, ${envStyle.sealColor}ee, ${envStyle.sealColor}88)`,
+              }}
+            >
+              <span style={{ fontFamily: "'Great Vibes', cursive", fontSize: 24, color: "rgba(255,255,255,0.92)", lineHeight: 1 }}>
+                {(brideName[0] || "H")}&amp;{(groomName[0] || "S")}
+              </span>
+            </div>
+
+            {/* Expand overlay — cream fade before invitation appears */}
+            <div
+              className="fs-expand-overlay"
+              style={{ opacity: isExpanding ? 1 : 0, transition: "opacity 0.5s ease" }}
+            />
 
             {/* Tap hint */}
             {animStage === "idle" && (
-              <div className="absolute bottom-0 left-0 right-0 flex flex-col items-center pb-10 pointer-events-none animate-fade-in">
-                <p className="invite-label opacity-40 mb-2">Tap to open</p>
-                <span className="text-gold opacity-40 text-2xl animate-bounce">↑</span>
-              </div>
-            )}
-            {animStage === "opening" && (
-              <div className="absolute bottom-0 left-0 right-0 flex flex-col items-center pb-10 pointer-events-none animate-fade-in">
-                <p className="font-script text-2xl gold-shimmer">Opening your invitation…</p>
+              <div className="fs-tap-hint">
+                <p style={{ fontFamily: "'Montserrat', sans-serif", fontSize: 11, letterSpacing: "0.2em", color: "rgba(201,168,76,0.7)", textTransform: "uppercase" }}>
+                  Tap to open
+                </p>
+                <span style={{ color: "rgba(201,168,76,0.5)", fontSize: 18 }}>↑</span>
               </div>
             )}
           </div>

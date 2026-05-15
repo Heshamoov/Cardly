@@ -70,3 +70,11 @@
 - [x] Background expands after opening to reveal invitation from the top
 - [x] Scroll to top when invitation is revealed
 - [x] Real printed font feel — letterpress-style serif/script throughout invitation
+
+## Envelope Split Animation Redesign
+- [ ] Full-screen envelope photo fills entire viewport (no background mismatch)
+- [ ] Top half uses clip-path to show top 50% of envelope photo, slides UP on open
+- [ ] Bottom half uses clip-path to show bottom 50% of envelope photo, slides DOWN on open
+- [ ] White/cream background revealed underneath as halves slide apart
+- [ ] Wax seal stays centered and fades out during opening
+- [ ] Same animation in both Builder preview and InvitationView guest page
