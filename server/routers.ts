@@ -20,6 +20,19 @@ export const appRouter = router({
   }),
 
   invitations: invitationsRouter,
+  debug: router({
+    dbCheck: publicProcedure.query(async () => {
+      const { getDb } = await import("./db");
+      const db = await getDb();
+      if (!db) return { connected: false, error: "getDb returned null", dbUrl: !!process.env.DATABASE_URL };
+      try {
+        const result = await db.execute("SELECT database() as db, (SELECT COUNT(*) FROM information_schema.tables WHERE table_schema=database() AND table_name='invitations') as hasTable, (SELECT COUNT(*) FROM invitations) as rowCount");
+        return { connected: true, result: (result as any)[0], dbUrl: !!process.env.DATABASE_URL };
+      } catch (e: any) {
+        return { connected: false, error: e.message, dbUrl: !!process.env.DATABASE_URL };
+      }
+    }),
+  }),
   // TODO: add feature routers here, e.g.
   // todo: router({
   //   list: protectedProcedure.query(({ ctx }) =>
