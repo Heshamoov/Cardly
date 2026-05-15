@@ -175,7 +175,7 @@ export default function InvitationView() {
       {/* Tap hint */}
       {animStage === "idle" && (
         <div className="fs-tap-hint">
-          <p style={{ fontFamily: "'Montserrat', sans-serif", fontSize: 11, letterSpacing: "0.2em", color: "rgba(201,168,76,0.7)", textTransform: "uppercase" }}>
+          <p style={{ fontFamily: "'Lato', sans-serif", fontSize: 12, letterSpacing: "0.2em", color: "rgba(201,168,76,0.7)", textTransform: "uppercase" }}>
             Tap to open
           </p>
           <span style={{ color: "rgba(201,168,76,0.5)", fontSize: 18, animation: "bounce 1s infinite" }}>↑</span>
@@ -379,7 +379,7 @@ function InvitationPage({ data }: { data: InvitationData }) {
                   background: "linear-gradient(135deg, #c9a84c, #9a7a2e)",
                   color: "#1a1a2e",
                   borderRadius: 50,
-                  fontFamily: "'Montserrat', sans-serif",
+                  fontFamily: "'Lato', sans-serif",
                   fontSize: 13,
                   fontWeight: 700,
                   letterSpacing: "0.08em",
@@ -444,8 +444,8 @@ function CountdownTimer({ targetDate }: { targetDate: string }) {
               {String(timeLeft[unit]).padStart(2, "0")}
             </div>
             <div style={{
-              fontFamily: "'Montserrat', sans-serif",
-              fontSize: 9,
+              fontFamily: "'Lato', sans-serif",
+              fontSize: 10,
               letterSpacing: "0.15em",
               color: "rgba(201,168,76,0.5)",
               textTransform: "uppercase",
