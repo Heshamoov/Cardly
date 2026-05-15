@@ -24,24 +24,52 @@ const ENVELOPE_STYLES = [
     name: "Classic Ivory",
     img: "https://d2xsxph8kpxj0f.cloudfront.net/310419663029094267/cwkwQE2ZytYK5D22sZcWLW/envelope_ivory_gold-c4CMUQ9ZncnqYJ2Gq4huYK.webp",
     sealColor: "#8b1a1a",
+    theme: {
+      bg: "linear-gradient(180deg, #2a1a08 0%, #1a0f05 40%, #0f0a03 100%)",
+      accent: "#c9a84c",
+      accentLight: "#e8c97a",
+      accentDark: "#a07830",
+      text: "#f5e6c8",
+    },
   },
   {
     id: "navy-gold",
     name: "Royal Navy",
     img: "https://d2xsxph8kpxj0f.cloudfront.net/310419663029094267/cwkwQE2ZytYK5D22sZcWLW/envelope_navy_gold-4km7M5i6ZhTiMMte5zY3i4.webp",
     sealColor: "#b8860b",
+    theme: {
+      bg: "linear-gradient(180deg, #1a1a2e 0%, #16213e 40%, #0f3460 100%)",
+      accent: "#c9a84c",
+      accentLight: "#e8c97a",
+      accentDark: "#a07830",
+      text: "#f5e6c8",
+    },
   },
   {
     id: "blush-rose",
     name: "Blush Rose",
     img: "https://d2xsxph8kpxj0f.cloudfront.net/310419663029094267/cwkwQE2ZytYK5D22sZcWLW/envelope_blush_rose-HByHvDtXorH2SVPndKTVVD.webp",
     sealColor: "#b5736a",
+    theme: {
+      bg: "linear-gradient(180deg, #2d1018 0%, #1f0a10 40%, #150608 100%)",
+      accent: "#d4a0a0",
+      accentLight: "#e8c0c0",
+      accentDark: "#b07070",
+      text: "#fdf0f0",
+    },
   },
   {
     id: "black-emerald",
     name: "Midnight Star",
     img: "https://d2xsxph8kpxj0f.cloudfront.net/310419663029094267/cwkwQE2ZytYK5D22sZcWLW/envelope_black_emerald-EEFgnZzoHwUGvwvWXt2WJN.webp",
     sealColor: "#1a5c3a",
+    theme: {
+      bg: "linear-gradient(180deg, #0a1a0f 0%, #081510 40%, #050e08 100%)",
+      accent: "#4caf7a",
+      accentLight: "#7dd4a8",
+      accentDark: "#2e8a55",
+      text: "#e8f5ee",
+    },
   },
 ];
 
@@ -670,21 +698,21 @@ function PreviewWithEnvelope({
             {showInvitation && (
               <button
                 onClick={resetEnvelope}
-                style={{ fontFamily: "'Montserrat', sans-serif", fontSize: 10, letterSpacing: "0.1em", padding: "5px 10px", borderRadius: 20, border: "1px solid rgba(201,168,76,0.5)", background: "transparent", color: "rgba(201,168,76,0.9)", cursor: "pointer", textTransform: "uppercase" }}
+                style={{ fontFamily: "'Lato', sans-serif", fontSize: 10, letterSpacing: "0.1em", padding: "5px 10px", borderRadius: 20, border: "1px solid rgba(201,168,76,0.5)", background: "transparent", color: "rgba(201,168,76,0.9)", cursor: "pointer", textTransform: "uppercase" }}
               >
                 💌 Envelope
               </button>
             )}
             <button
               onClick={onEdit}
-              style={{ fontFamily: "'Montserrat', sans-serif", fontSize: 10, letterSpacing: "0.1em", padding: "5px 10px", borderRadius: 20, border: "1px solid rgba(201,168,76,0.5)", background: "transparent", color: "rgba(201,168,76,0.9)", cursor: "pointer", textTransform: "uppercase" }}
+              style={{ fontFamily: "'Lato', sans-serif", fontSize: 10, letterSpacing: "0.1em", padding: "5px 10px", borderRadius: 20, border: "1px solid rgba(201,168,76,0.5)", background: "transparent", color: "rgba(201,168,76,0.9)", cursor: "pointer", textTransform: "uppercase" }}
             >
               ← Edit
             </button>
             <button
               onClick={onPublish}
               disabled={isPublishing}
-              style={{ fontFamily: "'Montserrat', sans-serif", fontSize: 10, letterSpacing: "0.1em", padding: "5px 12px", borderRadius: 20, background: "linear-gradient(135deg, #c9a84c, #e8d48b)", color: "#1a1a2e", border: "none", cursor: "pointer", fontWeight: 700, textTransform: "uppercase" }}
+              style={{ fontFamily: "'Lato', sans-serif", fontSize: 10, letterSpacing: "0.1em", padding: "5px 12px", borderRadius: 20, background: "linear-gradient(135deg, #c9a84c, #e8d48b)", color: "#1a1a2e", border: "none", cursor: "pointer", fontWeight: 700, textTransform: "uppercase" }}
             >
               {isPublishing ? "⏳" : "Publish"}
             </button>
@@ -733,7 +761,7 @@ function PreviewWithEnvelope({
           {/* Tap hint */}
           {animStage === "idle" && (
             <div className="fs-tap-hint">
-              <p style={{ fontFamily: "'Montserrat', sans-serif", fontSize: 11, letterSpacing: "0.2em", color: "rgba(201,168,76,0.7)", textTransform: "uppercase" }}>
+              <p style={{ fontFamily: "'Lato', sans-serif", fontSize: 11, letterSpacing: "0.2em", color: "rgba(201,168,76,0.7)", textTransform: "uppercase" }}>
                 Tap to open
               </p>
               <span style={{ color: "rgba(201,168,76,0.5)", fontSize: 18 }}>↑</span>
@@ -820,8 +848,20 @@ function PreviewContent({ data }: { data: InvitationData }) {
     data.venueMapQuery ? `https://maps.google.com/maps?q=${encodeURIComponent(data.venueMapQuery)}` : ""
   );
 
+  const envStyle = ENVELOPE_STYLES.find((s) => s.id === data.envelopeStyle) ?? ENVELOPE_STYLES[0];
+  const theme = envStyle.theme;
+
   return (
-    <div className="invitation-page">
+    <div
+      className="invitation-page"
+      style={{
+        background: theme.bg,
+        "--gold": theme.accent,
+        "--gold-light": theme.accentLight,
+        "--gold-dark": theme.accentDark,
+        "--cream": theme.text,
+      } as React.CSSProperties}
+    >
       {/* Hero / Names */}
       {data.sections.names && (
         <div className="invitation-section pt-16 pb-8 stagger">

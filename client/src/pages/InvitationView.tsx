@@ -2,26 +2,30 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { useRoute } from "wouter";
 import { trpc } from "@/lib/trpc";
 
-const ENVELOPE_STYLES: Record<string, { img: string; sealColor: string; name: string }> = {
+const ENVELOPE_STYLES: Record<string, { img: string; sealColor: string; name: string; theme: { bg: string; accent: string; accentLight: string; accentDark: string; text: string } }> = {
   "ivory-gold": {
     img: "https://d2xsxph8kpxj0f.cloudfront.net/310419663029094267/cwkwQE2ZytYK5D22sZcWLW/envelope_ivory_gold-c4CMUQ9ZncnqYJ2Gq4huYK.webp",
     sealColor: "#8b1a1a",
     name: "Classic Ivory",
+    theme: { bg: "linear-gradient(180deg, #2a1a08 0%, #1a0f05 40%, #0f0a03 100%)", accent: "#c9a84c", accentLight: "#e8c97a", accentDark: "#a07830", text: "#f5e6c8" },
   },
   "navy-gold": {
     img: "https://d2xsxph8kpxj0f.cloudfront.net/310419663029094267/cwkwQE2ZytYK5D22sZcWLW/envelope_navy_gold-4km7M5i6ZhTiMMte5zY3i4.webp",
     sealColor: "#b8860b",
     name: "Royal Navy",
+    theme: { bg: "linear-gradient(180deg, #1a1a2e 0%, #16213e 40%, #0f3460 100%)", accent: "#c9a84c", accentLight: "#e8c97a", accentDark: "#a07830", text: "#f5e6c8" },
   },
   "blush-rose": {
     img: "https://d2xsxph8kpxj0f.cloudfront.net/310419663029094267/cwkwQE2ZytYK5D22sZcWLW/envelope_blush_rose-HByHvDtXorH2SVPndKTVVD.webp",
     sealColor: "#b5736a",
     name: "Blush Rose",
+    theme: { bg: "linear-gradient(180deg, #2d1018 0%, #1f0a10 40%, #150608 100%)", accent: "#d4a0a0", accentLight: "#e8c0c0", accentDark: "#b07070", text: "#fdf0f0" },
   },
   "black-emerald": {
     img: "https://d2xsxph8kpxj0f.cloudfront.net/310419663029094267/cwkwQE2ZytYK5D22sZcWLW/envelope_black_emerald-EEFgnZzoHwUGvwvWXt2WJN.webp",
     sealColor: "#1a5c3a",
     name: "Midnight Star",
+    theme: { bg: "linear-gradient(180deg, #0a1a0f 0%, #081510 40%, #050e08 100%)", accent: "#4caf7a", accentLight: "#7dd4a8", accentDark: "#2e8a55", text: "#e8f5ee" },
   },
 };
 
@@ -221,6 +225,7 @@ function FloatingPetals() {
 function InvitationPage({ data }: { data: InvitationData }) {
   const brideName = [data.brideFirstName, data.brideLastName].filter(Boolean).join(" ");
   const groomName = [data.groomFirstName, data.groomLastName].filter(Boolean).join(" ");
+  const envStyle = ENVELOPE_STYLES[(data as { envelopeStyle?: string }).envelopeStyle ?? "ivory-gold"] ?? ENVELOPE_STYLES["ivory-gold"];
 
   const weddingDate = data.date ? new Date(data.date) : null;
   const formattedDate = weddingDate
@@ -252,9 +257,20 @@ function InvitationPage({ data }: { data: InvitationData }) {
   );
 
   const fontScale = (data as { fontScale?: number }).fontScale ?? 1.0;
+  const theme = envStyle.theme;
 
   return (
-    <div className="invitation-page" style={{ "--font-scale": fontScale } as React.CSSProperties}>
+    <div
+      className="invitation-page"
+      style={{
+        background: theme.bg,
+        "--font-scale": fontScale,
+        "--gold": theme.accent,
+        "--gold-light": theme.accentLight,
+        "--gold-dark": theme.accentDark,
+        "--cream": theme.text,
+      } as React.CSSProperties}
+    >
       <div className="mobile-container">
 
         {/* Hero — Names */}
