@@ -67,7 +67,18 @@ function VenueLocationInput({
   data: InvitationData;
   set: (field: keyof InvitationData, value: string) => void;
 }) {
-  const embedUrl = extractGoogleMapsEmbedUrl(data.venueMapQuery);
+  const [debouncedQuery, setDebouncedQuery] = useState(data.venueMapQuery);
+
+  // Debounce the query by 800ms so we don't fire on every keystroke
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedQuery(data.venueMapQuery), 800);
+    return () => clearTimeout(timer);
+  }, [data.venueMapQuery]);
+
+  const { data: resolved, isFetching } = trpc.invitations.resolveMapUrl.useQuery(
+    { url: debouncedQuery },
+    { enabled: !!debouncedQuery.trim() }
+  );
 
   return (
     <div className="space-y-3">
@@ -105,29 +116,40 @@ function VenueLocationInput({
       </div>
 
       {/* Live map preview */}
-      {embedUrl && (
+      {data.venueMapQuery.trim() && (
         <div className="mt-3">
-          <p className="font-sans text-xs opacity-40 mb-2 uppercase tracking-wider">Map Preview</p>
-          <div className="rounded-xl overflow-hidden border border-gold/20">
-            <iframe
-              src={embedUrl}
-              width="100%"
-              height="200"
-              style={{ border: 0 }}
-              loading="lazy"
-              allowFullScreen
-              referrerPolicy="no-referrer-when-downgrade"
-              title="Venue Map Preview"
-            />
-          </div>
-          <a
-            href={`https://maps.google.com/maps?q=${encodeURIComponent(data.venueMapQuery)}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="font-sans text-xs text-gold opacity-50 underline mt-1 inline-block"
-          >
-            Open in Google Maps →
-          </a>
+          <p className="font-sans text-xs opacity-40 mb-2 uppercase tracking-wider">
+            {isFetching ? "Resolving location…" : "Map Preview"}
+          </p>
+          {isFetching && (
+            <div className="flex items-center justify-center h-24 rounded-xl border border-gold/20">
+              <span className="font-sans text-xs opacity-40 animate-pulse">Loading map…</span>
+            </div>
+          )}
+          {!isFetching && resolved && (
+            <>
+              <div className="rounded-xl overflow-hidden border border-gold/20">
+                <iframe
+                  src={resolved.embedUrl}
+                  width="100%"
+                  height="200"
+                  style={{ border: 0 }}
+                  loading="lazy"
+                  allowFullScreen
+                  referrerPolicy="no-referrer-when-downgrade"
+                  title="Venue Map Preview"
+                />
+              </div>
+              <a
+                href={resolved.directionsUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-sans text-xs text-gold opacity-60 underline mt-1 inline-block"
+              >
+                Open in Google Maps →
+              </a>
+            </>
+          )}
         </div>
       )}
     </div>
@@ -543,10 +565,15 @@ function PreviewContent({ data }: { data: InvitationData }) {
       })
     : "";
 
-  const mapSrc = extractGoogleMapsEmbedUrl(data.venueMapQuery);
-  const mapsDirectionsUrl = data.venueMapQuery
-    ? `https://maps.google.com/maps?q=${encodeURIComponent(data.venueMapQuery)}`
-    : "";
+  // Use server-side resolver for accurate map embed (handles short URLs)
+  const { data: resolvedMap } = trpc.invitations.resolveMapUrl.useQuery(
+    { url: data.venueMapQuery },
+    { enabled: !!data.venueMapQuery.trim() }
+  );
+  const mapSrc = resolvedMap?.embedUrl ?? extractGoogleMapsEmbedUrl(data.venueMapQuery);
+  const mapsDirectionsUrl = resolvedMap?.directionsUrl ?? (
+    data.venueMapQuery ? `https://maps.google.com/maps?q=${encodeURIComponent(data.venueMapQuery)}` : ""
+  );
 
   return (
     <div className="invitation-page">

@@ -43,3 +43,8 @@
 - [x] Fix map embed: pasted Google Maps links must correctly render the map in preview
 - [x] Guest view: tapping the map opens Google Maps for directions
 - [x] Persist all builder form data in localStorage (auto-save on every change, restore on page load)
+
+## Short URL Fix
+- [x] Resolve maps.app.goo.gl short links server-side to extract real location coordinates
+- [x] Use resolved coordinates for map embed iframe and Get Directions button
+- [x] Show loading state while resolving, and error state if resolution fails

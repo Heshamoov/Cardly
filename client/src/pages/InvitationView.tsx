@@ -240,28 +240,17 @@ function InvitationPage({ data }: { data: InvitationData }) {
       })
     : "";
 
-  // Smart map embed: handles plain text queries AND pasted Google Maps links
-  function extractMapEmbedUrl(input: string): string {
-    if (!input.trim()) return "";
-    // Detect Google Maps share links and extract the query
-    if (input.includes("google.com/maps") || input.includes("goo.gl/maps") || input.includes("maps.app.goo.gl")) {
-      const qMatch = input.match(/[?&]q=([^&]+)/);
-      const placeMatch = input.match(/place\/([^/@?]+)/);
-      const query = qMatch
-        ? decodeURIComponent(qMatch[1])
-        : placeMatch
-        ? decodeURIComponent(placeMatch[1].replace(/\+/g, " "))
-        : input;
-      return `https://maps.google.com/maps?q=${encodeURIComponent(query)}&output=embed`;
-    }
-    // Plain text search
-    return `https://maps.google.com/maps?q=${encodeURIComponent(input)}&output=embed`;
-  }
-
-  const mapSrc = data.venueMapQuery ? extractMapEmbedUrl(data.venueMapQuery) : "";
-  const directionsUrl = data.venueMapQuery
-    ? `https://maps.google.com/maps?q=${encodeURIComponent(data.venueMapQuery)}`
-    : "";
+  // Use server-side resolver for accurate map embed (handles short URLs like maps.app.goo.gl)
+  const { data: resolvedMap } = trpc.invitations.resolveMapUrl.useQuery(
+    { url: data.venueMapQuery },
+    { enabled: !!data.venueMapQuery?.trim() }
+  );
+  const mapSrc = resolvedMap?.embedUrl ?? (
+    data.venueMapQuery ? `https://maps.google.com/maps?q=${encodeURIComponent(data.venueMapQuery)}&output=embed` : ""
+  );
+  const directionsUrl = resolvedMap?.directionsUrl ?? (
+    data.venueMapQuery ? `https://maps.google.com/maps?q=${encodeURIComponent(data.venueMapQuery)}` : ""
+  );
 
   return (
     <div className="invitation-page">
