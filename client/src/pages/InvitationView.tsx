@@ -251,8 +251,10 @@ function InvitationPage({ data }: { data: InvitationData }) {
     data.venueMapQuery ? `https://maps.google.com/maps?q=${encodeURIComponent(data.venueMapQuery)}` : ""
   );
 
+  const fontScale = (data as { fontScale?: number }).fontScale ?? 1.0;
+
   return (
-    <div className="invitation-page">
+    <div className="invitation-page" style={{ "--font-scale": fontScale } as React.CSSProperties}>
       <div className="mobile-container">
 
         {/* Hero — Names */}

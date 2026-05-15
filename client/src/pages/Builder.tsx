@@ -15,6 +15,7 @@ interface InvitationData {
   message: string;
   sections: Record<string, boolean>;
   envelopeStyle: string;
+  fontScale: number; // 0.8 – 1.4, default 1.0
 }
 
 const ENVELOPE_STYLES = [
@@ -56,6 +57,7 @@ const defaultData: InvitationData = {
   venueMapQuery: "",
   message: "",
   envelopeStyle: "ivory-gold",
+  fontScale: 1.0,
   sections: {
     names: true,
     date: true,
@@ -235,7 +237,7 @@ function loadDraft(): InvitationData {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
       const parsed = JSON.parse(saved) as Partial<InvitationData>;
-      return { ...defaultData, ...parsed, sections: { ...defaultData.sections, ...(parsed.sections ?? {}) } };
+      return { ...defaultData, ...parsed, fontScale: parsed.fontScale ?? 1.0, sections: { ...defaultData.sections, ...(parsed.sections ?? {}) } };
     }
   } catch {
     // ignore parse errors
@@ -265,7 +267,7 @@ export default function Builder() {
     },
   });
 
-  const set = (field: keyof InvitationData, value: string) =>
+  const set = (field: keyof InvitationData, value: string | number) =>
     setData((d) => ({ ...d, [field]: value }));
 
   const toggleSection = (key: string) =>
@@ -350,7 +352,7 @@ export default function Builder() {
 
   // ── Preview mode ──────────────────────────────────────────────────────────
   if (previewing) {
-    return <PreviewWithEnvelope data={data} onEdit={() => setPreviewing(false)} onPublish={handlePublish} isPublishing={createMutation.isPending} />;
+    return <PreviewWithEnvelope data={data} onEdit={() => setPreviewing(false)} onPublish={handlePublish} isPublishing={createMutation.isPending} onFontScaleChange={(scale) => set("fontScale", scale)} />;
   }
 
   // ── Builder mode ──────────────────────────────────────────────────────────
@@ -583,11 +585,13 @@ function PreviewWithEnvelope({
   onEdit,
   onPublish,
   isPublishing,
+  onFontScaleChange,
 }: {
   data: InvitationData;
   onEdit: () => void;
   onPublish: () => void;
   isPublishing: boolean;
+  onFontScaleChange: (scale: number) => void;
 }) {
   const [animStage, setAnimStage] = useState<"idle" | "opening" | "expand" | "done">("idle");
   const [showInvitation, setShowInvitation] = useState(false);
@@ -642,10 +646,26 @@ function PreviewWithEnvelope({
     <div className="builder-page" style={{ position: "relative" }}>
       {/* Floating banner — compact mobile-first bar */}
       <div className="fixed top-0 left-0 right-0 z-50" style={{ background: "rgba(10,8,24,0.88)", borderBottom: "1px solid rgba(201,168,76,0.2)", backdropFilter: "blur(10px)" }}>
-        <div style={{ maxWidth: 480, margin: "0 auto", padding: "6px 12px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <span style={{ fontFamily: "'Montserrat', sans-serif", fontSize: 10, letterSpacing: "0.15em", color: "rgba(201,168,76,0.8)", textTransform: "uppercase" }}>
-            Preview
-          </span>
+        <div style={{ maxWidth: 480, margin: "0 auto", padding: "6px 12px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+          {/* Font size slider — only shown when invitation content is visible */}
+          {showInvitation ? (
+            <div style={{ display: "flex", alignItems: "center", gap: 6, flex: 1 }}>
+              <span style={{ fontFamily: "'Lato', sans-serif", fontSize: 9, letterSpacing: "0.12em", color: "rgba(201,168,76,0.7)", textTransform: "uppercase", whiteSpace: "nowrap" }}>A</span>
+              <input
+                type="range"
+                min={0.8}
+                max={1.4}
+                step={0.05}
+                value={data.fontScale}
+                onChange={(e) => onFontScaleChange(parseFloat(e.target.value))}
+                style={{ flex: 1, accentColor: "#c9a84c", cursor: "pointer", height: 3 }}
+                title={`Font size: ${Math.round(data.fontScale * 100)}%`}
+              />
+              <span style={{ fontFamily: "'Lato', sans-serif", fontSize: 13, letterSpacing: "0.12em", color: "rgba(201,168,76,0.7)", textTransform: "uppercase", whiteSpace: "nowrap" }}>A</span>
+            </div>
+          ) : (
+            <span style={{ fontFamily: "'Lato', sans-serif", fontSize: 10, letterSpacing: "0.15em", color: "rgba(201,168,76,0.8)", textTransform: "uppercase" }}>Preview</span>
+          )}
           <div style={{ display: "flex", gap: 6 }}>
             {showInvitation && (
               <button
@@ -724,7 +744,7 @@ function PreviewWithEnvelope({
 
       {/* Invitation content after envelope opens */}
       {showInvitation && (
-        <div className="mobile-container">
+        <div className="mobile-container" style={{ "--font-scale": data.fontScale } as React.CSSProperties}>
           <PreviewContent data={data} />
         </div>
       )}
