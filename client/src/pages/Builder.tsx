@@ -115,7 +115,7 @@ function VenueLocationInput({
         <label className="font-sans text-xs opacity-50 block mb-1">Venue Name</label>
         <input
           className="wedding-input"
-          placeholder="e.g. Al Rekab Restaurant"
+          placeholder="e.g. The Grand Ballroom"
           value={data.venueName}
           onChange={(e) => set("venueName", e.target.value)}
         />
@@ -124,7 +124,7 @@ function VenueLocationInput({
         <label className="font-sans text-xs opacity-50 block mb-1">Address</label>
         <input
           className="wedding-input"
-          placeholder="e.g. Al Ain, Abu Dhabi, UAE"
+          placeholder="e.g. 123 Rose Avenue, New York, USA"
           value={data.venueAddress}
           onChange={(e) => set("venueAddress", e.target.value)}
         />
@@ -423,7 +423,7 @@ export default function Builder() {
               </label>
               <input
                 className="wedding-input"
-                placeholder="e.g. Hend"
+                placeholder="Bride's first name"
                 value={data.brideFirstName}
                 onChange={(e) => set("brideFirstName", e.target.value)}
               />
@@ -447,7 +447,7 @@ export default function Builder() {
               </label>
               <input
                 className="wedding-input"
-                placeholder="e.g. Sami"
+                placeholder="Groom's first name"
                 value={data.groomFirstName}
                 onChange={(e) => set("groomFirstName", e.target.value)}
               />
@@ -525,7 +525,7 @@ export default function Builder() {
           <textarea
             className="wedding-input"
             rows={3}
-            placeholder="e.g. We joyfully invite you to share in our happiness as we begin our journey together…"
+            placeholder="e.g. We joyfully invite you to share in our happiness as we begin our new journey together…"
             value={data.message}
             onChange={(e) => set("message", e.target.value)}
           />
