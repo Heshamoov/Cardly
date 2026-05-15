@@ -90,6 +90,7 @@ export const invitationsRouter = router({
           venueAddress: z.string(),
           venueMapQuery: z.string(),
           message: z.string().optional(),
+          envelopeStyle: z.string().optional(),
           sections: z.record(z.string(), z.boolean()),
         }),
       })

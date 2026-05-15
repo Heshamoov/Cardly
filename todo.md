@@ -48,3 +48,17 @@
 - [x] Resolve maps.app.goo.gl short links server-side to extract real location coordinates
 - [x] Use resolved coordinates for map embed iframe and Get Directions button
 - [x] Show loading state while resolving, and error state if resolution fails
+
+## Envelope Selection Gallery
+- [x] Generate 4 wedding envelope images with wax candle seals (different styles/colors)
+- [x] Add envelope selection gallery as first section in builder
+- [x] Highlight selected envelope with gold border/glow
+- [x] Store selected envelope style in invitation data
+- [x] Use selected envelope style in guest invitation view
+
+## Smooth Envelope Opening Animation
+- [x] CSS 3D flap lift animation — envelope top flap rotates open with perspective transform
+- [x] Wax seal crack/fade effect during opening
+- [x] Invitation card slides up and out of envelope smoothly
+- [x] Particle/confetti burst on envelope open
+- [x] Full animation sequence: tap → shake (0.35s) → flap lifts (0.85s) → card rises (0.9s) → invitation revealed

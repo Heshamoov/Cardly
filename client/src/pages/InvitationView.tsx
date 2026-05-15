@@ -2,6 +2,29 @@ import { useState, useEffect } from "react";
 import { useRoute } from "wouter";
 import { trpc } from "@/lib/trpc";
 
+const ENVELOPE_STYLES: Record<string, { img: string; sealColor: string; name: string }> = {
+  "ivory-gold": {
+    img: "https://d2xsxph8kpxj0f.cloudfront.net/310419663029094267/cwkwQE2ZytYK5D22sZcWLW/envelope_ivory_gold-c4CMUQ9ZncnqYJ2Gq4huYK.webp",
+    sealColor: "#8b1a1a",
+    name: "Classic Ivory",
+  },
+  "navy-gold": {
+    img: "https://d2xsxph8kpxj0f.cloudfront.net/310419663029094267/cwkwQE2ZytYK5D22sZcWLW/envelope_navy_gold-4km7M5i6ZhTiMMte5zY3i4.webp",
+    sealColor: "#b8860b",
+    name: "Royal Navy",
+  },
+  "blush-rose": {
+    img: "https://d2xsxph8kpxj0f.cloudfront.net/310419663029094267/cwkwQE2ZytYK5D22sZcWLW/envelope_blush_rose-HByHvDtXorH2SVPndKTVVD.webp",
+    sealColor: "#b5736a",
+    name: "Blush Rose",
+  },
+  "black-emerald": {
+    img: "https://d2xsxph8kpxj0f.cloudfront.net/310419663029094267/cwkwQE2ZytYK5D22sZcWLW/envelope_black_emerald-EEFgnZzoHwUGvwvWXt2WJN.webp",
+    sealColor: "#1a5c3a",
+    name: "Midnight Star",
+  },
+};
+
 interface InvitationData {
   brideFirstName: string;
   brideLastName: string;
@@ -14,6 +37,7 @@ interface InvitationData {
   venueMapQuery: string;
   message: string;
   sections: Record<string, boolean>;
+  envelopeStyle?: string;
 }
 
 export default function InvitationView() {
@@ -24,24 +48,37 @@ export default function InvitationView() {
     { enabled: !!slug }
   );
 
-  const [envelopeOpen, setEnvelopeOpen] = useState(false);
+  const [animStage, setAnimStage] = useState<"idle" | "shake" | "opening" | "risen" | "done">("idle");
   const [showInvitation, setShowInvitation] = useState(false);
-  const [particles, setParticles] = useState<{ id: number; x: number; y: number; delay: number }[]>([]);
+  const [particles, setParticles] = useState<{ id: number; x: number; y: number; delay: number; angle: number }[]>([]);
 
   const handleOpenEnvelope = () => {
-    if (envelopeOpen) return;
-    setEnvelopeOpen(true);
-    // Generate sparkle particles
-    setParticles(
-      Array.from({ length: 12 }, (_, i) => ({
-        id: i,
-        x: 30 + Math.random() * 40,
-        y: 20 + Math.random() * 60,
-        delay: Math.random() * 0.5,
-      }))
-    );
-    // Show invitation after card slides out
-    setTimeout(() => setShowInvitation(true), 1400);
+    if (animStage !== "idle") return;
+    // Stage 1: shake (300ms)
+    setAnimStage("shake");
+    setTimeout(() => {
+      // Stage 2: flap opens + card rises (900ms)
+      setAnimStage("opening");
+      // Burst particles
+      setParticles(
+        Array.from({ length: 16 }, (_, i) => ({
+          id: i,
+          x: 20 + Math.random() * 60,
+          y: 10 + Math.random() * 70,
+          delay: Math.random() * 0.4,
+          angle: Math.random() * 360,
+        }))
+      );
+      setTimeout(() => {
+        // Stage 3: card fully risen
+        setAnimStage("risen");
+        setTimeout(() => {
+          // Stage 4: fade to invitation
+          setAnimStage("done");
+          setTimeout(() => setShowInvitation(true), 500);
+        }, 600);
+      }, 900);
+    }, 350);
   };
 
   if (isLoading) {
@@ -76,104 +113,128 @@ export default function InvitationView() {
     .filter(Boolean)
     .join(" ");
 
-  // ── Invitation scrollable page ──────────────────────────────────────────
+  const envStyle = ENVELOPE_STYLES[invData.envelopeStyle ?? "ivory-gold"] ?? ENVELOPE_STYLES["ivory-gold"];
+  const isOpening = animStage === "opening" || animStage === "risen" || animStage === "done";
+  const isShaking = animStage === "shake";
+
+  // ── Invitation scrollable page ───────────────────────────────────────
   if (showInvitation) {
     return <InvitationPage data={invData} />;
   }
 
-  // ── Envelope screen ─────────────────────────────────────────────────────
+  // ── Envelope screen ──────────────────────────────────────────────────────────────────────────────────────
   return (
-    <div className="envelope-scene" onClick={handleOpenEnvelope}>
-      {/* Floating petals background */}
+    <div
+      className="envelope-scene"
+      style={{ opacity: animStage === "done" ? 0 : 1, transition: "opacity 0.5s ease" }}
+      onClick={handleOpenEnvelope}
+    >
       <FloatingPetals />
 
       <div className="text-center animate-fade-in-up mobile-container px-6">
-        {/* Invitation label */}
         <p className="font-sans text-xs uppercase tracking-widest text-gold opacity-60 mb-2">
           You are invited to
         </p>
         <h2 className="font-script text-4xl gold-shimmer mb-8 leading-tight">
-          {brideName && groomName
-            ? `${brideName} & ${groomName}`
-            : "A Wedding Celebration"}
+          {brideName && groomName ? `${brideName} & ${groomName}` : "A Wedding Celebration"}
         </h2>
 
-        {/* Envelope */}
+        {/* Photo envelope with CSS 3D animation */}
         <div
-          className={`envelope-wrapper animate-float mx-auto ${envelopeOpen ? "open" : ""}`}
-          style={{ animationPlayState: envelopeOpen ? "paused" : "running" }}
+          className="photo-envelope mx-auto"
+          style={{
+            animation: isShaking ? "envelopeShake 0.35s ease" : isOpening ? "none" : "float 3s ease-in-out infinite",
+            transform: animStage === "done" ? "scale(0.9)" : "scale(1)",
+            transition: "transform 0.5s ease",
+          }}
         >
-          {/* Card peeking out */}
-          <div className="invitation-card-preview">
-            <div className="card-inner">
-              <p className="font-script text-xl text-gold-dark leading-tight">
+          {/* The envelope photo — flap folds open */}
+          <div className="photo-envelope-img-wrap">
+            <img
+              src={envStyle.img}
+              alt="Wedding Envelope"
+              className="photo-envelope-img"
+              style={{
+                transformOrigin: "top center",
+                transform: isOpening ? "perspective(800px) rotateX(-160deg)" : "perspective(800px) rotateX(0deg)",
+                transition: isOpening ? "transform 0.85s cubic-bezier(0.4,0,0.2,1)" : "none",
+                backfaceVisibility: "hidden",
+              }}
+            />
+            {/* Wax seal — cracks and fades on open */}
+            <div
+              className="photo-wax-seal"
+              style={{
+                background: `radial-gradient(circle at 35% 35%, ${envStyle.sealColor}dd, ${envStyle.sealColor}88)`,
+                opacity: isOpening ? 0 : 1,
+                transform: isOpening ? "scale(1.4) rotate(15deg)" : "scale(1) rotate(0deg)",
+                transition: "opacity 0.4s ease, transform 0.4s ease",
+              }}
+            >
+              <span style={{ fontFamily: "'Great Vibes', cursive", fontSize: 22, color: "rgba(255,255,255,0.9)" }}>
+                {(brideName[0] || "H")}&{(groomName[0] || "S")}
+              </span>
+            </div>
+          </div>
+
+          {/* Invitation card rising from envelope */}
+          <div
+            className="photo-card-rising"
+            style={{
+              transform: isOpening
+                ? animStage === "risen" || animStage === "done"
+                  ? "translateX(-50%) translateY(-130%)"
+                  : "translateX(-50%) translateY(-80%)"
+                : "translateX(-50%) translateY(10%)",
+              opacity: isOpening ? 1 : 0,
+              transition: "transform 0.9s cubic-bezier(0.34,1.56,0.64,1), opacity 0.3s ease",
+              transitionDelay: isOpening ? "0.2s" : "0s",
+            }}
+          >
+            <div className="photo-card-inner">
+              <p style={{ fontFamily: "'Great Vibes', cursive", fontSize: 22, color: "#9a7a2e", lineHeight: 1.3 }}>
                 {brideName || "Bride"}
               </p>
-              <p className="font-serif text-sm italic text-gold-dark opacity-60">
-                &amp;
-              </p>
-              <p className="font-script text-xl text-gold-dark leading-tight">
+              <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 14, color: "#9a7a2e", opacity: 0.6, margin: "4px 0" }}>&amp;</p>
+              <p style={{ fontFamily: "'Great Vibes', cursive", fontSize: 22, color: "#9a7a2e", lineHeight: 1.3 }}>
                 {groomName || "Groom"}
               </p>
             </div>
           </div>
 
-          {/* Envelope body */}
-          <div className="envelope-body">
-            <div className="envelope-left" />
-            <div className="envelope-right" />
-          </div>
-
-          {/* Flap */}
-          <div className="envelope-flap">
-            <div className="envelope-flap-face" />
-            <div className="envelope-flap-back" />
-          </div>
-
-          {/* Wax seal */}
-          {!envelopeOpen && (
-            <div className="wax-seal">
-              {brideName[0] || "H"}&{groomName[0] || "S"}
+          {/* Sparkle burst */}
+          {isOpening && particles.map((p) => (
+            <div
+              key={p.id}
+              style={{
+                position: "absolute",
+                left: `${p.x}%`,
+                top: `${p.y}%`,
+                animationDelay: `${p.delay}s`,
+                animation: "sparkle 0.8s ease forwards",
+                pointerEvents: "none",
+                color: "var(--gold)",
+                fontSize: 14 + Math.random() * 10,
+                transform: `rotate(${p.angle}deg)`,
+              }}
+            >
+              ❆
             </div>
-          )}
-
-          {/* Sparkles on open */}
-          {envelopeOpen &&
-            particles.map((p) => (
-              <div
-                key={p.id}
-                style={{
-                  position: "absolute",
-                  left: `${p.x}%`,
-                  top: `${p.y}%`,
-                  animationDelay: `${p.delay}s`,
-                  pointerEvents: "none",
-                }}
-                className="text-gold text-lg"
-                css-animation="sparkle 0.8s ease forwards"
-              >
-                ✦
-              </div>
-            ))}
+          ))}
         </div>
 
         {/* Tap hint */}
-        {!envelopeOpen && (
+        {animStage === "idle" && (
           <div className="mt-8 animate-fade-in">
-            <p className="font-sans text-xs uppercase tracking-widest opacity-40">
-              Tap to open
-            </p>
+            <p className="font-sans text-xs uppercase tracking-widest opacity-40">Tap to open</p>
             <div className="mt-2 flex justify-center">
               <span className="text-gold opacity-40 text-lg animate-bounce">↑</span>
             </div>
           </div>
         )}
-
-        {envelopeOpen && !showInvitation && (
+        {isOpening && animStage !== "done" && (
           <div className="mt-8 animate-fade-in">
-            <p className="font-script text-2xl gold-shimmer">
-              Opening your invitation…
-            </p>
+            <p className="font-script text-2xl gold-shimmer">Opening your invitation…</p>
           </div>
         )}
       </div>

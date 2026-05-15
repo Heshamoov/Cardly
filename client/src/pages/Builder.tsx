@@ -14,7 +14,35 @@ interface InvitationData {
   venueMapQuery: string;
   message: string;
   sections: Record<string, boolean>;
+  envelopeStyle: string;
 }
+
+const ENVELOPE_STYLES = [
+  {
+    id: "ivory-gold",
+    name: "Classic Ivory",
+    img: "https://d2xsxph8kpxj0f.cloudfront.net/310419663029094267/cwkwQE2ZytYK5D22sZcWLW/envelope_ivory_gold-c4CMUQ9ZncnqYJ2Gq4huYK.webp",
+    sealColor: "#8b1a1a",
+  },
+  {
+    id: "navy-gold",
+    name: "Royal Navy",
+    img: "https://d2xsxph8kpxj0f.cloudfront.net/310419663029094267/cwkwQE2ZytYK5D22sZcWLW/envelope_navy_gold-4km7M5i6ZhTiMMte5zY3i4.webp",
+    sealColor: "#b8860b",
+  },
+  {
+    id: "blush-rose",
+    name: "Blush Rose",
+    img: "https://d2xsxph8kpxj0f.cloudfront.net/310419663029094267/cwkwQE2ZytYK5D22sZcWLW/envelope_blush_rose-HByHvDtXorH2SVPndKTVVD.webp",
+    sealColor: "#b5736a",
+  },
+  {
+    id: "black-emerald",
+    name: "Midnight Star",
+    img: "https://d2xsxph8kpxj0f.cloudfront.net/310419663029094267/cwkwQE2ZytYK5D22sZcWLW/envelope_black_emerald-EEFgnZzoHwUGvwvWXt2WJN.webp",
+    sealColor: "#1a5c3a",
+  },
+];
 
 const defaultData: InvitationData = {
   brideFirstName: "",
@@ -27,6 +55,7 @@ const defaultData: InvitationData = {
   venueAddress: "",
   venueMapQuery: "",
   message: "",
+  envelopeStyle: "ivory-gold",
   sections: {
     names: true,
     date: true,
@@ -368,6 +397,45 @@ export default function Builder() {
           <p className="font-sans text-xs opacity-40 mt-2">
             Fill in your details · Toggle sections on or off · Preview & Publish
           </p>
+        </div>
+
+        {/* ── Envelope Style Picker ── */}
+        <div className="section-card mb-6 animate-fade-in-up">
+          <p className="font-sans text-xs uppercase tracking-widest text-gold opacity-80 mb-4">
+            Choose Your Envelope Style
+          </p>
+          <div className="grid grid-cols-2 gap-3">
+            {ENVELOPE_STYLES.map((style) => (
+              <button
+                key={style.id}
+                type="button"
+                onClick={() => set("envelopeStyle", style.id)}
+                className="relative rounded-xl overflow-hidden border-2 transition-all duration-200 focus:outline-none"
+                style={{
+                  borderColor: data.envelopeStyle === style.id ? "var(--gold)" : "transparent",
+                  boxShadow: data.envelopeStyle === style.id
+                    ? "0 0 0 2px rgba(201,168,76,0.4), 0 8px 24px rgba(0,0,0,0.4)"
+                    : "0 4px 12px rgba(0,0,0,0.3)",
+                  transform: data.envelopeStyle === style.id ? "scale(1.04)" : "scale(1)",
+                }}
+              >
+                <img
+                  src={style.img}
+                  alt={style.name}
+                  className="w-full h-28 object-cover block"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                <div className="absolute bottom-2 left-0 right-0 text-center">
+                  <span className="font-sans text-xs text-cream opacity-90">{style.name}</span>
+                </div>
+                {data.envelopeStyle === style.id && (
+                  <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-gold flex items-center justify-center">
+                    <span className="text-dark text-xs font-bold">✓</span>
+                  </div>
+                )}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* ── Section: Names ── */}

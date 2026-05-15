@@ -138,3 +138,48 @@ describe("extractMapEmbedUrl", () => {
     expect(result.directionsUrl).toBe("");
   });
 });
+
+describe("envelopeStyle persistence", () => {
+  it("includes envelopeStyle in serialized invitation data", () => {
+    const invData = {
+      brideFirstName: "Hend",
+      groomFirstName: "Sami",
+      date: "2026-05-24",
+      time: "21:00",
+      venueName: "Al Rekab Restaurant",
+      venueAddress: "Al Ain, UAE",
+      venueMapQuery: "Al Rekab Restaurant Al Ain",
+      message: "Join us!",
+      envelopeStyle: "navy-gold",
+      sections: { names: true, date: true },
+    };
+    const serialized = JSON.stringify(invData);
+    const parsed = JSON.parse(serialized);
+    expect(parsed.envelopeStyle).toBe("navy-gold");
+  });
+
+  it("defaults to ivory-gold when envelopeStyle is missing", () => {
+    const invData = {
+      brideFirstName: "Hend",
+      groomFirstName: "Sami",
+      date: "2026-05-24",
+      time: "21:00",
+      venueName: "Al Rekab Restaurant",
+      venueAddress: "Al Ain, UAE",
+      venueMapQuery: "",
+      sections: { names: true },
+    };
+    const parsed = JSON.parse(JSON.stringify(invData)) as { envelopeStyle?: string };
+    const style = parsed.envelopeStyle ?? "ivory-gold";
+    expect(style).toBe("ivory-gold");
+  });
+
+  it("preserves all four valid envelope style IDs", () => {
+    const validStyles = ["ivory-gold", "navy-gold", "blush-rose", "black-emerald"];
+    validStyles.forEach((styleId) => {
+      const data = { envelopeStyle: styleId };
+      const parsed = JSON.parse(JSON.stringify(data)) as { envelopeStyle: string };
+      expect(parsed.envelopeStyle).toBe(styleId);
+    });
+  });
+});

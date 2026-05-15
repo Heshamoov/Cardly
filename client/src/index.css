@@ -36,6 +36,9 @@ html, body {
 .text-gold       { color: var(--gold); }
 .text-gold-light { color: var(--gold-light); }
 .border-gold     { border-color: var(--gold); }
+.bg-gold         { background-color: var(--gold); }
+.text-dark       { color: var(--dark); }
+.text-cream      { color: var(--cream); }
 
 /* ─── Envelope ───────────────────────────────── */
 .envelope-scene {
@@ -382,6 +385,75 @@ html, body {
 .stagger > *:nth-child(3) { animation-delay: 0.5s; opacity: 0; }
 .stagger > *:nth-child(4) { animation-delay: 0.7s; opacity: 0; }
 .stagger > *:nth-child(5) { animation-delay: 0.9s; opacity: 0; }
+
+/* ─── Photo Envelope ─────────────────────────── */
+.photo-envelope {
+  position: relative;
+  width: min(300px, 80vw);
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.photo-envelope-img-wrap {
+  position: relative;
+  width: 100%;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow:
+    0 24px 64px rgba(0,0,0,0.7),
+    0 0 0 1px rgba(201,168,76,0.25);
+  perspective: 800px;
+}
+
+.photo-envelope-img {
+  width: 100%;
+  display: block;
+  border-radius: 12px;
+}
+
+.photo-wax-seal {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 3px 12px rgba(0,0,0,0.5), inset 0 1px 3px rgba(255,255,255,0.2);
+  z-index: 20;
+  border: 2px solid rgba(255,255,255,0.2);
+  cursor: pointer;
+}
+
+.photo-card-rising {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 80%;
+  background: linear-gradient(160deg, #fdf8f0, #f5ead8);
+  border-radius: 8px 8px 4px 4px;
+  box-shadow: 0 -4px 20px rgba(0,0,0,0.4);
+  z-index: 5;
+  padding: 16px 12px;
+}
+
+.photo-card-inner {
+  text-align: center;
+}
+
+@keyframes envelopeShake {
+  0%   { transform: translateX(0) rotate(0deg); }
+  15%  { transform: translateX(-6px) rotate(-2deg); }
+  30%  { transform: translateX(6px) rotate(2deg); }
+  45%  { transform: translateX(-4px) rotate(-1deg); }
+  60%  { transform: translateX(4px) rotate(1deg); }
+  75%  { transform: translateX(-2px) rotate(-0.5deg); }
+  100% { transform: translateX(0) rotate(0deg); }
+}
 
 /* ─── Scrollbar ───────────────────────────────── */
 ::-webkit-scrollbar { width: 4px; }
