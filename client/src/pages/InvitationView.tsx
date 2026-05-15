@@ -240,8 +240,27 @@ function InvitationPage({ data }: { data: InvitationData }) {
       })
     : "";
 
-  const mapSrc = data.venueMapQuery
-    ? `https://maps.google.com/maps?q=${encodeURIComponent(data.venueMapQuery)}&output=embed`
+  // Smart map embed: handles plain text queries AND pasted Google Maps links
+  function extractMapEmbedUrl(input: string): string {
+    if (!input.trim()) return "";
+    // Detect Google Maps share links and extract the query
+    if (input.includes("google.com/maps") || input.includes("goo.gl/maps") || input.includes("maps.app.goo.gl")) {
+      const qMatch = input.match(/[?&]q=([^&]+)/);
+      const placeMatch = input.match(/place\/([^/@?]+)/);
+      const query = qMatch
+        ? decodeURIComponent(qMatch[1])
+        : placeMatch
+        ? decodeURIComponent(placeMatch[1].replace(/\+/g, " "))
+        : input;
+      return `https://maps.google.com/maps?q=${encodeURIComponent(query)}&output=embed`;
+    }
+    // Plain text search
+    return `https://maps.google.com/maps?q=${encodeURIComponent(input)}&output=embed`;
+  }
+
+  const mapSrc = data.venueMapQuery ? extractMapEmbedUrl(data.venueMapQuery) : "";
+  const directionsUrl = data.venueMapQuery
+    ? `https://maps.google.com/maps?q=${encodeURIComponent(data.venueMapQuery)}`
     : "";
 
   return (
@@ -370,14 +389,15 @@ function InvitationPage({ data }: { data: InvitationData }) {
                 title="Venue Map"
               />
             </div>
-            {data.venueMapQuery && (
+            {directionsUrl && (
               <a
-                href={`https://maps.google.com/maps?q=${encodeURIComponent(data.venueMapQuery)}`}
+                href={directionsUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-block mt-3 font-sans text-xs text-gold opacity-60 underline"
+                className="btn-gold w-full mt-4 text-center block"
+                style={{ textDecoration: 'none' }}
               >
-                Open in Google Maps →
+                📍 Get Directions
               </a>
             )}
           </div>

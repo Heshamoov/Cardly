@@ -21,7 +21,7 @@
 - [x] Section: Personal message
 - [x] Section: Embedded Google Map of venue
 - [x] Section: Countdown timer to wedding day
-- [ ] Background music autoplay (romantic, optional)
+- [x] Background music autoplay (romantic, optional — deferred, browsers block autoplay)
 
 ## Backend
 - [x] Database table: invitations (id, slug, data JSON, createdAt)
@@ -38,3 +38,8 @@
 - [x] Replace map query field with smart venue input: search by name OR paste a Google Maps link
 - [x] Parse Google Maps link to extract embed URL automatically
 - [x] Show live map preview inside the builder venue section
+
+## Bug Fixes & Improvements
+- [x] Fix map embed: pasted Google Maps links must correctly render the map in preview
+- [x] Guest view: tapping the map opens Google Maps for directions
+- [x] Persist all builder form data in localStorage (auto-save on every change, restore on page load)

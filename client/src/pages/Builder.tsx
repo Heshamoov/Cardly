@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 
@@ -177,12 +177,36 @@ function SectionCard({
   );
 }
 
+const STORAGE_KEY = "lovenote-builder-draft";
+
+function loadDraft(): InvitationData {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      const parsed = JSON.parse(saved) as Partial<InvitationData>;
+      return { ...defaultData, ...parsed, sections: { ...defaultData.sections, ...(parsed.sections ?? {}) } };
+    }
+  } catch {
+    // ignore parse errors
+  }
+  return defaultData;
+}
+
 export default function Builder() {
-  const [data, setData] = useState<InvitationData>(defaultData);
+  const [data, setData] = useState<InvitationData>(loadDraft);
   const [previewing, setPreviewing] = useState(false);
   const [publishedSlug, setPublishedSlug] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [, navigate] = useLocation();
+
+  // Auto-save to localStorage on every change
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    } catch {
+      // ignore storage errors
+    }
+  }, [data]);
 
   const createMutation = trpc.invitations.create.useMutation({
     onSuccess: ({ slug }) => {
@@ -262,6 +286,7 @@ export default function Builder() {
               onClick={() => {
                 setPublishedSlug(null);
                 setData(defaultData);
+                try { localStorage.removeItem(STORAGE_KEY); } catch {}
               }}
             >
               Create another invitation
@@ -518,8 +543,9 @@ function PreviewContent({ data }: { data: InvitationData }) {
       })
     : "";
 
-  const mapSrc = data.venueMapQuery
-    ? `https://maps.google.com/maps?q=${encodeURIComponent(data.venueMapQuery)}&output=embed`
+  const mapSrc = extractGoogleMapsEmbedUrl(data.venueMapQuery);
+  const mapsDirectionsUrl = data.venueMapQuery
+    ? `https://maps.google.com/maps?q=${encodeURIComponent(data.venueMapQuery)}`
     : "";
 
   return (
@@ -641,6 +667,17 @@ function PreviewContent({ data }: { data: InvitationData }) {
               title="Venue Map"
             />
           </div>
+          {mapsDirectionsUrl && (
+            <a
+              href={mapsDirectionsUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn-gold w-full mt-4 text-center block"
+              style={{ textDecoration: 'none' }}
+            >
+              📍 Get Directions
+            </a>
+          )}
         </div>
       )}
 
