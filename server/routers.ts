@@ -1,4 +1,5 @@
 import { COOKIE_NAME } from "@shared/const";
+// v2 — full invitations router with get, create, resolveMapUrl
 import { invitationsRouter } from "./invitationsRouter";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
