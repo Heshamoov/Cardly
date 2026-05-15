@@ -62,3 +62,11 @@
 - [x] Invitation card slides up and out of envelope smoothly
 - [x] Particle/confetti burst on envelope open
 - [x] Full animation sequence: tap → shake (0.35s) → flap lifts (0.85s) → card rises (0.9s) → invitation revealed
+
+## Envelope Redesign
+- [x] Full-screen envelope (100vw x 100vh)
+- [x] Top flap opens upward (rotateX from bottom edge), bottom flap opens downward
+- [x] 2-second slow realistic opening animation
+- [x] Background expands after opening to reveal invitation from the top
+- [x] Scroll to top when invitation is revealed
+- [x] Real printed font feel — letterpress-style serif/script throughout invitation

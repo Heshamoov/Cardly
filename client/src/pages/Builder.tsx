@@ -589,168 +589,162 @@ function PreviewWithEnvelope({
   onPublish: () => void;
   isPublishing: boolean;
 }) {
-  const [animStage, setAnimStage] = useState<"idle" | "shake" | "opening" | "risen" | "done">("idle");
+  const [animStage, setAnimStage] = useState<"idle" | "shake" | "opening" | "expand" | "done">("idle");
   const [showInvitation, setShowInvitation] = useState(false);
-  const [particles, setParticles] = useState<{ id: number; x: number; y: number; delay: number; angle: number }[]>([]);
 
   const brideName = [data.brideFirstName, data.brideLastName].filter(Boolean).join(" ");
   const groomName = [data.groomFirstName, data.groomLastName].filter(Boolean).join(" ");
   const envStyle = ENVELOPE_STYLES.find((s) => s.id === (data.envelopeStyle ?? "ivory-gold")) ?? ENVELOPE_STYLES[0];
-  const isOpening = animStage === "opening" || animStage === "risen" || animStage === "done";
+  const isOpening = animStage === "opening" || animStage === "expand" || animStage === "done";
   const isShaking = animStage === "shake";
+  const isExpanding = animStage === "expand";
 
   const handleOpenEnvelope = () => {
     if (animStage !== "idle") return;
+    // Stage 1: shake (400ms)
     setAnimStage("shake");
     setTimeout(() => {
+      // Stage 2: both flaps open + card rises (2000ms)
       setAnimStage("opening");
-      setParticles(
-        Array.from({ length: 16 }, (_, i) => ({
-          id: i,
-          x: 20 + Math.random() * 60,
-          y: 10 + Math.random() * 70,
-          delay: Math.random() * 0.4,
-          angle: Math.random() * 360,
-        }))
-      );
       setTimeout(() => {
-        setAnimStage("risen");
+        // Stage 3: expand overlay (700ms)
+        setAnimStage("expand");
         setTimeout(() => {
           setAnimStage("done");
-          setTimeout(() => setShowInvitation(true), 500);
-        }, 600);
-      }, 900);
-    }, 350);
+          setShowInvitation(true);
+          requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: "instant" }));
+        }, 700);
+      }, 2000);
+    }, 400);
   };
 
   const resetEnvelope = () => {
     setAnimStage("idle");
     setShowInvitation(false);
-    setParticles([]);
   };
 
   return (
-    <div className="builder-page">
-      <div className="mobile-container">
-        {/* Sticky banner */}
-        <div className="sticky top-0 z-50 bg-dark-mid border-b border-gold/20 px-4 py-3 flex items-center justify-between">
-          <span className="font-sans text-xs uppercase tracking-widest text-gold">
-            👁 Preview
-          </span>
-          <div className="flex gap-2">
-            {showInvitation && (
-              <button className="btn-outline text-xs py-2 px-3" onClick={resetEnvelope}>
-                💌 Envelope
+    <div className="builder-page" style={{ position: "relative" }}>
+      {/* Floating banner — always on top of envelope and invitation */}
+      <div className="fixed top-0 left-0 right-0 z-50" style={{ background: "rgba(10,8,24,0.92)", borderBottom: "1px solid rgba(201,168,76,0.25)", backdropFilter: "blur(8px)" }}>
+        <div className="mobile-container">
+          <div className="px-4 py-3 flex items-center justify-between">
+            <span className="font-sans text-xs uppercase tracking-widest text-gold">
+              👁 Preview
+            </span>
+            <div className="flex gap-2">
+              {showInvitation && (
+                <button className="btn-outline text-xs py-2 px-3" onClick={resetEnvelope}>
+                  💌 Envelope
+                </button>
+              )}
+              <button className="btn-outline text-xs py-2 px-3" onClick={onEdit}>
+                ← Edit
               </button>
-            )}
-            <button className="btn-outline text-xs py-2 px-3" onClick={onEdit}>
-              ← Edit
-            </button>
-            <button className="btn-gold text-xs py-2 px-3" onClick={onPublish} disabled={isPublishing}>
-              {isPublishing ? "Publishing…" : "Publish"}
-            </button>
+              <button className="btn-gold text-xs py-2 px-3" onClick={onPublish} disabled={isPublishing}>
+                {isPublishing ? "Publishing…" : "Publish"}
+              </button>
+            </div>
           </div>
         </div>
+      </div>
 
-        {/* Envelope scene */}
+      <div className="mobile-container">
+
+        {/* Envelope scene — full screen */}
         {!showInvitation && (
           <div
             className="envelope-scene"
-            style={{ opacity: animStage === "done" ? 0 : 1, transition: "opacity 0.5s ease" }}
+            style={{ opacity: isExpanding ? 0 : 1, transition: "opacity 0.5s ease" }}
             onClick={handleOpenEnvelope}
           >
             <FloatingPetals />
-            <div className="text-center animate-fade-in-up mobile-container px-6">
-              <p className="font-sans text-xs uppercase tracking-widest text-gold opacity-60 mb-2">You are invited to</p>
-              <h2 className="font-script text-4xl gold-shimmer mb-8 leading-tight">
+
+            {/* Expand overlay — covers screen before showing invitation */}
+            {isExpanding && (
+              <div
+                className="fs-expand-overlay expanding"
+                style={{ pointerEvents: "none" }}
+              />
+            )}
+
+            {/* Top text */}
+            <div className="absolute top-0 left-0 right-0 flex flex-col items-center pt-10 px-6 z-10 pointer-events-none">
+              <p className="invite-label text-gold opacity-60 mb-2">You are invited to</p>
+              <h2 className="font-script gold-shimmer leading-tight text-center" style={{ fontSize: "clamp(2rem, 8vw, 3.5rem)" }}>
                 {brideName && groomName ? `${brideName} & ${groomName}` : "A Wedding Celebration"}
               </h2>
+            </div>
+
+            {/* Full-screen envelope */}
+            <div
+              className="fs-envelope"
+              style={{ animation: isShaking ? "envelopeShake 0.4s ease" : "none" }}
+            >
+              <img src={envStyle.img} alt="Wedding Envelope" className="fs-envelope-img" draggable={false} />
+
+              {/* Top flap — opens upward (hinge at bottom edge, rotates backward) */}
               <div
-                className="photo-envelope mx-auto"
+                className="fs-flap-top"
                 style={{
-                  animation: isShaking ? "envelopeShake 0.35s ease" : isOpening ? "none" : "float 3s ease-in-out infinite",
-                  transform: animStage === "done" ? "scale(0.9)" : "scale(1)",
-                  transition: "transform 0.5s ease",
+                  transform: isOpening ? "perspective(1200px) rotateX(175deg)" : "perspective(1200px) rotateX(0deg)",
+                  transition: isOpening ? "transform 2s cubic-bezier(0.4, 0, 0.2, 1)" : "none",
                 }}
               >
-                <div className="photo-envelope-img-wrap">
-                  <img
-                    src={envStyle.img}
-                    alt="Wedding Envelope"
-                    className="photo-envelope-img"
-                    style={{
-                      transformOrigin: "top center",
-                      transform: isOpening ? "perspective(800px) rotateX(-160deg)" : "perspective(800px) rotateX(0deg)",
-                      transition: isOpening ? "transform 0.85s cubic-bezier(0.4,0,0.2,1)" : "none",
-                      backfaceVisibility: "hidden",
-                    }}
-                  />
-                  <div
-                    className="photo-wax-seal"
-                    style={{
-                      background: `radial-gradient(circle at 35% 35%, ${envStyle.sealColor}dd, ${envStyle.sealColor}88)`,
-                      opacity: isOpening ? 0 : 1,
-                      transform: isOpening ? "scale(1.4) rotate(15deg)" : "scale(1) rotate(0deg)",
-                      transition: "opacity 0.4s ease, transform 0.4s ease",
-                    }}
-                  >
-                    <span style={{ fontFamily: "'Great Vibes', cursive", fontSize: 22, color: "rgba(255,255,255,0.9)" }}>
-                      {(brideName[0] || "H")}&{(groomName[0] || "S")}
-                    </span>
-                  </div>
-                </div>
-                <div
-                  className="photo-card-rising"
-                  style={{
-                    transform: isOpening
-                      ? animStage === "risen" || animStage === "done"
-                        ? "translateX(-50%) translateY(-130%)"
-                        : "translateX(-50%) translateY(-80%)"
-                      : "translateX(-50%) translateY(10%)",
-                    opacity: isOpening ? 1 : 0,
-                    transition: "transform 0.9s cubic-bezier(0.34,1.56,0.64,1), opacity 0.3s ease",
-                    transitionDelay: isOpening ? "0.2s" : "0s",
-                  }}
-                >
-                  <div className="photo-card-inner">
-                    <p style={{ fontFamily: "'Great Vibes', cursive", fontSize: 22, color: "#9a7a2e", lineHeight: 1.3 }}>{brideName || "Bride"}</p>
-                    <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 14, color: "#9a7a2e", opacity: 0.6, margin: "4px 0" }}>&amp;</p>
-                    <p style={{ fontFamily: "'Great Vibes', cursive", fontSize: 22, color: "#9a7a2e", lineHeight: 1.3 }}>{groomName || "Groom"}</p>
-                  </div>
-                </div>
-                {isOpening && particles.map((p) => (
-                  <div
-                    key={p.id}
-                    style={{
-                      position: "absolute",
-                      left: `${p.x}%`,
-                      top: `${p.y}%`,
-                      animationDelay: `${p.delay}s`,
-                      animation: "sparkle 0.8s ease forwards",
-                      pointerEvents: "none",
-                      color: "var(--gold)",
-                      fontSize: 14 + Math.random() * 10,
-                      transform: `rotate(${p.angle}deg)`,
-                    }}
-                  >
-                    ❆
-                  </div>
-                ))}
+                <div className="fs-flap-top-face" />
               </div>
-              {animStage === "idle" && (
-                <div className="mt-8 animate-fade-in">
-                  <p className="font-sans text-xs uppercase tracking-widest opacity-40">Tap to open</p>
-                  <div className="mt-2 flex justify-center">
-                    <span className="text-gold opacity-40 text-lg animate-bounce">↑</span>
-                  </div>
+
+              {/* Bottom flap — opens downward (hinge at top edge, rotates forward) */}
+              <div
+                className="fs-flap-bottom"
+                style={{
+                  transform: isOpening ? "perspective(1200px) rotateX(-175deg)" : "perspective(1200px) rotateX(0deg)",
+                  transition: isOpening ? "transform 2s cubic-bezier(0.4, 0, 0.2, 1)" : "none",
+                }}
+              >
+                <div className="fs-flap-bottom-face" />
+              </div>
+
+              {/* Wax seal */}
+              <div
+                className="fs-wax-seal"
+                style={{
+                  background: `radial-gradient(circle at 35% 35%, ${envStyle.sealColor}ee, ${envStyle.sealColor}88)`,
+                  opacity: isOpening ? 0 : 1,
+                  transform: isOpening ? "translate(-50%, -50%) scale(1.6) rotate(20deg)" : "translate(-50%, -50%) scale(1) rotate(0deg)",
+                  transition: "opacity 0.5s ease 0.2s, transform 0.5s ease 0.2s",
+                }}
+              >
+                <span style={{ fontFamily: "'Great Vibes', cursive", fontSize: 26, color: "rgba(255,255,255,0.92)" }}>
+                  {(brideName[0] || "H")}&{(groomName[0] || "S")}
+                </span>
+              </div>
+
+              {/* Card rising */}
+              <div
+                className={`fs-card-rising ${isOpening ? "risen" : ""}`}
+                style={{ transitionDelay: isOpening ? "0.3s" : "0s" }}
+              >
+                <div style={{ textAlign: "center" }}>
+                  <p style={{ fontFamily: "'Great Vibes', cursive", fontSize: 28, color: "#9a7a2e", lineHeight: 1.3 }}>{brideName || "Bride"}</p>
+                  <p style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: "italic", fontSize: 18, color: "#9a7a2e", opacity: 0.6, margin: "6px 0" }}>&amp;</p>
+                  <p style={{ fontFamily: "'Great Vibes', cursive", fontSize: 28, color: "#9a7a2e", lineHeight: 1.3 }}>{groomName || "Groom"}</p>
                 </div>
-              )}
-              {isOpening && animStage !== "done" && (
-                <div className="mt-8 animate-fade-in">
-                  <p className="font-script text-2xl gold-shimmer">Opening your invitation…</p>
-                </div>
-              )}
+              </div>
             </div>
+
+            {/* Tap hint */}
+            {animStage === "idle" && (
+              <div className="absolute bottom-0 left-0 right-0 flex flex-col items-center pb-10 pointer-events-none animate-fade-in">
+                <p className="invite-label opacity-40 mb-2">Tap to open</p>
+                <span className="text-gold opacity-40 text-2xl animate-bounce">↑</span>
+              </div>
+            )}
+            {animStage === "opening" && (
+              <div className="absolute bottom-0 left-0 right-0 flex flex-col items-center pb-10 pointer-events-none animate-fade-in">
+                <p className="font-script text-2xl gold-shimmer">Opening your invitation…</p>
+              </div>
+            )}
           </div>
         )}
 

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRoute } from "wouter";
 import { trpc } from "@/lib/trpc";
 
@@ -40,6 +40,10 @@ interface InvitationData {
   envelopeStyle?: string;
 }
 
+// ── Animation stages ──────────────────────────────────────────────────────────
+// idle → shake (0.4s) → opening (2s: flaps open + card rises) → expand (0.7s) → done
+type AnimStage = "idle" | "shake" | "opening" | "expand" | "done";
+
 export default function InvitationView() {
   const [, params] = useRoute("/invite/:slug");
   const slug = params?.slug ?? "";
@@ -48,37 +52,35 @@ export default function InvitationView() {
     { enabled: !!slug }
   );
 
-  const [animStage, setAnimStage] = useState<"idle" | "shake" | "opening" | "risen" | "done">("idle");
+  const [animStage, setAnimStage] = useState<AnimStage>("idle");
   const [showInvitation, setShowInvitation] = useState(false);
-  const [particles, setParticles] = useState<{ id: number; x: number; y: number; delay: number; angle: number }[]>([]);
+  const invitationRef = useRef<HTMLDivElement>(null);
 
   const handleOpenEnvelope = () => {
     if (animStage !== "idle") return;
-    // Stage 1: shake (300ms)
+
+    // Stage 1: shake (400ms)
     setAnimStage("shake");
     setTimeout(() => {
-      // Stage 2: flap opens + card rises (900ms)
+      // Stage 2: both flaps open + card rises (2000ms)
       setAnimStage("opening");
-      // Burst particles
-      setParticles(
-        Array.from({ length: 16 }, (_, i) => ({
-          id: i,
-          x: 20 + Math.random() * 60,
-          y: 10 + Math.random() * 70,
-          delay: Math.random() * 0.4,
-          angle: Math.random() * 360,
-        }))
-      );
       setTimeout(() => {
-        // Stage 3: card fully risen
-        setAnimStage("risen");
+        // Stage 3: expand overlay covers screen (700ms)
+        setAnimStage("expand");
         setTimeout(() => {
-          // Stage 4: fade to invitation
+          // Stage 4: show invitation, scroll to top
           setAnimStage("done");
-          setTimeout(() => setShowInvitation(true), 500);
-        }, 600);
-      }, 900);
-    }, 350);
+          setShowInvitation(true);
+          // Scroll to top after a brief frame
+          requestAnimationFrame(() => {
+            window.scrollTo({ top: 0, behavior: "instant" });
+            if (invitationRef.current) {
+              invitationRef.current.scrollTop = 0;
+            }
+          });
+        }, 700);
+      }, 2000);
+    }, 400);
   };
 
   if (isLoading) {
@@ -106,138 +108,147 @@ export default function InvitationView() {
   }
 
   const invData = invitation.data as InvitationData;
-  const brideName = [invData.brideFirstName, invData.brideLastName]
-    .filter(Boolean)
-    .join(" ");
-  const groomName = [invData.groomFirstName, invData.groomLastName]
-    .filter(Boolean)
-    .join(" ");
-
+  const brideName = [invData.brideFirstName, invData.brideLastName].filter(Boolean).join(" ");
+  const groomName = [invData.groomFirstName, invData.groomLastName].filter(Boolean).join(" ");
   const envStyle = ENVELOPE_STYLES[invData.envelopeStyle ?? "ivory-gold"] ?? ENVELOPE_STYLES["ivory-gold"];
-  const isOpening = animStage === "opening" || animStage === "risen" || animStage === "done";
-  const isShaking = animStage === "shake";
 
-  // ── Invitation scrollable page ───────────────────────────────────────
+  const isOpening = animStage === "opening" || animStage === "expand" || animStage === "done";
+  const isShaking = animStage === "shake";
+  const isExpanding = animStage === "expand";
+
+  // ── Invitation page (after envelope opens) ───────────────────────────────
   if (showInvitation) {
-    return <InvitationPage data={invData} />;
+    return (
+      <div ref={invitationRef}>
+        <InvitationPage data={invData} />
+      </div>
+    );
   }
 
-  // ── Envelope screen ──────────────────────────────────────────────────────────────────────────────────────
+  // ── Envelope scene ────────────────────────────────────────────────────────
   return (
     <div
       className="envelope-scene"
-      style={{ opacity: animStage === "done" ? 0 : 1, transition: "opacity 0.5s ease" }}
       onClick={handleOpenEnvelope}
+      style={{ opacity: isExpanding ? 0 : 1, transition: "opacity 0.5s ease" }}
     >
       <FloatingPetals />
 
-      <div className="text-center animate-fade-in-up mobile-container px-6">
-        <p className="font-sans text-xs uppercase tracking-widest text-gold opacity-60 mb-2">
-          You are invited to
-        </p>
-        <h2 className="font-script text-4xl gold-shimmer mb-8 leading-tight">
+      {/* Expand overlay — slides up to cover screen before showing invitation */}
+      {isExpanding && (
+        <div
+          className="fs-expand-overlay expanding"
+          style={{ pointerEvents: "none" }}
+        />
+      )}
+
+      {/* Top text */}
+      <div className="absolute top-0 left-0 right-0 flex flex-col items-center pt-10 px-6 z-10 pointer-events-none">
+        <p className="invite-label text-gold opacity-60 mb-2">You are invited to</p>
+        <h2
+          className="font-script gold-shimmer leading-tight text-center"
+          style={{ fontSize: "clamp(2rem, 8vw, 3.5rem)" }}
+        >
           {brideName && groomName ? `${brideName} & ${groomName}` : "A Wedding Celebration"}
         </h2>
+      </div>
 
-        {/* Photo envelope with CSS 3D animation */}
+      {/* Full-screen envelope */}
+      <div
+        className="fs-envelope"
+        style={{
+          animation: isShaking ? "envelopeShake 0.4s ease" : "none",
+        }}
+      >
+        {/* Envelope photo */}
+        <img
+          src={envStyle.img}
+          alt="Wedding Envelope"
+          className="fs-envelope-img"
+          draggable={false}
+        />
+
+        {/* Top flap — opens upward (hinge at bottom edge, rotates backward) */}
         <div
-          className="photo-envelope mx-auto"
+          className="fs-flap-top"
           style={{
-            animation: isShaking ? "envelopeShake 0.35s ease" : isOpening ? "none" : "float 3s ease-in-out infinite",
-            transform: animStage === "done" ? "scale(0.9)" : "scale(1)",
-            transition: "transform 0.5s ease",
+            transform: isOpening
+              ? "perspective(1200px) rotateX(175deg)"
+              : "perspective(1200px) rotateX(0deg)",
+            transition: isOpening
+              ? "transform 2s cubic-bezier(0.4, 0, 0.2, 1)"
+              : "none",
           }}
         >
-          {/* The envelope photo — flap folds open */}
-          <div className="photo-envelope-img-wrap">
-            <img
-              src={envStyle.img}
-              alt="Wedding Envelope"
-              className="photo-envelope-img"
-              style={{
-                transformOrigin: "top center",
-                transform: isOpening ? "perspective(800px) rotateX(-160deg)" : "perspective(800px) rotateX(0deg)",
-                transition: isOpening ? "transform 0.85s cubic-bezier(0.4,0,0.2,1)" : "none",
-                backfaceVisibility: "hidden",
-              }}
-            />
-            {/* Wax seal — cracks and fades on open */}
-            <div
-              className="photo-wax-seal"
-              style={{
-                background: `radial-gradient(circle at 35% 35%, ${envStyle.sealColor}dd, ${envStyle.sealColor}88)`,
-                opacity: isOpening ? 0 : 1,
-                transform: isOpening ? "scale(1.4) rotate(15deg)" : "scale(1) rotate(0deg)",
-                transition: "opacity 0.4s ease, transform 0.4s ease",
-              }}
-            >
-              <span style={{ fontFamily: "'Great Vibes', cursive", fontSize: 22, color: "rgba(255,255,255,0.9)" }}>
-                {(brideName[0] || "H")}&{(groomName[0] || "S")}
-              </span>
-            </div>
-          </div>
-
-          {/* Invitation card rising from envelope */}
-          <div
-            className="photo-card-rising"
-            style={{
-              transform: isOpening
-                ? animStage === "risen" || animStage === "done"
-                  ? "translateX(-50%) translateY(-130%)"
-                  : "translateX(-50%) translateY(-80%)"
-                : "translateX(-50%) translateY(10%)",
-              opacity: isOpening ? 1 : 0,
-              transition: "transform 0.9s cubic-bezier(0.34,1.56,0.64,1), opacity 0.3s ease",
-              transitionDelay: isOpening ? "0.2s" : "0s",
-            }}
-          >
-            <div className="photo-card-inner">
-              <p style={{ fontFamily: "'Great Vibes', cursive", fontSize: 22, color: "#9a7a2e", lineHeight: 1.3 }}>
-                {brideName || "Bride"}
-              </p>
-              <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 14, color: "#9a7a2e", opacity: 0.6, margin: "4px 0" }}>&amp;</p>
-              <p style={{ fontFamily: "'Great Vibes', cursive", fontSize: 22, color: "#9a7a2e", lineHeight: 1.3 }}>
-                {groomName || "Groom"}
-              </p>
-            </div>
-          </div>
-
-          {/* Sparkle burst */}
-          {isOpening && particles.map((p) => (
-            <div
-              key={p.id}
-              style={{
-                position: "absolute",
-                left: `${p.x}%`,
-                top: `${p.y}%`,
-                animationDelay: `${p.delay}s`,
-                animation: "sparkle 0.8s ease forwards",
-                pointerEvents: "none",
-                color: "var(--gold)",
-                fontSize: 14 + Math.random() * 10,
-                transform: `rotate(${p.angle}deg)`,
-              }}
-            >
-              ❆
-            </div>
-          ))}
+          <div className="fs-flap-top-face" />
         </div>
 
-        {/* Tap hint */}
-        {animStage === "idle" && (
-          <div className="mt-8 animate-fade-in">
-            <p className="font-sans text-xs uppercase tracking-widest opacity-40">Tap to open</p>
-            <div className="mt-2 flex justify-center">
-              <span className="text-gold opacity-40 text-lg animate-bounce">↑</span>
-            </div>
+        {/* Bottom flap — opens downward (hinge at top edge, rotates forward) */}
+        <div
+          className="fs-flap-bottom"
+          style={{
+            transform: isOpening
+              ? "perspective(1200px) rotateX(-175deg)"
+              : "perspective(1200px) rotateX(0deg)",
+            transition: isOpening
+              ? "transform 2s cubic-bezier(0.4, 0, 0.2, 1)"
+              : "none",
+          }}
+        >
+          <div className="fs-flap-bottom-face" />
+        </div>
+
+        {/* Wax seal — cracks and flies off */}
+        <div
+          className="fs-wax-seal"
+          style={{
+            background: `radial-gradient(circle at 35% 35%, ${envStyle.sealColor}ee, ${envStyle.sealColor}88)`,
+            opacity: isOpening ? 0 : 1,
+            transform: isOpening
+              ? "translate(-50%, -50%) scale(1.6) rotate(20deg)"
+              : "translate(-50%, -50%) scale(1) rotate(0deg)",
+            transition: "opacity 0.5s ease 0.2s, transform 0.5s ease 0.2s",
+          }}
+        >
+          <span style={{ fontFamily: "'Great Vibes', cursive", fontSize: 26, color: "rgba(255,255,255,0.92)" }}>
+            {(brideName[0] || "H")}&{(groomName[0] || "S")}
+          </span>
+        </div>
+
+        {/* Invitation card rising from inside */}
+        <div
+          className={`fs-card-rising ${isOpening ? "risen" : ""}`}
+          style={{
+            transitionDelay: isOpening ? "0.3s" : "0s",
+          }}
+        >
+          <div style={{ textAlign: "center" }}>
+            <p style={{ fontFamily: "'Great Vibes', cursive", fontSize: 28, color: "#9a7a2e", lineHeight: 1.3 }}>
+              {brideName || "Bride"}
+            </p>
+            <p style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: "italic", fontSize: 18, color: "#9a7a2e", opacity: 0.6, margin: "6px 0" }}>
+              &amp;
+            </p>
+            <p style={{ fontFamily: "'Great Vibes', cursive", fontSize: 28, color: "#9a7a2e", lineHeight: 1.3 }}>
+              {groomName || "Groom"}
+            </p>
           </div>
-        )}
-        {isOpening && animStage !== "done" && (
-          <div className="mt-8 animate-fade-in">
-            <p className="font-script text-2xl gold-shimmer">Opening your invitation…</p>
-          </div>
-        )}
+        </div>
       </div>
+
+      {/* Tap hint */}
+      {animStage === "idle" && (
+        <div className="absolute bottom-0 left-0 right-0 flex flex-col items-center pb-10 pointer-events-none animate-fade-in">
+          <p className="invite-label opacity-40 mb-2">Tap to open</p>
+          <span className="text-gold opacity-40 text-2xl animate-bounce">↑</span>
+        </div>
+      )}
+
+      {animStage === "opening" && (
+        <div className="absolute bottom-0 left-0 right-0 flex flex-col items-center pb-10 pointer-events-none animate-fade-in">
+          <p className="font-script text-2xl gold-shimmer">Opening your invitation…</p>
+        </div>
+      )}
     </div>
   );
 }
@@ -276,12 +287,8 @@ function FloatingPetals() {
 
 // ── Full Invitation Page ──────────────────────────────────────────────────────
 function InvitationPage({ data }: { data: InvitationData }) {
-  const brideName = [data.brideFirstName, data.brideLastName]
-    .filter(Boolean)
-    .join(" ");
-  const groomName = [data.groomFirstName, data.groomLastName]
-    .filter(Boolean)
-    .join(" ");
+  const brideName = [data.brideFirstName, data.brideLastName].filter(Boolean).join(" ");
+  const groomName = [data.groomFirstName, data.groomLastName].filter(Boolean).join(" ");
 
   const weddingDate = data.date ? new Date(data.date) : null;
   const formattedDate = weddingDate
@@ -301,7 +308,6 @@ function InvitationPage({ data }: { data: InvitationData }) {
       })
     : "";
 
-  // Use server-side resolver for accurate map embed (handles short URLs like maps.app.goo.gl)
   const { data: resolvedMap } = trpc.invitations.resolveMapUrl.useQuery(
     { url: data.venueMapQuery },
     { enabled: !!data.venueMapQuery?.trim() }
@@ -316,26 +322,26 @@ function InvitationPage({ data }: { data: InvitationData }) {
   return (
     <div className="invitation-page">
       <div className="mobile-container">
-        {/* Hero */}
+
+        {/* Hero — Names */}
         {data.sections?.names !== false && (
           <div className="invitation-section pt-16 pb-8 stagger">
-            {/* Decorative top border */}
             <div className="flex justify-center mb-6">
               <div className="w-24 h-px bg-gradient-to-r from-transparent via-gold to-transparent" />
             </div>
 
-            <p className="font-sans text-xs uppercase tracking-widest text-gold opacity-60 animate-fade-in-up">
+            <p className="invite-label text-gold opacity-60 animate-fade-in-up">
               Together with their families
             </p>
 
             <div className="my-8 animate-fade-in-up">
-              <h1 className="font-script text-7xl gold-shimmer leading-tight">
+              <h1 className="font-script gold-shimmer leading-tight" style={{ fontSize: "clamp(3rem, 14vw, 5rem)" }}>
                 {brideName || "Bride"}
               </h1>
-              <p className="font-serif text-3xl italic text-gold opacity-50 my-3">
+              <p className="font-fell text-3xl text-gold opacity-50 my-3" style={{ fontStyle: "italic" }}>
                 &amp;
               </p>
-              <h1 className="font-script text-7xl gold-shimmer leading-tight">
+              <h1 className="font-script gold-shimmer leading-tight" style={{ fontSize: "clamp(3rem, 14vw, 5rem)" }}>
                 {groomName || "Groom"}
               </h1>
             </div>
@@ -344,10 +350,10 @@ function InvitationPage({ data }: { data: InvitationData }) {
               <span className="text-gold text-xl">✦</span>
             </div>
 
-            <p className="font-serif italic text-lg opacity-60 mt-5 animate-fade-in-up">
+            <p className="invite-detail opacity-60 mt-5 animate-fade-in-up">
               request the pleasure of your company
             </p>
-            <p className="font-serif italic text-lg opacity-60 animate-fade-in-up">
+            <p className="invite-detail opacity-60 animate-fade-in-up">
               at their wedding celebration
             </p>
           </div>
@@ -359,22 +365,16 @@ function InvitationPage({ data }: { data: InvitationData }) {
             <div className="divider-ornament mb-5">
               <span className="text-gold">❧</span>
             </div>
-            <p className="font-sans text-xs uppercase tracking-widest text-gold opacity-50 mb-3">
-              Date
-            </p>
-            <p className="font-serif text-2xl text-cream leading-relaxed">
-              {formattedDate}
-            </p>
+            <p className="invite-label text-gold opacity-50 mb-3">Date</p>
+            <p className="invite-heading text-cream text-2xl leading-relaxed">{formattedDate}</p>
           </div>
         )}
 
         {/* Time */}
         {data.sections?.time !== false && formattedTime && (
           <div className="invitation-section py-6">
-            <p className="font-sans text-xs uppercase tracking-widest text-gold opacity-50 mb-3">
-              Time
-            </p>
-            <p className="font-serif text-2xl text-cream">{formattedTime}</p>
+            <p className="invite-label text-gold opacity-50 mb-3">Time</p>
+            <p className="invite-heading text-cream text-2xl">{formattedTime}</p>
           </div>
         )}
 
@@ -384,14 +384,10 @@ function InvitationPage({ data }: { data: InvitationData }) {
             <div className="divider-ornament mb-5">
               <span className="text-gold">❧</span>
             </div>
-            <p className="font-sans text-xs uppercase tracking-widest text-gold opacity-50 mb-3">
-              Venue
-            </p>
-            <p className="font-serif text-2xl text-cream">{data.venueName}</p>
+            <p className="invite-label text-gold opacity-50 mb-3">Venue</p>
+            <p className="invite-heading text-cream text-2xl">{data.venueName}</p>
             {data.venueAddress && (
-              <p className="font-sans text-sm opacity-40 mt-2">
-                {data.venueAddress}
-              </p>
+              <p className="invite-detail opacity-40 mt-2">{data.venueAddress}</p>
             )}
           </div>
         )}
@@ -402,7 +398,7 @@ function InvitationPage({ data }: { data: InvitationData }) {
             <div className="divider-ornament mb-5">
               <span className="text-gold">✦</span>
             </div>
-            <p className="font-serif italic text-xl opacity-75 leading-relaxed">
+            <p className="invite-detail text-xl opacity-75 leading-relaxed">
               "{data.message}"
             </p>
           </div>
@@ -424,9 +420,7 @@ function InvitationPage({ data }: { data: InvitationData }) {
             <div className="divider-ornament mb-5">
               <span className="text-gold">❧</span>
             </div>
-            <p className="font-sans text-xs uppercase tracking-widest text-gold opacity-50 mb-5">
-              Find Us
-            </p>
+            <p className="invite-label text-gold opacity-50 mb-5">Find Us</p>
             <div className="rounded-2xl overflow-hidden border border-gold/20 shadow-2xl">
               <iframe
                 src={mapSrc}
@@ -445,7 +439,7 @@ function InvitationPage({ data }: { data: InvitationData }) {
                 target="_blank"
                 rel="noopener noreferrer"
                 className="btn-gold w-full mt-4 text-center block"
-                style={{ textDecoration: 'none' }}
+                style={{ textDecoration: "none" }}
               >
                 📍 Get Directions
               </a>
@@ -458,18 +452,15 @@ function InvitationPage({ data }: { data: InvitationData }) {
           <div className="divider-ornament mb-6">
             <span className="text-gold text-xl">✦</span>
           </div>
-          <p className="font-script text-4xl gold-shimmer">
-            {[data.brideFirstName, "&", data.groomFirstName]
-              .filter(Boolean)
-              .join(" ") || "Bride & Groom"}
+          <p className="font-script gold-shimmer" style={{ fontSize: "clamp(2rem, 10vw, 3rem)" }}>
+            {[data.brideFirstName, "&", data.groomFirstName].filter(Boolean).join(" ") || "Bride & Groom"}
           </p>
-          <p className="font-sans text-xs opacity-25 mt-4 tracking-widest uppercase">
-            With love
-          </p>
+          <p className="invite-label opacity-25 mt-4">With love</p>
           <div className="flex justify-center mt-6">
             <div className="w-16 h-px bg-gradient-to-r from-transparent via-gold to-transparent" />
           </div>
         </div>
+
       </div>
     </div>
   );
@@ -495,9 +486,7 @@ function CountdownTimer({ targetDate }: { targetDate: string }) {
 
   return (
     <div>
-      <p className="font-sans text-xs uppercase tracking-widest text-gold opacity-50 mb-5">
-        Counting Down
-      </p>
+      <p className="invite-label text-gold opacity-50 mb-5">Counting Down</p>
       <div className="flex justify-center gap-3">
         {[
           { value: timeLeft.days, label: "Days" },
@@ -507,14 +496,12 @@ function CountdownTimer({ targetDate }: { targetDate: string }) {
         ].map(({ value, label }) => (
           <div key={label} className="text-center">
             <div
-              className="font-serif text-3xl text-gold font-light flex items-center justify-center border border-gold/25 rounded-xl"
+              className="invite-heading text-3xl text-gold font-light flex items-center justify-center border border-gold/25 rounded-xl"
               style={{ width: 64, height: 64 }}
             >
               {String(value).padStart(2, "0")}
             </div>
-            <p className="font-sans text-xs opacity-35 mt-2 uppercase tracking-wider">
-              {label}
-            </p>
+            <p className="invite-label opacity-35 mt-2">{label}</p>
           </div>
         ))}
       </div>
