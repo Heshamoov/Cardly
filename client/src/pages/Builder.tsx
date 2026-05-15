@@ -644,55 +644,56 @@ function PreviewWithEnvelope({
         </div>
       </div>
 
-      <div className="mobile-container">
+      {/* Envelope scene — OUTSIDE mobile-container so it fills the full screen */}
+      {!showInvitation && (
+        <div className="envelope-scene" onClick={handleOpenEnvelope}>
 
-        {/* Envelope scene — full screen split-photo animation */}
-        {!showInvitation && (
-          <div className="envelope-scene" onClick={handleOpenEnvelope}>
-
-            {/* Top half — shows top 50% of envelope photo, slides UP */}
-            <div className={`fs-half fs-half-top ${isOpen ? "open" : ""}`}>
-              <img src={envStyle.img} alt="" className="fs-half-img" draggable={false} />
-            </div>
-
-            {/* Bottom half — shows bottom 50% of envelope photo, slides DOWN */}
-            <div className={`fs-half fs-half-bottom ${isOpen ? "open" : ""}`}>
-              <img src={envStyle.img} alt="" className="fs-half-img" draggable={false} />
-            </div>
-
-            {/* Wax seal — centered at the split line */}
-            <div
-              className={`fs-wax-seal ${isOpen ? "open" : ""}`}
-              style={{
-                background: `radial-gradient(circle at 35% 35%, ${envStyle.sealColor}ee, ${envStyle.sealColor}88)`,
-              }}
-            >
-              <span style={{ fontFamily: "'Great Vibes', cursive", fontSize: 24, color: "rgba(255,255,255,0.92)", lineHeight: 1 }}>
-                {(brideName[0] || "H")}&amp;{(groomName[0] || "S")}
-              </span>
-            </div>
-
-            {/* Expand overlay — cream fade before invitation appears */}
-            <div
-              className="fs-expand-overlay"
-              style={{ opacity: isExpanding ? 1 : 0, transition: "opacity 0.5s ease" }}
-            />
-
-            {/* Tap hint */}
-            {animStage === "idle" && (
-              <div className="fs-tap-hint">
-                <p style={{ fontFamily: "'Montserrat', sans-serif", fontSize: 11, letterSpacing: "0.2em", color: "rgba(201,168,76,0.7)", textTransform: "uppercase" }}>
-                  Tap to open
-                </p>
-                <span style={{ color: "rgba(201,168,76,0.5)", fontSize: 18 }}>↑</span>
-              </div>
-            )}
+          {/* Top half — shows top 50% of envelope photo, slides UP */}
+          <div className={`fs-half fs-half-top ${isOpen ? "open" : ""}`}>
+            <img src={envStyle.img} alt="" className="fs-half-img" draggable={false} />
           </div>
-        )}
 
-        {/* Invitation content after envelope opens */}
-        {showInvitation && <PreviewContent data={data} />}
-      </div>
+          {/* Bottom half — shows bottom 50% of envelope photo, slides DOWN */}
+          <div className={`fs-half fs-half-bottom ${isOpen ? "open" : ""}`}>
+            <img src={envStyle.img} alt="" className="fs-half-img" draggable={false} />
+          </div>
+
+          {/* Wax seal — centered at the split line */}
+          <div
+            className={`fs-wax-seal ${isOpen ? "open" : ""}`}
+            style={{
+              background: `radial-gradient(circle at 35% 35%, ${envStyle.sealColor}ee, ${envStyle.sealColor}88)`,
+            }}
+          >
+            <span style={{ fontFamily: "'Great Vibes', cursive", fontSize: 24, color: "rgba(255,255,255,0.92)", lineHeight: 1 }}>
+              {(brideName[0] || "H")}&amp;{(groomName[0] || "S")}
+            </span>
+          </div>
+
+          {/* Expand overlay — dark navy fade before invitation appears */}
+          <div
+            className="fs-expand-overlay"
+            style={{ opacity: isExpanding ? 1 : 0, transition: "opacity 0.5s ease" }}
+          />
+
+          {/* Tap hint */}
+          {animStage === "idle" && (
+            <div className="fs-tap-hint">
+              <p style={{ fontFamily: "'Montserrat', sans-serif", fontSize: 11, letterSpacing: "0.2em", color: "rgba(201,168,76,0.7)", textTransform: "uppercase" }}>
+                Tap to open
+              </p>
+              <span style={{ color: "rgba(201,168,76,0.5)", fontSize: 18 }}>↑</span>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Invitation content after envelope opens */}
+      {showInvitation && (
+        <div className="mobile-container">
+          <PreviewContent data={data} />
+        </div>
+      )}
     </div>
   );
 }

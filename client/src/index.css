@@ -46,7 +46,7 @@ html, body {
   inset: 0;
   background: linear-gradient(180deg, #1a1a2e 0%, #16213e 40%, #0f3460 100%);
   overflow: hidden;
-  z-index: 0;
+  z-index: 10;
   cursor: pointer;
   user-select: none;
   -webkit-tap-highlight-color: transparent;
