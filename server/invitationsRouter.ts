@@ -144,8 +144,22 @@ export const invitationsRouter = router({
 
       let parsedData;
       try {
-        parsedData = JSON.parse(result[0].data);
-        // Guard against "[object Object]" stored by old buggy code
+        const rawData = result[0].data as unknown;
+        // drizzle-orm with mysql2 may auto-parse JSON text columns into objects,
+        // or return them as strings or Buffers depending on the driver version.
+        if (typeof rawData === "object" && rawData !== null && !Buffer.isBuffer(rawData)) {
+          // Already parsed by drizzle
+          parsedData = rawData;
+        } else {
+          // Convert Buffer or string to string, then parse
+          const dataStr = Buffer.isBuffer(rawData)
+            ? (rawData as Buffer).toString("utf8")
+            : String(rawData);
+          parsedData = JSON.parse(dataStr);
+          if (typeof parsedData === "string") {
+            parsedData = JSON.parse(parsedData);
+          }
+        }
         if (typeof parsedData !== "object" || parsedData === null) return null;
       } catch {
         return null;
