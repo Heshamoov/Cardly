@@ -1,0 +1,43 @@
+{
+  "build_command": "pnpm run build",
+  "capabilities": [
+    "server",
+    "db",
+    "user"
+  ],
+  "dev_command": "pnpm run dev",
+  "env_vars": {
+    "DATABASE_URL": "mysql://2bhwhUTWxWaU7ZU.root:UF5PI8pv8o4tHLgd1fX4@gateway06.us-east-1.prod.aws.tidbcloud.com:4000/cwkwQE2ZytYK5D22sZcWLW?ssl={\"rejectUnauthorized\":true}"
+  },
+  "experiments": [
+    "no_db_push"
+  ],
+  "git_remote": {
+    "repo_url": "s3://vida-prod-gitrepo/webdev-git/310419663029094267/cwkwQE2ZytYK5D22sZcWLW",
+    "access_key_id": "ASIAZV3A2ECZKGYZYIBB",
+    "secret_access_key": "F1Lh9/IjJ95BEh/GupjcNTZM31R69ipgcxG3Parq",
+    "session_token": "IQoJb3JpZ2luX2VjELT//////////wEaCXVzLWVhc3QtMSJIMEYCIQCNDrnEFalYBUsh/6lsdJZ6B63t0avRCLG+3oe4m3KpGwIhAOOOZY/FCXHL+WflMuACy9vtBvoAEKZRjasxg5jf9OIMKvYDCHwQBBoMNjY1Mzg2MDk4ODY2IgwwQjrGM84wiZ6POQkq0wNTfs27sW/P9DsnsDt3ZpiH/XsT4gDD+2nC6bE2zxGghJ/ax6yuWlncAQkw+GTbsahhObC8NdGm/JsdSfqxX1iCaplUxH3GkdMugRbPKl1TDlTWoHwtwBDUM4pPlaZIP7XLPjssagM3lh9wrG4HupNAy9acnMbplnopxMYyH+fR0BQSQPv3u44xNeOiqdcExVdqm0TwL8QFV/Mi6bmB0G97zjePv5qMcS85wf0H7SLXPqOm4FrlFGHcomguM46CVOwoN64s8kDlf91fl6eI8jMceNeCSFxjkZDxKzwftqe9PaBrVMdlQDd2rNENLTK/3JCRYDEIvBLkbQPL5tAIdSV4y0uo96n1RsRzgNPrr7+LxCSPkvvHy0Sb70C0u5fc+N663Fxvzafv4qvDk/l8w6fXwHBFQG8JmW4KFdnbIG2R63CuEaoJ/wwRUJEoXfEAdopbOs4XyyGfdgmE59FQQFpvNSvhYu5eqMUTnVaNu5n1V1lpaV6tH7jnSbA3VmdVIwTZqGHD8s2YcqRmAr5JiGawOaZiwBPvBsjidNQ6HnZElPUo4gw0QZK4zjJkvuNufVYdlJ1W1LDROKT9VX7e3fBLXR/GA6Vo5Fd5IbGxYWjQMhlHojDh453QBjqcATbD4D79ugL+p61q7nR2K2I579rDFP3G6tYc5eEceSisPo6oXYYqFNOedcubcxYhd6onp2jmj8ZqBpvpgtdIfkjuVRuG7TcWWjV0hTlylGx5vEHlEM62IG25lhIBuzMd5ik8611mPY/KswJYEHTrYRNsNjuLBZQy++uVKMwGa+fWQxW2lOaVFdYE/KGJCDyXufAcoAN2Wwmi+i+ZBA==",
+    "expiration": "2026-05-16T07:20:01.000Z"
+  },
+  "name": "wedding-invite-builder",
+  "path": "/home/ubuntu/wedding-invite-builder",
+  "port": 3000,
+  "secrets": {
+    "BUILT_IN_FORGE_API_KEY": "Uo9QiiZRwdHrnrFDkWhGaT",
+    "BUILT_IN_FORGE_API_URL": "https://forge.manus.ai",
+    "JWT_SECRET": "87sLPUgbBptTvPR5ULsZbR",
+    "OAUTH_SERVER_URL": "https://api.manus.im",
+    "OWNER_NAME": "hesham alatrash",
+    "OWNER_OPEN_ID": "jMW9QPknopPRiRnw6M3ifT",
+    "VITE_ANALYTICS_ENDPOINT": "https://manus-analytics.com",
+    "VITE_ANALYTICS_WEBSITE_ID": "368e4fed-c65f-478c-a968-d9439dbb036a",
+    "VITE_APP_ID": "cwkwQE2ZytYK5D22sZcWLW",
+    "VITE_APP_LOGO": "",
+    "VITE_APP_TITLE": "LoveNote — Digital Wedding Invitation Builder",
+    "VITE_FRONTEND_FORGE_API_KEY": "hyfeBXbfjyFwRdhzXH2fXB",
+    "VITE_FRONTEND_FORGE_API_URL": "https://forge.manus.ai",
+    "VITE_OAUTH_PORTAL_URL": "https://manus.im"
+  },
+  "template_id": "web-db-user",
+  "test_command": "pnpm test"
+}
