@@ -44,7 +44,7 @@ html, body {
 .envelope-scene {
   position: fixed;
   inset: 0;
-  background: #fdf8f0;
+  background: linear-gradient(180deg, #1a1a2e 0%, #16213e 40%, #0f3460 100%);
   overflow: hidden;
   z-index: 0;
   cursor: pointer;
@@ -172,7 +172,7 @@ html, body {
 .fs-expand-overlay {
   position: fixed;
   inset: 0;
-  background: #fdf8f0;
+  background: linear-gradient(180deg, #1a1a2e 0%, #16213e 40%, #0f3460 100%);
   z-index: 100;
   opacity: 0;
   pointer-events: none;
