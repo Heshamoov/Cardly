@@ -80,7 +80,7 @@
 - [x] Same animation in both Builder preview and InvitationView guest page
 
 ## Mobile-First Fixes
-- [ ] Envelope fills full screen on mobile — use object-fit: cover on the image halves
-- [ ] Top banner buttons compact and mobile-friendly (smaller, icon-only or short labels)
-- [ ] TAP TO OPEN hint visible inside the envelope viewport
-- [ ] Envelope image covers full portrait screen without cropping the wax seal
+- [x] Envelope fills full screen on mobile — use object-fit: cover on the image halves
+- [x] Top banner buttons compact and mobile-friendly (smaller, icon-only or short labels)
+- [x] TAP TO OPEN hint visible inside the envelope viewport
+- [x] Envelope image covers full portrait screen without cropping the wax seal
