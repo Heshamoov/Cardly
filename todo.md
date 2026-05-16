@@ -150,3 +150,7 @@
 - [x] Make invitations.delete a protectedProcedure (owner-only, not public)
 - [x] Also delete related rsvp_responses when an invitation is deleted
 - [x] Replace remaining "RSVP" labels in Builder (viewRsvp button text, i18n keys) with "Guest Responses" / "استجابات الضيوف"
+
+## Fix: Guest Responses Dashboard Arabic Toggle
+- [x] Add EN/AR language toggle to Guest Responses dashboard header
+- [x] Translate all dashboard labels to Arabic (RTL layout when AR selected)
