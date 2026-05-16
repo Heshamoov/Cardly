@@ -264,26 +264,30 @@ function SectionCard({
   sections,
   onToggle,
   children,
+  hiddenText,
+  labelFont,
 }: {
   label: string;
   sectionKey: string;
   sections: Record<string, boolean>;
   onToggle: (key: string) => void;
   children: React.ReactNode;
+  hiddenText?: string;
+  labelFont?: string;
 }) {
   const isOn = sections[sectionKey];
   return (
     <div className={`section-card ${!isOn ? "hidden-section" : ""}`}>
       <div className="flex items-center justify-between mb-3 pr-12">
-        <span className="font-sans text-xs uppercase tracking-widest text-gold opacity-80">
+        <span className="font-sans text-xs uppercase tracking-widest text-gold opacity-80" style={labelFont ? { fontFamily: labelFont, textTransform: "none" } : {}}>
           {label}
         </span>
         <Toggle on={isOn} onToggle={() => onToggle(sectionKey)} />
       </div>
       {isOn && <div>{children}</div>}
       {!isOn && (
-        <p className="font-sans text-xs text-center opacity-40 mt-1">
-          Section hidden — toggle to show
+        <p className="font-sans text-xs text-center opacity-40 mt-1" style={labelFont ? { fontFamily: labelFont } : {}}>
+          {hiddenText ?? "Section hidden — toggle to show"}
         </p>
       )}
     </div>
@@ -330,6 +334,8 @@ export default function Builder() {
 
   const set = (field: keyof InvitationData, value: string | number) =>
     setData((d) => ({ ...d, [field]: value }));
+
+  const ft = translations[formLang]; // form translations
 
   const toggleSection = (key: string) =>
     setData((d) => ({
@@ -422,14 +428,14 @@ export default function Builder() {
       <div className="mobile-container px-4 pt-8">
         {/* Header */}
         <div className="text-center mb-8 animate-fade-in-up">
-          <p className="font-sans text-xs uppercase tracking-widest text-gold mb-1 opacity-70">
-            Create Your
+          <p className="font-sans text-xs uppercase tracking-widest text-gold mb-1 opacity-70" style={formLang === "ar" ? { fontFamily: ARABIC_FONT } : {}}>
+            {ft.createYour}
           </p>
-          <h1 className="font-script text-5xl gold-shimmer">
-            Wedding Invitation
+          <h1 className="font-script text-5xl gold-shimmer" style={formLang === "ar" ? { fontFamily: ARABIC_FONT, fontSize: "2.5rem" } : {}}>
+            {ft.weddingInvitation}
           </h1>
-          <p className="font-sans text-xs opacity-40 mt-2">
-            Fill in your details · Toggle sections on or off · Preview & Publish
+          <p className="font-sans text-xs opacity-40 mt-2" style={formLang === "ar" ? { fontFamily: ARABIC_FONT } : {}}>
+            {ft.builderSubtitle}
           </p>
           {/* Language toggle */}
           <div style={{ display: "flex", justifyContent: "center", gap: 8, marginTop: 16 }}>
@@ -483,22 +489,22 @@ export default function Builder() {
               background: "transparent",
               border: "1px solid rgba(201,168,76,0.4)",
               borderRadius: 20,
-              fontFamily: "'Lato', sans-serif",
+              fontFamily: formLang === "ar" ? ARABIC_FONT : "'Lato', sans-serif",
               fontSize: 11,
               color: "rgba(201,168,76,0.8)",
-              letterSpacing: "0.1em",
+              letterSpacing: formLang === "ar" ? "0" : "0.1em",
               textDecoration: "none",
-              textTransform: "uppercase" as const,
+              textTransform: formLang === "ar" ? "none" as const : "uppercase" as const,
             }}
           >
-            📊 View RSVP Responses
+            📊 {ft.viewRsvp}
           </a>
         </div>
 
         {/* ── Envelope Style Picker ── */}
         <div className="section-card mb-6 animate-fade-in-up">
-          <p className="font-sans text-xs uppercase tracking-widest text-gold opacity-80 mb-4">
-            Choose Your Envelope Style
+          <p className="font-sans text-xs uppercase tracking-widest text-gold opacity-80 mb-4" style={formLang === "ar" ? { fontFamily: ARABIC_FONT, textTransform: "none" } : {}}>
+            {ft.chooseEnvelope}
           </p>
           <div className="grid grid-cols-2 gap-3">
             {ENVELOPE_STYLES.map((style) => (
@@ -536,10 +542,12 @@ export default function Builder() {
 
         {/* ── Section: Names ── */}
         <SectionCard
-          label={formLang === "ar" ? "أسماء العروسين" : "Bride & Groom Names"}
+          label={ft.sectionNames}
           sectionKey="names"
           sections={data.sections}
           onToggle={toggleSection}
+          hiddenText={formLang === "ar" ? "القسم مخفي — اضغط للتفعيل" : undefined}
+          labelFont={formLang === "ar" ? ARABIC_FONT : undefined}
         >
           {formLang === "en" ? (
             <>
@@ -592,13 +600,15 @@ export default function Builder() {
 
         {/* ── Section: Date ── */}
         <SectionCard
-          label="Wedding Date"
+          label={ft.sectionDate}
           sectionKey="date"
           sections={data.sections}
           onToggle={toggleSection}
+          hiddenText={formLang === "ar" ? "القسم مخفي — اضغط للتفعيل" : undefined}
+          labelFont={formLang === "ar" ? ARABIC_FONT : undefined}
         >
-          <label className="font-sans text-xs opacity-50 block mb-1">
-            Date
+          <label className="font-sans text-xs opacity-50 block mb-1" style={formLang === "ar" ? { fontFamily: ARABIC_FONT } : {}}>
+            {ft.date}
           </label>
           <input
             className="wedding-input"
@@ -610,13 +620,15 @@ export default function Builder() {
 
         {/* ── Section: Time ── */}
         <SectionCard
-          label="Start Time"
+          label={ft.sectionTime}
           sectionKey="time"
           sections={data.sections}
           onToggle={toggleSection}
+          hiddenText={formLang === "ar" ? "القسم مخفي — اضغط للتفعيل" : undefined}
+          labelFont={formLang === "ar" ? ARABIC_FONT : undefined}
         >
-          <label className="font-sans text-xs opacity-50 block mb-1">
-            Time
+          <label className="font-sans text-xs opacity-50 block mb-1" style={formLang === "ar" ? { fontFamily: ARABIC_FONT } : {}}>
+            {ft.time}
           </label>
           <input
             className="wedding-input"
@@ -628,10 +640,12 @@ export default function Builder() {
 
         {/* ── Section: Venue ── */}
         <SectionCard
-          label={formLang === "ar" ? "مكان الحفل" : "Venue & Location"}
+          label={ft.sectionVenue}
           sectionKey="venue"
           sections={data.sections}
           onToggle={toggleSection}
+          hiddenText={formLang === "ar" ? "القسم مخفي — اضغط للتفعيل" : undefined}
+          labelFont={formLang === "ar" ? ARABIC_FONT : undefined}
         >
           {formLang === "en" ? (
             <VenueLocationInput data={data} set={set} />
@@ -652,10 +666,12 @@ export default function Builder() {
 
         {/* ── Section: Message ── */}
         <SectionCard
-          label={formLang === "ar" ? "رسالة شخصية" : "Personal Message"}
+          label={ft.sectionMessage}
           sectionKey="message"
           sections={data.sections}
           onToggle={toggleSection}
+          hiddenText={formLang === "ar" ? "القسم مخفي — اضغط للتفعيل" : undefined}
+          labelFont={formLang === "ar" ? ARABIC_FONT : undefined}
         >
           {formLang === "en" ? (
             <>
@@ -672,26 +688,29 @@ export default function Builder() {
 
         {/* ── Section: Map ── */}
         <SectionCard
-          label="Venue Map"
+          label={ft.sectionMap}
           sectionKey="map"
           sections={data.sections}
           onToggle={toggleSection}
+          hiddenText={formLang === "ar" ? "القسم مخفي — اضغط للتفعيل" : undefined}
+          labelFont={formLang === "ar" ? ARABIC_FONT : undefined}
         >
-          <p className="font-sans text-xs opacity-50">
-            An interactive Google Map of your venue will appear in the
-            invitation.
+          <p className="font-sans text-xs opacity-50" style={formLang === "ar" ? { fontFamily: ARABIC_FONT } : {}}>
+            {formLang === "ar" ? "ستظهر خريطة Google تفاعلية لمكان الحفل في الدعوة." : "An interactive Google Map of your venue will appear in the invitation."}
           </p>
         </SectionCard>
 
         {/* ── Section: Countdown ── */}
         <SectionCard
-          label="Countdown Timer"
+          label={ft.sectionCountdown}
           sectionKey="countdown"
           sections={data.sections}
           onToggle={toggleSection}
+          hiddenText={formLang === "ar" ? "القسم مخفي — اضغط للتفعيل" : undefined}
+          labelFont={formLang === "ar" ? ARABIC_FONT : undefined}
         >
-          <p className="font-sans text-xs opacity-50">
-            A live countdown to your wedding day will appear in the invitation.
+          <p className="font-sans text-xs opacity-50" style={formLang === "ar" ? { fontFamily: ARABIC_FONT } : {}}>
+            {formLang === "ar" ? "سيظهر عداد تنازلي حتى يوم زفافكم في الدعوة." : "A live countdown to your wedding day will appear in the invitation."}
           </p>
         </SectionCard>
 
@@ -700,15 +719,19 @@ export default function Builder() {
           <button
             className="btn-gold w-full"
             onClick={() => setPreviewing(true)}
+            style={formLang === "ar" ? { fontFamily: ARABIC_FONT } : {}}
           >
-            Preview Invitation →
+            {formLang === "ar" ? "معاينة الدعوة ←" : "Preview Invitation →"}
           </button>
           <button
             className="btn-outline w-full"
             onClick={handlePublish}
             disabled={createMutation.isPending}
+            style={formLang === "ar" ? { fontFamily: ARABIC_FONT } : {}}
           >
-            {createMutation.isPending ? "Publishing…" : "Skip Preview & Publish"}
+            {createMutation.isPending
+              ? (formLang === "ar" ? "جارٍ النشر…" : "Publishing…")
+              : (formLang === "ar" ? "تخطي المعاينة والنشر" : "Skip Preview & Publish")}
           </button>
         </div>
       </div>

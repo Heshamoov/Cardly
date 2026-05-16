@@ -130,3 +130,12 @@
 - [x] Update PreviewContent in Builder to show Arabic content when lang=ar
 - [x] Update InvitationPage in InvitationView to show Arabic content when lang=ar
 - [x] Arabic fields are optional — fall back to English if Arabic not filled in
+
+## Bug Fix: Builder Form Static Labels Not Translated to Arabic
+- [x] Translate page title "CREATE YOUR / Wedding Invitation" to Arabic
+- [x] Translate subtitle "Fill in your details · Toggle sections on or off · Preview & Publish" to Arabic
+- [x] Translate "CHOOSE YOUR ENVELOPE STYLE" section heading to Arabic
+- [x] Translate all section card titles (BRIDE & GROOM NAMES, WEDDING DATE, VENUE, etc.) to Arabic
+- [x] Translate all input field labels and placeholders to Arabic
+- [x] Translate button labels (Preview, Publish, Save, etc.) to Arabic
+- [x] Translate "VIEW RSVP RESPONSES" button to Arabic
