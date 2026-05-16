@@ -196,10 +196,18 @@ export default function InvitationView() {
   const isOpen = animStage === "opening" || animStage === "expand" || animStage === "done";
   const isExpanding = animStage === "expand" || animStage === "done";
 
+  const handleBackToEnvelope = () => {
+    setShowInvitation(false);
+    setAnimStage("idle");
+    requestAnimationFrame(() => {
+      window.scrollTo({ top: 0, behavior: "instant" });
+    });
+  };
+
   if (showInvitation) {
     return (
       <div ref={invitationRef}>
-        <InvitationPage data={invData} slug={slug} lang={lang} onToggleLang={toggleLang} />
+        <InvitationPage data={invData} slug={slug} lang={lang} onToggleLang={toggleLang} onBackToEnvelope={handleBackToEnvelope} />
       </div>
     );
   }
@@ -278,37 +286,61 @@ export default function InvitationView() {
 }
 
 // ── Language Toggle Button ────────────────────────────────────────────────────
-function LangToggle({ lang, onToggle, theme }: { lang: Lang; onToggle: () => void; theme: Theme }) {
+function LangToggle({ lang, onToggle, onBackToEnvelope, theme }: {
+  lang: Lang; onToggle: () => void; onBackToEnvelope: () => void; theme: Theme;
+}) {
+  const btnBase: React.CSSProperties = {
+    padding: "5px 14px",
+    background: `${theme.bgSecondary}ee`,
+    border: `1px solid ${theme.accent}66`,
+    borderRadius: 20,
+    fontSize: 12,
+    fontWeight: 700,
+    color: theme.accent,
+    cursor: "pointer",
+    backdropFilter: "blur(8px)",
+    transition: "all 0.2s",
+    display: "flex",
+    alignItems: "center",
+    gap: 5,
+    whiteSpace: "nowrap" as const,
+  };
   return (
-    <button
-      onClick={onToggle}
-      style={{
-        position: "fixed",
-        top: 14,
-        right: 14,
-        zIndex: 200,
-        padding: "5px 14px",
-        background: `${theme.bgSecondary}ee`,
-        border: `1px solid ${theme.accent}66`,
-        borderRadius: 20,
-        fontFamily: lang === "ar" ? ARABIC_FONT : "'Lato', sans-serif",
-        fontSize: 12,
-        fontWeight: 700,
-        color: theme.accent,
-        cursor: "pointer",
-        letterSpacing: "0.05em",
-        backdropFilter: "blur(8px)",
-        transition: "all 0.2s",
-      }}
-    >
-      {lang === "en" ? "عربي" : "English"}
-    </button>
+    <div style={{
+      position: "fixed",
+      top: 14,
+      right: 14,
+      zIndex: 200,
+      display: "flex",
+      gap: 8,
+      alignItems: "center",
+    }}>
+      <button
+        onClick={onBackToEnvelope}
+        title={lang === "ar" ? "العودة إلى الظرف" : "Back to envelope"}
+        style={btnBase}
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="2" y="4" width="20" height="16" rx="2" />
+          <polyline points="2,4 12,13 22,4" />
+        </svg>
+        <span style={{ fontFamily: lang === "ar" ? ARABIC_FONT : "'Lato', sans-serif", letterSpacing: lang === "ar" ? 0 : "0.05em" }}>
+          {lang === "ar" ? "الظرف" : "Envelope"}
+        </span>
+      </button>
+      <button
+        onClick={onToggle}
+        style={{ ...btnBase, fontFamily: lang === "ar" ? ARABIC_FONT : "'Lato', sans-serif", letterSpacing: lang === "ar" ? 0 : "0.05em" }}
+      >
+        {lang === "en" ? "عربي" : "English"}
+      </button>
+    </div>
   );
 }
 
 // ── Full Invitation Page ──────────────────────────────────────────────────────
-function InvitationPage({ data, slug, lang, onToggleLang }: {
-  data: InvitationData; slug: string; lang: Lang; onToggleLang: () => void;
+function InvitationPage({ data, slug, lang, onToggleLang, onBackToEnvelope }: {
+  data: InvitationData; slug: string; lang: Lang; onToggleLang: () => void; onBackToEnvelope: () => void;
 }) {
   const isRtl = lang === "ar";
   const brideName = isRtl
@@ -370,8 +402,8 @@ function InvitationPage({ data, slug, lang, onToggleLang }: {
         fontFamily: bodyFont,
       } as React.CSSProperties}
     >
-      {/* Language Toggle */}
-      <LangToggle lang={lang} onToggle={onToggleLang} theme={theme} />
+      {/* Language Toggle + Envelope Button */}
+      <LangToggle lang={lang} onToggle={onToggleLang} onBackToEnvelope={onBackToEnvelope} theme={theme} />
 
       <div className="mobile-container">
 

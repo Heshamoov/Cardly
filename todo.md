@@ -196,3 +196,6 @@
 ## Feature: Personal Message Dropdown Suggestions
 - [x] Add a styled dropdown above the message textarea in Builder with pre-written EN/AR messages
 - [x] Selecting a suggestion auto-fills the message field (user can still edit freely after)
+
+## Feature: Back-to-Envelope Button on Published Invitation
+- [x] Add envelope icon button next to language toggle that scrolls back to the top (envelope scene)
