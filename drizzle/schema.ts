@@ -30,6 +30,7 @@ export type InsertUser = typeof users.$inferInsert;
 export const invitations = mysqlTable("invitations", {
   id: int("id").autoincrement().primaryKey(),
   slug: varchar("slug", { length: 16 }).notNull().unique(),
+  title: varchar("title", { length: 128 }).default("Untitled").notNull(),
   data: text("data").notNull(), // JSON string
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),

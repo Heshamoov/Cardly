@@ -4,6 +4,7 @@ import { trpc } from "@/lib/trpc";
 import { translations, ARABIC_FONT, type Lang } from "@/lib/i18n";
 
 interface InvitationData {
+  title: string;
   brideFirstName: string;
   brideLastName: string;
   groomFirstName: string;
@@ -99,6 +100,7 @@ const ENVELOPE_STYLES = [
 ];
 
 const defaultData: InvitationData = {
+  title: "",
   brideFirstName: "",
   brideLastName: "",
   groomFirstName: "",
@@ -348,7 +350,7 @@ export default function Builder() {
       alert("Please fill in at least the names and date before publishing.");
       return;
     }
-    createMutation.mutate({ data });
+    createMutation.mutate({ title: data.title || "Untitled", data });
   };
 
   const shareUrl = publishedSlug
@@ -419,7 +421,7 @@ export default function Builder() {
 
   // ── Preview mode ──────────────────────────────────────────────────────────
   if (previewing) {
-    return <PreviewWithEnvelope data={data} onEdit={() => setPreviewing(false)} onPublish={handlePublish} isPublishing={createMutation.isPending} onFontScaleChange={(scale) => set("fontScale", scale)} />;
+    return <PreviewWithEnvelope data={data} onEdit={() => setPreviewing(false)} onPublish={handlePublish} isPublishing={createMutation.isPending} onFontScaleChange={(scale) => set("fontScale", scale)} initialLang={formLang} />;
   }
 
   // ── Builder mode ──────────────────────────────────────────────────────────
@@ -499,6 +501,24 @@ export default function Builder() {
           >
             📊 {ft.viewRsvp}
           </a>
+        </div>
+
+        {/* ── Invitation Title ── */}
+        <div className="section-card mb-6 animate-fade-in-up">
+          <p className="font-sans text-xs uppercase tracking-widest text-gold opacity-80 mb-3" style={formLang === "ar" ? { fontFamily: ARABIC_FONT, textTransform: "none" } : {}}>
+            {formLang === "ar" ? "عنوان الدعوة" : "Invitation Title"}
+          </p>
+          <input
+            className="wedding-input"
+            placeholder={formLang === "ar" ? "مثال: حفل زفاف سارة وأحمد" : "e.g. Sara & Ahmed's Wedding"}
+            value={data.title}
+            onChange={(e) => set("title", e.target.value)}
+            dir={formLang === "ar" ? "rtl" : undefined}
+            style={formLang === "ar" ? { fontFamily: ARABIC_FONT } : {}}
+          />
+          <p className="font-sans text-xs opacity-30 mt-2" style={formLang === "ar" ? { fontFamily: ARABIC_FONT } : {}}>
+            {formLang === "ar" ? "يظهر في لوحة الاستجابات فقط" : "Shown in your Guest Responses dashboard only"}
+          </p>
         </div>
 
         {/* ── Envelope Style Picker ── */}
@@ -746,16 +766,18 @@ function PreviewWithEnvelope({
   onPublish,
   isPublishing,
   onFontScaleChange,
+  initialLang = "en",
 }: {
   data: InvitationData;
   onEdit: () => void;
   onPublish: () => void;
   isPublishing: boolean;
   onFontScaleChange: (scale: number) => void;
+  initialLang?: Lang;
 }) {
   const [animStage, setAnimStage] = useState<"idle" | "opening" | "expand" | "done">("idle");
   const [showInvitation, setShowInvitation] = useState(false);
-  const [lang, setLang] = useState<Lang>("en");
+  const [lang, setLang] = useState<Lang>(initialLang);
   const toggleLang = () => setLang((l) => l === "en" ? "ar" : "en");
   const sceneRef = useRef<HTMLDivElement>(null);
 

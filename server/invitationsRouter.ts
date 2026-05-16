@@ -2,7 +2,7 @@ import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { invitations } from "../drizzle/schema";
 import { getDb } from "./db";
-import { publicProcedure, router } from "./_core/trpc";
+import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 
 function generateSlug(length = 8): string {
   const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
@@ -79,6 +79,7 @@ export const invitationsRouter = router({
   create: publicProcedure
     .input(
       z.object({
+        title: z.string().default("Untitled"),
         data: z.object({
           brideFirstName: z.string(),
           brideLastName: z.string().optional(),
@@ -123,10 +124,29 @@ export const invitationsRouter = router({
 
       await db.insert(invitations).values({
         slug,
+        title: input.title || "Untitled",
         data: JSON.stringify(input.data),
       } as any);
 
       return { slug };
+    }),
+
+  delete: protectedProcedure
+    .input(z.object({ slug: z.string() }))
+    .mutation(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+      // Only the app owner can delete invitations
+      const { ENV } = await import("./_core/env");
+      if (ctx.user.openId !== ENV.ownerOpenId) {
+        throw new Error("Forbidden");
+      }
+      // Delete related RSVP responses first (cascade)
+      const { rsvpResponses } = await import("../drizzle/schema");
+      await db.delete(rsvpResponses).where(eq(rsvpResponses.invitationSlug, input.slug));
+      // Delete the invitation
+      await db.delete(invitations).where(eq(invitations.slug, input.slug));
+      return { success: true };
     }),
 
   resolveMapUrl: publicProcedure

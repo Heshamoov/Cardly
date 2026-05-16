@@ -6,6 +6,10 @@ import { getLoginUrl } from "@/const";
 export default function RsvpDashboard() {
   const { user, loading: authLoading } = useAuth();
   const [selectedSlug, setSelectedSlug] = useState<string | null>(null);
+  const [deletingSlug, setDeletingSlug] = useState<string | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+
+  const utils = trpc.useUtils();
 
   const { data: overview, isLoading: overviewLoading } = trpc.rsvp.getAllSlugs.useQuery(undefined, {
     enabled: !!user,
@@ -15,6 +19,28 @@ export default function RsvpDashboard() {
     { slug: selectedSlug! },
     { enabled: !!selectedSlug }
   );
+
+  const deleteMutation = trpc.invitations.delete.useMutation({
+    onSuccess: () => {
+      setDeletingSlug(null);
+      setConfirmDelete(null);
+      if (selectedSlug === deletingSlug) setSelectedSlug(null);
+      utils.rsvp.getAllSlugs.invalidate();
+    },
+    onError: () => {
+      setDeletingSlug(null);
+    },
+  });
+
+  const handleDeleteClick = (slug: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setConfirmDelete(slug);
+  };
+
+  const handleConfirmDelete = (slug: string) => {
+    setDeletingSlug(slug);
+    deleteMutation.mutate({ slug });
+  };
 
   if (authLoading) {
     return (
@@ -30,7 +56,7 @@ export default function RsvpDashboard() {
         <div className="text-center px-8">
           <p className="font-script text-4xl mb-4" style={{ color: "#D4AF37" }}>Private Area</p>
           <p className="font-sans text-sm mb-6" style={{ color: "#E5C07B", opacity: 0.7 }}>
-            Please sign in to view RSVP responses.
+            Please sign in to view guest responses.
           </p>
           <a
             href={getLoginUrl()}
@@ -64,7 +90,7 @@ export default function RsvpDashboard() {
       <div style={{ borderBottom: "1px solid #D4AF3722", padding: "16px 24px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <div>
           <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 22, color: "#D4AF37", fontWeight: 300 }}>
-            RSVP Responses
+            Guest Responses
           </p>
           <p style={{ fontFamily: "'Lato', sans-serif", fontSize: 11, color: "#E5C07B", opacity: 0.5, letterSpacing: "0.1em", textTransform: "uppercase", marginTop: 2 }}>
             LoveNote Dashboard
@@ -130,39 +156,121 @@ export default function RsvpDashboard() {
             </p>
             {overview?.slugs.map((inv) => (
               <div key={inv.slug}>
-                <button
-                  onClick={() => setSelectedSlug(selectedSlug === inv.slug ? null : inv.slug)}
-                  style={{
-                    width: "100%",
-                    background: selectedSlug === inv.slug ? "#1E293B" : "transparent",
-                    border: `1px solid ${selectedSlug === inv.slug ? "#D4AF37" : "#D4AF3733"}`,
-                    borderRadius: 10,
-                    padding: "14px 16px",
-                    cursor: "pointer",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    marginBottom: 8,
-                    transition: "all 0.2s",
-                  }}
-                >
-                  <div style={{ textAlign: "left" }}>
-                    <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 18, color: "#D4AF37", fontWeight: 400 }}>
-                      {inv.title}
+                {/* Confirm delete dialog */}
+                {confirmDelete === inv.slug && (
+                  <div
+                    style={{
+                      background: "#1E293B",
+                      border: "1px solid #ef444466",
+                      borderRadius: 10,
+                      padding: "16px 20px",
+                      marginBottom: 8,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      gap: 12,
+                    }}
+                  >
+                    <p style={{ fontFamily: "'Lato', sans-serif", fontSize: 13, color: "#E5C07B" }}>
+                      Delete <strong style={{ color: "#D4AF37" }}>{inv.title}</strong>? This cannot be undone.
                     </p>
-                    <p style={{ fontFamily: "'Lato', sans-serif", fontSize: 11, color: "#E5C07B", opacity: 0.5, marginTop: 2 }}>
-                      /{inv.slug} · {new Date(inv.createdAt).toLocaleDateString("en-GB")}
-                    </p>
+                    <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
+                      <button
+                        onClick={() => setConfirmDelete(null)}
+                        style={{
+                          padding: "6px 14px",
+                          borderRadius: 20,
+                          border: "1px solid #D4AF3766",
+                          background: "transparent",
+                          color: "#D4AF37",
+                          fontFamily: "'Lato', sans-serif",
+                          fontSize: 12,
+                          cursor: "pointer",
+                        }}
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={() => handleConfirmDelete(inv.slug)}
+                        disabled={deletingSlug === inv.slug}
+                        style={{
+                          padding: "6px 14px",
+                          borderRadius: 20,
+                          border: "none",
+                          background: "#ef4444",
+                          color: "#fff",
+                          fontFamily: "'Lato', sans-serif",
+                          fontSize: 12,
+                          fontWeight: 700,
+                          cursor: "pointer",
+                          opacity: deletingSlug === inv.slug ? 0.6 : 1,
+                        }}
+                      >
+                        {deletingSlug === inv.slug ? "Deleting…" : "Delete"}
+                      </button>
+                    </div>
                   </div>
-                  <div style={{ textAlign: "right" }}>
-                    <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 24, color: "#D4AF37" }}>
-                      {inv.totalGuests}
-                    </p>
-                    <p style={{ fontFamily: "'Lato', sans-serif", fontSize: 10, color: "#E5C07B", opacity: 0.5, textTransform: "uppercase" }}>
-                      {inv.responseCount} {inv.responseCount === 1 ? "reply" : "replies"}
-                    </p>
-                  </div>
-                </button>
+                )}
+
+                <div style={{ display: "flex", gap: 8, marginBottom: selectedSlug === inv.slug ? 0 : 8 }}>
+                  <button
+                    onClick={() => setSelectedSlug(selectedSlug === inv.slug ? null : inv.slug)}
+                    style={{
+                      flex: 1,
+                      background: selectedSlug === inv.slug ? "#1E293B" : "transparent",
+                      border: `1px solid ${selectedSlug === inv.slug ? "#D4AF37" : "#D4AF3733"}`,
+                      borderRadius: selectedSlug === inv.slug ? "10px 10px 0 0" : 10,
+                      padding: "14px 16px",
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      transition: "all 0.2s",
+                    }}
+                  >
+                    <div style={{ textAlign: "left" }}>
+                      <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 18, color: "#D4AF37", fontWeight: 400 }}>
+                        {inv.title}
+                      </p>
+                      <p style={{ fontFamily: "'Lato', sans-serif", fontSize: 11, color: "#E5C07B", opacity: 0.5, marginTop: 2 }}>
+                        /{inv.slug} · {new Date(inv.createdAt).toLocaleDateString("en-GB")}
+                      </p>
+                    </div>
+                    <div style={{ textAlign: "right" }}>
+                      <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 24, color: "#D4AF37" }}>
+                        {inv.totalGuests}
+                      </p>
+                      <p style={{ fontFamily: "'Lato', sans-serif", fontSize: 10, color: "#E5C07B", opacity: 0.5, textTransform: "uppercase" }}>
+                        {inv.responseCount} {inv.responseCount === 1 ? "reply" : "replies"}
+                      </p>
+                    </div>
+                  </button>
+
+                  {/* Delete button */}
+                  <button
+                    onClick={(e) => handleDeleteClick(inv.slug, e)}
+                    title="Delete invitation"
+                    style={{
+                      width: 40,
+                      flexShrink: 0,
+                      background: "transparent",
+                      border: "1px solid #ef444444",
+                      borderRadius: 10,
+                      cursor: "pointer",
+                      color: "#ef4444",
+                      fontSize: 16,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      transition: "all 0.2s",
+                      marginBottom: selectedSlug === inv.slug ? 0 : 0,
+                    }}
+                    onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "#ef444422"; }}
+                    onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "transparent"; }}
+                  >
+                    🗑
+                  </button>
+                </div>
 
                 {/* Expanded guest list */}
                 {selectedSlug === inv.slug && (

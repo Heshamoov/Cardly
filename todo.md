@@ -139,3 +139,14 @@
 - [x] Translate all input field labels and placeholders to Arabic
 - [x] Translate button labels (Preview, Publish, Save, etc.) to Arabic
 - [x] Translate "VIEW RSVP RESPONSES" button to Arabic
+
+## Fix: Four Issues (May 17)
+- [x] Fix Home page Arabic toggle not working (shows English after switching)
+- [x] Add invitation title field to builder form (stored in DB and shown in dashboard)
+- [x] Add delete invitation button on Guest Responses dashboard (with confirmation)
+- [x] Rename "RSVP" to "Guest Responses" throughout the app (EN) and use Arabic equivalent in AR mode
+
+## Fix: Security & Naming Gaps (May 17)
+- [x] Make invitations.delete a protectedProcedure (owner-only, not public)
+- [x] Also delete related rsvp_responses when an invitation is deleted
+- [x] Replace remaining "RSVP" labels in Builder (viewRsvp button text, i18n keys) with "Guest Responses" / "استجابات الضيوف"

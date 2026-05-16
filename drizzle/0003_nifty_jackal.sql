@@ -1,0 +1,1 @@
+ALTER TABLE `invitations` ADD `title` varchar(128) DEFAULT 'Untitled' NOT NULL;

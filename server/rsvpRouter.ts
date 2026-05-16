@@ -78,15 +78,18 @@ export const rsvpRouter = router({
 
     return {
       slugs: allInvitations.map((inv) => {
-        let title = "Untitled";
-        try {
-          const data = JSON.parse(
-            Buffer.isBuffer(inv.data) ? (inv.data as unknown as Buffer).toString("utf8") : String(inv.data)
-          );
-          const bride = data.brideFirstName || "";
-          const groom = data.groomFirstName || "";
-          if (bride || groom) title = [bride, "&", groom].filter(Boolean).join(" ");
-        } catch {}
+        // Use the dedicated title column; fall back to parsing names from data JSON for old rows
+        let title = inv.title || "Untitled";
+        if (!title || title === "Untitled") {
+          try {
+            const data = JSON.parse(
+              Buffer.isBuffer(inv.data) ? (inv.data as unknown as Buffer).toString("utf8") : String(inv.data)
+            );
+            const bride = data.brideFirstName || "";
+            const groom = data.groomFirstName || "";
+            if (bride || groom) title = [bride, "&", groom].filter(Boolean).join(" ");
+          } catch {}
+        }
         const summary = summaryMap.get(inv.slug) ?? { totalGuests: 0, responseCount: 0 };
         return { slug: inv.slug, title, createdAt: inv.createdAt, ...summary };
       }),
