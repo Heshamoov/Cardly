@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
+import { translations, ARABIC_FONT, type Lang } from "@/lib/i18n";
 
 interface InvitationData {
   brideFirstName: string;
@@ -414,6 +415,25 @@ export default function Builder() {
           <p className="font-sans text-xs opacity-40 mt-2">
             Fill in your details · Toggle sections on or off · Preview & Publish
           </p>
+          <a
+            href="/rsvp-dashboard"
+            style={{
+              display: "inline-block",
+              marginTop: 12,
+              padding: "6px 18px",
+              background: "transparent",
+              border: "1px solid rgba(201,168,76,0.4)",
+              borderRadius: 20,
+              fontFamily: "'Lato', sans-serif",
+              fontSize: 11,
+              color: "rgba(201,168,76,0.8)",
+              letterSpacing: "0.1em",
+              textDecoration: "none",
+              textTransform: "uppercase" as const,
+            }}
+          >
+            📊 View RSVP Responses
+          </a>
         </div>
 
         {/* ── Envelope Style Picker ── */}
@@ -639,6 +659,8 @@ function PreviewWithEnvelope({
 }) {
   const [animStage, setAnimStage] = useState<"idle" | "opening" | "expand" | "done">("idle");
   const [showInvitation, setShowInvitation] = useState(false);
+  const [lang, setLang] = useState<Lang>("en");
+  const toggleLang = () => setLang((l) => l === "en" ? "ar" : "en");
   const sceneRef = useRef<HTMLDivElement>(null);
 
   const brideName = [data.brideFirstName, data.brideLastName].filter(Boolean).join(" ");
@@ -789,7 +811,7 @@ function PreviewWithEnvelope({
       {/* Invitation content after envelope opens */}
       {showInvitation && (
         <div className="mobile-container" style={{ "--font-scale": data.fontScale } as React.CSSProperties}>
-          <PreviewContent data={data} />
+          <PreviewContent data={data} lang={lang} onToggleLang={toggleLang} />
         </div>
       )}
 
@@ -829,7 +851,11 @@ function FloatingPetals() {
 }
 
 // ── Preview Content (shared between preview mode and invitation page) ─────────
-function PreviewContent({ data }: { data: InvitationData }) {
+function PreviewContent({ data, lang = "en", onToggleLang }: { data: InvitationData; lang?: Lang; onToggleLang?: () => void }) {
+  const t = translations[lang];
+  const isRtl = lang === "ar";
+  const bodyFont = isRtl ? ARABIC_FONT : undefined;
+
   const brideName = [data.brideFirstName, data.brideLastName]
     .filter(Boolean)
     .join(" ");
@@ -871,6 +897,7 @@ function PreviewContent({ data }: { data: InvitationData }) {
   return (
     <div
       className="invitation-page"
+      dir={isRtl ? "rtl" : "ltr"}
       style={{
         background: theme.bg,
         "--gold": theme.accent,
@@ -882,13 +909,14 @@ function PreviewContent({ data }: { data: InvitationData }) {
         "--accent-secondary": theme.accentSecondary,
         "--btn-text": theme.buttonText,
         color: theme.text,
+        fontFamily: bodyFont,
       } as React.CSSProperties}
     >
       {/* Hero / Names */}
       {data.sections.names && (
         <div className="invitation-section pt-16 pb-8 stagger">
-          <p className="font-sans text-xs uppercase tracking-widest text-gold opacity-70 animate-fade-in-up">
-            Together with their families
+          <p className="font-sans text-xs uppercase tracking-widest text-gold opacity-70 animate-fade-in-up" style={{ fontFamily: bodyFont }}>
+            {t.togetherWith}
           </p>
           <div className="my-6 animate-fade-in-up">
             <h1 className="font-script text-6xl gold-shimmer leading-tight">
@@ -904,11 +932,8 @@ function PreviewContent({ data }: { data: InvitationData }) {
           <div className="divider-ornament">
             <span className="text-gold text-lg">✦</span>
           </div>
-          <p className="font-serif italic text-lg opacity-60 mt-4 animate-fade-in-up">
-            request the pleasure of your company
-          </p>
-          <p className="font-serif italic text-lg opacity-60 animate-fade-in-up">
-            at their wedding celebration
+          <p className="font-serif italic text-lg opacity-60 mt-4 animate-fade-in-up" style={{ fontFamily: bodyFont }}>
+            {t.requestPleasure}
           </p>
         </div>
       )}
@@ -919,8 +944,8 @@ function PreviewContent({ data }: { data: InvitationData }) {
           <div className="divider-ornament mb-4">
             <span className="text-gold text-sm">❧</span>
           </div>
-          <p className="font-sans text-xs uppercase tracking-widest text-gold opacity-60 mb-2">
-            Date
+          <p className="font-sans text-xs uppercase tracking-widest text-gold opacity-60 mb-2" style={{ fontFamily: bodyFont }}>
+            {t.dateLabel}
           </p>
           <p className="font-serif text-2xl text-cream">
             {formattedDate || "Sunday, 24 May 2026"}
@@ -931,8 +956,8 @@ function PreviewContent({ data }: { data: InvitationData }) {
       {/* Time */}
       {data.sections.time && (
         <div className="invitation-section py-4">
-          <p className="font-sans text-xs uppercase tracking-widest text-gold opacity-60 mb-2">
-            Time
+          <p className="font-sans text-xs uppercase tracking-widest text-gold opacity-60 mb-2" style={{ fontFamily: bodyFont }}>
+            {t.dateLabel}
           </p>
           <p className="font-serif text-2xl text-cream">
             {formattedTime || "9:00 PM"}
@@ -946,8 +971,8 @@ function PreviewContent({ data }: { data: InvitationData }) {
           <div className="divider-ornament mb-4">
             <span className="text-gold text-sm">❧</span>
           </div>
-          <p className="font-sans text-xs uppercase tracking-widest text-gold opacity-60 mb-2">
-            Venue
+          <p className="font-sans text-xs uppercase tracking-widest text-gold opacity-60 mb-2" style={{ fontFamily: bodyFont }}>
+            {t.venueLabel}
           </p>
           <p className="font-serif text-2xl text-cream">
             {data.venueName || "Al Rekab Restaurant"}
@@ -976,7 +1001,7 @@ function PreviewContent({ data }: { data: InvitationData }) {
           <div className="divider-ornament mb-4">
             <span className="text-gold text-sm">❧</span>
           </div>
-          <CountdownTimer targetDate={data.date} />
+          <CountdownTimer targetDate={data.date} label={t.countdownLabel} bodyFont={bodyFont} />
         </div>
       )}
 
@@ -986,8 +1011,8 @@ function PreviewContent({ data }: { data: InvitationData }) {
           <div className="divider-ornament mb-4">
             <span className="text-gold text-sm">❧</span>
           </div>
-          <p className="font-sans text-xs uppercase tracking-widest text-gold opacity-60 mb-4">
-            Find Us
+          <p className="font-sans text-xs uppercase tracking-widest text-gold opacity-60 mb-4" style={{ fontFamily: bodyFont }}>
+            {t.findUs}
           </p>
           <div style={{ borderRadius: 12, overflow: "hidden", border: `1px solid ${theme.accent}44`, boxShadow: `0 8px 32px rgba(0,0,0,0.3)` }}>
             <iframe
@@ -1023,7 +1048,7 @@ function PreviewContent({ data }: { data: InvitationData }) {
                 textTransform: "uppercase",
               }}
             >
-              📍 Get Directions
+              {t.getDirections}
             </a>
           )}
         </div>
@@ -1039,15 +1064,15 @@ function PreviewContent({ data }: { data: InvitationData }) {
             .filter(Boolean)
             .join(" ") || "Bride & Groom"}
         </p>
-        <p className="font-sans text-xs opacity-30 mt-4 tracking-widest uppercase">
-          With love
+        <p className="font-sans text-xs opacity-30 mt-4 tracking-widest uppercase" style={{ fontFamily: bodyFont }}>
+          {t.withLove}
         </p>
       </div>
     </div>
   );
 }
 
-function CountdownTimer({ targetDate }: { targetDate: string }) {
+function CountdownTimer({ targetDate, label = "Counting Down", bodyFont }: { targetDate: string; label?: string; bodyFont?: string }) {
   const [timeLeft, setTimeLeft] = useState(() => getTimeLeft(targetDate));
 
   useState(() => {
@@ -1061,8 +1086,8 @@ function CountdownTimer({ targetDate }: { targetDate: string }) {
 
   return (
     <div>
-      <p className="font-sans text-xs uppercase tracking-widest text-gold opacity-60 mb-4">
-        Counting Down
+      <p className="font-sans text-xs uppercase tracking-widest text-gold opacity-60 mb-4" style={{ fontFamily: bodyFont }}>
+        {label}
       </p>
       <div className="flex justify-center gap-4">
         {[

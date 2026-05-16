@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useRoute } from "wouter";
 import { trpc } from "@/lib/trpc";
+import { translations, ARABIC_FONT, type Lang } from "@/lib/i18n";
 
 const ENVELOPE_STYLES: Record<string, {
   img: string; sealColor: string; name: string;
@@ -72,6 +73,7 @@ interface InvitationData {
 }
 
 type AnimStage = "idle" | "opening" | "expand" | "done";
+type Theme = typeof ENVELOPE_STYLES["navy-gold"]["theme"];
 
 export default function InvitationView() {
   const [, params] = useRoute("/invite/:slug");
@@ -86,7 +88,17 @@ export default function InvitationView() {
   const invitationRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<HTMLDivElement>(null);
 
-  // Calculate split point based on actual rendered image size
+  // Language toggle — persisted per slug
+  const LANG_KEY = `invite_lang_${slug}`;
+  const [lang, setLang] = useState<Lang>(() => {
+    try { return (localStorage.getItem(LANG_KEY) as Lang) || "en"; } catch { return "en"; }
+  });
+  const toggleLang = () => {
+    const next: Lang = lang === "en" ? "ar" : "en";
+    setLang(next);
+    try { localStorage.setItem(LANG_KEY, next); } catch {}
+  };
+
   const updateSplitPoint = useCallback(() => {
     const img = sceneRef.current?.querySelector<HTMLImageElement>(".fs-half-top .fs-half-img");
     if (!img || !img.complete || img.naturalWidth === 0) return;
@@ -106,21 +118,15 @@ export default function InvitationView() {
 
   const handleOpenEnvelope = () => {
     if (animStage !== "idle") return;
-
-    // Stage 1: both halves slide apart (2000ms)
     setAnimStage("opening");
     setTimeout(() => {
-      // Stage 2: cream overlay fades in (500ms)
       setAnimStage("expand");
       setTimeout(() => {
-        // Stage 3: show invitation, scroll to top
         setAnimStage("done");
         setShowInvitation(true);
         requestAnimationFrame(() => {
           window.scrollTo({ top: 0, behavior: "instant" });
-          if (invitationRef.current) {
-            invitationRef.current.scrollTop = 0;
-          }
+          if (invitationRef.current) invitationRef.current.scrollTop = 0;
         });
       }, 500);
     }, 2000);
@@ -162,42 +168,47 @@ export default function InvitationView() {
   if (showInvitation) {
     return (
       <div ref={invitationRef}>
-        <InvitationPage data={invData} />
+        <InvitationPage data={invData} slug={slug} lang={lang} onToggleLang={toggleLang} />
       </div>
     );
   }
 
   return (
-      <div ref={sceneRef} className="envelope-scene" onClick={handleOpenEnvelope} style={{ background: envStyle.theme.sceneBg }}>
-      {/* Top half — shows top portion of envelope photo, slides UP */}
+    <div ref={sceneRef} className="envelope-scene" onClick={handleOpenEnvelope} style={{ background: envStyle.theme.sceneBg }}>
+      {/* Top half */}
       <div className={`fs-half fs-half-top ${isOpen ? "open" : ""}`}>
         <img
           src={envStyle.img}
-          alt=""
+          alt="Wedding envelope"
           className="fs-half-img"
-          draggable={false}
           onLoad={updateSplitPoint}
         />
       </div>
 
-      {/* Bottom half — shows bottom portion of envelope photo, slides DOWN */}
+      {/* Bottom half */}
       <div className={`fs-half fs-half-bottom ${isOpen ? "open" : ""}`}>
-        <img src={envStyle.img} alt="" className="fs-half-img" draggable={false} />
+        <img
+          src={envStyle.img}
+          alt=""
+          className="fs-half-img"
+          aria-hidden="true"
+        />
       </div>
 
-      {/* Wax seal — centered at the split line */}
-      <div
-        className={`fs-wax-seal ${isOpen ? "open" : ""}`}
-        style={{
-          background: `radial-gradient(circle at 35% 35%, ${envStyle.sealColor}ee, ${envStyle.sealColor}88)`,
-        }}
-      >
-        <span style={{ fontFamily: "'Great Vibes', cursive", fontSize: 24, color: "rgba(255,255,255,0.92)", lineHeight: 1 }}>
-          {(brideName[0] || "H")}&amp;{(groomName[0] || "S")}
+      {/* Wax seal */}
+      <div className="fs-wax-seal" style={{ opacity: isOpen ? 0 : 1, transition: "opacity 0.4s ease" }}>
+        <span style={{
+          fontFamily: "'Great Vibes', cursive",
+          fontSize: "clamp(1.2rem, 5vw, 1.8rem)",
+          color: envStyle.sealColor,
+          letterSpacing: "-1px",
+          border: `2px solid ${envStyle.sealColor}55`,
+        }}>
+          {(brideName[0] || "H")}&{(groomName[0] || "S")}
         </span>
       </div>
 
-      {/* Expand overlay — fades to theme background before invitation appears */}
+      {/* Expand overlay */}
       <div
         className="fs-expand-overlay"
         style={{ opacity: isExpanding ? 1 : 0, background: envStyle.theme.bg }}
@@ -207,7 +218,7 @@ export default function InvitationView() {
       {animStage === "idle" && (
         <div className="fs-tap-hint">
           <p style={{ fontFamily: "'Lato', sans-serif", fontSize: 12, letterSpacing: "0.2em", color: `${envStyle.theme.accent}BB`, textTransform: "uppercase" }}>
-            Tap to open
+            {lang === "ar" ? "اضغط للفتح" : "Tap to open"}
           </p>
           <span style={{ color: `${envStyle.theme.accent}88`, fontSize: 18, animation: "bounce 1s infinite" }}>↑</span>
         </div>
@@ -216,59 +227,56 @@ export default function InvitationView() {
   );
 }
 
-// ── Floating petals decoration ────────────────────────────────────────────────
-function FloatingPetals() {
-  const petals = Array.from({ length: 8 }, (_, i) => ({
-    id: i,
-    left: `${10 + i * 11}%`,
-    delay: `${i * 0.7}s`,
-    duration: `${4 + (i % 3)}s`,
-    size: 6 + (i % 4) * 2,
-  }));
-
+// ── Language Toggle Button ────────────────────────────────────────────────────
+function LangToggle({ lang, onToggle, theme }: { lang: Lang; onToggle: () => void; theme: Theme }) {
   return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none">
-      {petals.map((p) => (
-        <div
-          key={p.id}
-          style={{
-            position: "absolute",
-            left: p.left,
-            top: "-20px",
-            width: p.size,
-            height: p.size,
-            borderRadius: "50% 0 50% 0",
-            background: "rgba(201,168,76,0.15)",
-            animation: `float ${p.duration} ease-in-out infinite`,
-            animationDelay: p.delay,
-          }}
-        />
-      ))}
-    </div>
+    <button
+      onClick={onToggle}
+      style={{
+        position: "fixed",
+        top: 14,
+        right: 14,
+        zIndex: 200,
+        padding: "5px 14px",
+        background: `${theme.bgSecondary}ee`,
+        border: `1px solid ${theme.accent}66`,
+        borderRadius: 20,
+        fontFamily: lang === "ar" ? ARABIC_FONT : "'Lato', sans-serif",
+        fontSize: 12,
+        fontWeight: 700,
+        color: theme.accent,
+        cursor: "pointer",
+        letterSpacing: "0.05em",
+        backdropFilter: "blur(8px)",
+        transition: "all 0.2s",
+      }}
+    >
+      {lang === "en" ? "عربي" : "English"}
+    </button>
   );
 }
 
 // ── Full Invitation Page ──────────────────────────────────────────────────────
-function InvitationPage({ data }: { data: InvitationData }) {
+function InvitationPage({ data, slug, lang, onToggleLang }: {
+  data: InvitationData; slug: string; lang: Lang; onToggleLang: () => void;
+}) {
   const brideName = [data.brideFirstName, data.brideLastName].filter(Boolean).join(" ");
   const groomName = [data.groomFirstName, data.groomLastName].filter(Boolean).join(" ");
   const envStyle = ENVELOPE_STYLES[(data as { envelopeStyle?: string }).envelopeStyle ?? "ivory-gold"] ?? ENVELOPE_STYLES["ivory-gold"];
+  const t = translations[lang];
+  const isRtl = lang === "ar";
+  const bodyFont = isRtl ? ARABIC_FONT : undefined;
 
   const weddingDate = data.date ? new Date(data.date) : null;
   const formattedDate = weddingDate
-    ? weddingDate.toLocaleDateString("en-GB", {
-        weekday: "long",
-        day: "numeric",
-        month: "long",
-        year: "numeric",
+    ? weddingDate.toLocaleDateString(isRtl ? "ar-AE" : "en-GB", {
+        weekday: "long", day: "numeric", month: "long", year: "numeric",
       })
     : "";
 
   const formattedTime = data.time
-    ? new Date(`2000-01-01T${data.time}`).toLocaleTimeString("en-US", {
-        hour: "numeric",
-        minute: "2-digit",
-        hour12: true,
+    ? new Date(`2000-01-01T${data.time}`).toLocaleTimeString(isRtl ? "ar-AE" : "en-US", {
+        hour: "numeric", minute: "2-digit", hour12: true,
       })
     : "";
 
@@ -289,6 +297,7 @@ function InvitationPage({ data }: { data: InvitationData }) {
   return (
     <div
       className="invitation-page"
+      dir={isRtl ? "rtl" : "ltr"}
       style={{
         background: theme.bg,
         "--font-scale": fontScale,
@@ -301,8 +310,12 @@ function InvitationPage({ data }: { data: InvitationData }) {
         "--accent-secondary": theme.accentSecondary,
         "--btn-text": theme.buttonText,
         color: theme.text,
+        fontFamily: bodyFont,
       } as React.CSSProperties}
     >
+      {/* Language Toggle */}
+      <LangToggle lang={lang} onToggle={onToggleLang} theme={theme} />
+
       <div className="mobile-container">
 
         {/* Hero — Names */}
@@ -312,8 +325,8 @@ function InvitationPage({ data }: { data: InvitationData }) {
               <div className="w-24 h-px bg-gradient-to-r from-transparent via-gold to-transparent" />
             </div>
 
-            <p className="invite-label text-gold opacity-60 animate-fade-in-up">
-              Together with their families
+            <p className="invite-label text-gold opacity-60 animate-fade-in-up" style={{ fontFamily: bodyFont }}>
+              {t.togetherWith}
             </p>
 
             <div className="my-8 animate-fade-in-up">
@@ -332,11 +345,8 @@ function InvitationPage({ data }: { data: InvitationData }) {
               <span className="text-gold text-xl">✦</span>
             </div>
 
-            <p className="invite-detail opacity-60 mt-5 animate-fade-in-up">
-              request the pleasure of your company
-            </p>
-            <p className="invite-detail opacity-60 animate-fade-in-up">
-              at their wedding celebration
+            <p className="invite-detail opacity-60 mt-5 animate-fade-in-up" style={{ fontFamily: bodyFont }}>
+              {t.requestPleasure}
             </p>
           </div>
         )}
@@ -347,16 +357,11 @@ function InvitationPage({ data }: { data: InvitationData }) {
             <div className="divider-ornament mb-5">
               <span className="text-gold">❧</span>
             </div>
-            <p className="invite-label text-gold opacity-50 mb-3">Date</p>
-            <p className="invite-heading text-cream text-2xl leading-relaxed">{formattedDate}</p>
-          </div>
-        )}
-
-        {/* Time */}
-        {data.sections?.time !== false && formattedTime && (
-          <div className="invitation-section py-6">
-            <p className="invite-label text-gold opacity-50 mb-3">Time</p>
-            <p className="invite-heading text-cream text-2xl">{formattedTime}</p>
+            <p className="invite-label text-gold opacity-50 mb-3" style={{ fontFamily: bodyFont }}>{t.dateLabel}</p>
+            <p className="invite-heading text-cream text-2xl leading-relaxed" style={{ fontFamily: bodyFont }}>{formattedDate}</p>
+            {formattedTime && (
+              <p className="invite-heading text-cream text-xl mt-2 opacity-80" style={{ fontFamily: bodyFont }}>{formattedTime}</p>
+            )}
           </div>
         )}
 
@@ -366,7 +371,7 @@ function InvitationPage({ data }: { data: InvitationData }) {
             <div className="divider-ornament mb-5">
               <span className="text-gold">❧</span>
             </div>
-            <p className="invite-label text-gold opacity-50 mb-3">Venue</p>
+            <p className="invite-label text-gold opacity-50 mb-3" style={{ fontFamily: bodyFont }}>{t.venueLabel}</p>
             <p className="invite-heading text-cream text-2xl">{data.venueName}</p>
             {data.venueAddress && (
               <p className="invite-detail opacity-40 mt-2">{data.venueAddress}</p>
@@ -380,7 +385,7 @@ function InvitationPage({ data }: { data: InvitationData }) {
             <div className="divider-ornament mb-5">
               <span className="text-gold">✦</span>
             </div>
-            <p className="invite-detail text-xl opacity-75 leading-relaxed">
+            <p className="invite-detail text-xl opacity-75 leading-relaxed" style={{ fontFamily: bodyFont }}>
               "{data.message}"
             </p>
           </div>
@@ -392,7 +397,7 @@ function InvitationPage({ data }: { data: InvitationData }) {
             <div className="divider-ornament mb-5">
               <span className="text-gold">❧</span>
             </div>
-            <CountdownTimer targetDate={data.date} />
+            <CountdownTimer targetDate={data.date} label={t.countdownLabel} bodyFont={bodyFont} />
           </div>
         )}
 
@@ -402,7 +407,7 @@ function InvitationPage({ data }: { data: InvitationData }) {
             <div className="divider-ornament mb-5">
               <span className="text-gold">📍</span>
             </div>
-            <p className="invite-label text-gold opacity-50 mb-4">Find Us</p>
+            <p className="invite-label text-gold opacity-50 mb-4" style={{ fontFamily: bodyFont }}>{t.findUs}</p>
             <div style={{ borderRadius: 12, overflow: "hidden", border: `1px solid ${theme.accent}44`, boxShadow: "0 8px 32px rgba(0,0,0,0.3)" }}>
               <iframe
                 src={mapSrc}
@@ -429,7 +434,7 @@ function InvitationPage({ data }: { data: InvitationData }) {
                   background: `linear-gradient(135deg, ${theme.accentDark}, ${theme.accent})`,
                   color: theme.buttonText,
                   borderRadius: 50,
-                  fontFamily: "'Lato', sans-serif",
+                  fontFamily: bodyFont ?? "'Lato', sans-serif",
                   fontSize: 13,
                   fontWeight: 700,
                   letterSpacing: "0.08em",
@@ -439,22 +444,25 @@ function InvitationPage({ data }: { data: InvitationData }) {
                 }}
                 onClick={(e) => e.stopPropagation()}
               >
-                📍 Get Directions
+                {t.getDirections}
               </a>
             )}
           </div>
         )}
 
+        {/* RSVP Section */}
+        <RsvpSection slug={slug} theme={theme} t={t} isRtl={isRtl} bodyFont={bodyFont} />
+
         {/* Footer */}
         <div className="invitation-section py-12">
           <div className="divider-ornament mb-6">
-            <span className="text-gold text-xl">✦</span>
+            <span className="text-gold text-xl">✶</span>
           </div>
           <p className="font-script gold-shimmer" style={{ fontSize: "clamp(2rem, 10vw, 3rem)" }}>
             {[data.brideFirstName, "&", data.groomFirstName].filter(Boolean).join(" ")}
           </p>
-          <p className="invite-label opacity-30 mt-4">
-            {formattedDate || ""}
+          <p className="invite-label opacity-30 mt-4" style={{ fontFamily: bodyFont }}>
+            {t.withLove}
           </p>
         </div>
 
@@ -463,8 +471,194 @@ function InvitationPage({ data }: { data: InvitationData }) {
   );
 }
 
+// ── RSVP Section ─────────────────────────────────────────────────────────────
+function RsvpSection({
+  slug, theme, t, isRtl, bodyFont,
+}: {
+  slug: string;
+  theme: Theme;
+  t: (typeof translations)["en"] | (typeof translations)["ar"];
+  isRtl: boolean;
+  bodyFont?: string;
+}) {
+  const STORAGE_KEY = `rsvp_submitted_${slug}`;
+  const [submitted, setSubmitted] = useState(() => !!localStorage.getItem(STORAGE_KEY));
+  const [name, setName] = useState("");
+  const [partySize, setPartySize] = useState(1);
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
+
+  const submitMutation = trpc.rsvp.submit.useMutation({
+    onSuccess: () => {
+      localStorage.setItem(STORAGE_KEY, "1");
+      setSubmitted(true);
+    },
+    onError: (err) => setError(err.message || t.somethingWrong),
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    if (!name.trim()) { setError(t.nameRequired); return; }
+    if (partySize < 1 || partySize > 50) { setError(t.partySizeError); return; }
+    submitMutation.mutate({ slug, guestName: name.trim(), partySize, message: message.trim() || undefined });
+  };
+
+  const inputStyle: React.CSSProperties = {
+    width: "100%",
+    background: `${theme.bgSecondary}cc`,
+    border: `1px solid ${theme.accent}55`,
+    borderRadius: 8,
+    padding: "10px 14px",
+    color: theme.text,
+    fontFamily: bodyFont ?? "'Lato', sans-serif",
+    fontSize: 14,
+    outline: "none",
+    boxSizing: "border-box" as const,
+    direction: isRtl ? "rtl" : "ltr",
+    textAlign: isRtl ? "right" : "left",
+  };
+
+  const labelStyle: React.CSSProperties = {
+    display: "block",
+    fontFamily: bodyFont ?? "'Lato', sans-serif",
+    fontSize: 11,
+    letterSpacing: isRtl ? 0 : "0.1em",
+    textTransform: isRtl ? "none" : "uppercase" as const,
+    color: theme.text,
+    opacity: 0.6,
+    marginBottom: 6,
+  };
+
+  return (
+    <div className="invitation-section" style={{ paddingTop: 32, paddingBottom: 40 }}>
+      <div className="divider-ornament mb-6">
+        <span style={{ color: theme.accent, fontSize: 20 }}>✉</span>
+      </div>
+      <p
+        className="font-sans uppercase tracking-widest mb-6"
+        style={{ fontSize: 11, color: theme.accent, opacity: 0.7, fontFamily: bodyFont }}
+      >
+        {t.rsvpLabel}
+      </p>
+
+      {submitted ? (
+        <div
+          style={{
+            background: `${theme.bgSecondary}cc`,
+            border: `1px solid ${theme.accent}44`,
+            borderRadius: 12,
+            padding: "24px 20px",
+            textAlign: "center",
+          }}
+        >
+          <div style={{ fontSize: 36, marginBottom: 12 }}>🎉</div>
+          <p className="font-script" style={{ fontSize: "clamp(1.4rem, 6vw, 2rem)", color: theme.accent }}>
+            {t.thankYou}
+          </p>
+          <p className="font-sans mt-2" style={{ fontSize: 13, color: theme.text, opacity: 0.7, fontFamily: bodyFont }}>
+            {t.rsvpReceived}
+          </p>
+        </div>
+      ) : (
+        <form
+          onSubmit={handleSubmit}
+          style={{ textAlign: isRtl ? "right" : "left", maxWidth: 360, margin: "0 auto" }}
+          dir={isRtl ? "rtl" : "ltr"}
+        >
+          <div style={{ marginBottom: 14 }}>
+            <label style={labelStyle}>{t.yourName}</label>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder={t.namePlaceholder}
+              style={inputStyle}
+              maxLength={128}
+            />
+          </div>
+
+          <div style={{ marginBottom: 14 }}>
+            <label style={labelStyle}>{t.numberOfGuests}</label>
+            <div style={{ display: "flex", alignItems: "center", gap: 12, justifyContent: isRtl ? "flex-end" : "flex-start" }}>
+              <button
+                type="button"
+                onClick={() => setPartySize((p) => Math.max(1, p - 1))}
+                style={{
+                  width: 36, height: 36, borderRadius: "50%",
+                  background: `${theme.bgSecondary}cc`,
+                  border: `1px solid ${theme.accent}55`,
+                  color: theme.accent, fontSize: 20, cursor: "pointer",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                }}
+              >−</button>
+              <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 28, color: theme.accent, minWidth: 32, textAlign: "center" }}>
+                {partySize}
+              </span>
+              <button
+                type="button"
+                onClick={() => setPartySize((p) => Math.min(50, p + 1))}
+                style={{
+                  width: 36, height: 36, borderRadius: "50%",
+                  background: `${theme.bgSecondary}cc`,
+                  border: `1px solid ${theme.accent}55`,
+                  color: theme.accent, fontSize: 20, cursor: "pointer",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                }}
+              >+</button>
+            </div>
+          </div>
+
+          <div style={{ marginBottom: 20 }}>
+            <label style={labelStyle}>{t.messageOptional}</label>
+            <textarea
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              placeholder={t.messagePlaceholder}
+              rows={3}
+              style={{ ...inputStyle, resize: "none" }}
+              maxLength={500}
+            />
+          </div>
+
+          {error && (
+            <p style={{ color: theme.accentSecondary, fontSize: 13, marginBottom: 12, fontFamily: bodyFont ?? "'Lato', sans-serif" }}>
+              {error}
+            </p>
+          )}
+
+          <button
+            type="submit"
+            disabled={submitMutation.isPending}
+            style={{
+              width: "100%",
+              padding: "13px 28px",
+              background: submitMutation.isPending
+                ? `${theme.accentDark}88`
+                : `linear-gradient(135deg, ${theme.accentDark}, ${theme.accent})`,
+              color: theme.buttonText,
+              border: "none",
+              borderRadius: 50,
+              fontFamily: bodyFont ?? "'Lato', sans-serif",
+              fontSize: 13,
+              fontWeight: 700,
+              letterSpacing: isRtl ? 0 : "0.1em",
+              textTransform: isRtl ? "none" : "uppercase" as const,
+              cursor: submitMutation.isPending ? "not-allowed" : "pointer",
+              boxShadow: `0 4px 16px ${theme.accent}44`,
+              transition: "opacity 0.2s",
+            }}
+          >
+            {submitMutation.isPending ? t.sending : t.confirmAttendance}
+          </button>
+        </form>
+      )}
+    </div>
+  );
+}
+
 // ── Countdown Timer ───────────────────────────────────────────────────────────
-function CountdownTimer({ targetDate }: { targetDate: string }) {
+function CountdownTimer({ targetDate, label, bodyFont }: { targetDate: string; label: string; bodyFont?: string }) {
   const [timeLeft, setTimeLeft] = useState(() => calcTimeLeft(targetDate));
 
   function calcTimeLeft(date: string) {
@@ -478,9 +672,14 @@ function CountdownTimer({ targetDate }: { targetDate: string }) {
     };
   }
 
+  useEffect(() => {
+    const id = setInterval(() => setTimeLeft(calcTimeLeft(targetDate)), 1000);
+    return () => clearInterval(id);
+  }, [targetDate]);
+
   return (
     <div>
-      <p className="invite-label text-gold opacity-50 mb-6">Counting Down</p>
+      <p className="invite-label text-gold opacity-50 mb-6" style={{ fontFamily: bodyFont }}>{label}</p>
       <div style={{ display: "flex", justifyContent: "center", gap: 16 }}>
         {(["days", "hours", "minutes", "seconds"] as const).map((unit) => (
           <div key={unit} style={{ textAlign: "center" }}>
@@ -499,7 +698,7 @@ function CountdownTimer({ targetDate }: { targetDate: string }) {
               {String(timeLeft[unit]).padStart(2, "0")}
             </div>
             <div style={{
-              fontFamily: "'Lato', sans-serif",
+              fontFamily: bodyFont ?? "'Lato', sans-serif",
               fontSize: 10,
               letterSpacing: "0.15em",
               color: "var(--gold)",
@@ -512,6 +711,37 @@ function CountdownTimer({ targetDate }: { targetDate: string }) {
           </div>
         ))}
       </div>
+    </div>
+  );
+}
+
+// ── Floating Petals ───────────────────────────────────────────────────────────
+function FloatingPetals() {
+  const petals = Array.from({ length: 8 }, (_, i) => ({
+    id: i,
+    left: `${10 + i * 11}%`,
+    delay: `${i * 0.7}s`,
+    duration: `${4 + (i % 3)}s`,
+    size: 6 + (i % 4) * 2,
+  }));
+
+  return (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      {petals.map((p) => (
+        <div
+          key={p.id}
+          style={{
+            position: "absolute",
+            left: p.left,
+            top: "-20px",
+            width: p.size,
+            height: p.size,
+            borderRadius: "50% 0",
+            background: "rgba(201,168,76,0.3)",
+            animation: `fall ${p.duration} ${p.delay} linear infinite`,
+          }}
+        />
+      ))}
     </div>
   );
 }

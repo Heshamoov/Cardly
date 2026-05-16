@@ -96,3 +96,25 @@
 - [x] Add smooth CSS transition on .invitation-page for theme switching
 - [x] Update envelope-scene background to match selected envelope theme
 - [x] Update fs-expand-overlay background to match selected envelope theme
+
+## RSVP Feature
+- [x] Add rsvp_responses table to drizzle schema (id, invitationSlug, guestName, partySize, message, createdAt)
+- [x] Add publicProcedure: rsvp.submit — save guest name + party size for a given slug
+- [x] Add protectedProcedure: rsvp.getBySlug — return all responses for a slug (owner only)
+- [x] Add protectedProcedure: rsvp.getAllForOwner — return all RSVPs across all owner's invitations
+- [x] Add RSVP form section to InvitationView.tsx (name, party size, optional message, submit button)
+- [x] Style RSVP form with envelope theme colors (CSS variables)
+- [x] Show success confirmation after submission; prevent duplicate submissions (localStorage flag)
+- [x] Add /rsvp-dashboard route (protected, login required)
+- [x] RSVP dashboard: total headcount, per-invitation breakdown, list of guest names + party sizes
+- [x] Add RSVP dashboard link to builder page header (visible only when logged in)
+- [x] Write vitest tests for rsvp.submit and rsvp.getBySlug procedures
+
+## Arabic / English Language Toggle
+- [x] Create shared i18n translations object (EN + AR) for all static invitation labels
+- [x] Add EN/AR toggle button to InvitationView guest page (top-right corner, styled with theme colors)
+- [x] Apply dir="rtl" and font-family switch (Arabic: Amiri or Noto Naskh Arabic) when AR selected
+- [x] Add EN/AR toggle button to Builder preview panel (same position)
+- [x] Apply RTL + Arabic translations in Builder preview when AR selected
+- [x] Add EN/AR toggle to RSVP form labels in both views
+- [x] Persist language choice in localStorage per invitation slug

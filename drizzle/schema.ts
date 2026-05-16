@@ -37,3 +37,15 @@ export const invitations = mysqlTable("invitations", {
 
 export type Invitation = typeof invitations.$inferSelect;
 export type InsertInvitation = typeof invitations.$inferInsert;
+
+export const rsvpResponses = mysqlTable("rsvp_responses", {
+  id: int("id").autoincrement().primaryKey(),
+  invitationSlug: varchar("invitationSlug", { length: 16 }).notNull(),
+  guestName: varchar("guestName", { length: 128 }).notNull(),
+  partySize: int("partySize").notNull().default(1),
+  message: text("message"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type RsvpResponse = typeof rsvpResponses.$inferSelect;
+export type InsertRsvpResponse = typeof rsvpResponses.$inferInsert;

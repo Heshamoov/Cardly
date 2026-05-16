@@ -1,6 +1,6 @@
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users } from "../drizzle/schema";
+import { InsertUser, InsertRsvpResponse, rsvpResponses, users } from "../drizzle/schema";
 import { ENV } from './_core/env';
 let _db: ReturnType<typeof drizzle> | null = null;
 // Lazily create the drizzle instance so local tooling can run without a DB.
@@ -89,4 +89,30 @@ export async function getUserByOpenId(openId: string) {
   return result.length > 0 ? result[0] : undefined;
 }
 
-// TODO: add feature queries here as your schema grows.
+// ── RSVP helpers ─────────────────────────────────────────────────────────────
+
+export async function insertRsvp(data: InsertRsvpResponse) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.insert(rsvpResponses).values(data);
+}
+
+export async function getRsvpsBySlug(slug: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db
+    .select()
+    .from(rsvpResponses)
+    .where(eq(rsvpResponses.invitationSlug, slug))
+    .orderBy(rsvpResponses.createdAt);
+}
+
+export async function getRsvpSummaryBySlug(slug: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const rows = await db
+    .select({ total: sql<number>`SUM(${rsvpResponses.partySize})`, count: sql<number>`COUNT(*)` })
+    .from(rsvpResponses)
+    .where(eq(rsvpResponses.invitationSlug, slug));
+  return { totalGuests: Number(rows[0]?.total ?? 0), responseCount: Number(rows[0]?.count ?? 0) };
+}
