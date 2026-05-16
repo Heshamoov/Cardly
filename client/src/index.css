@@ -51,6 +51,48 @@ html, body {
   user-select: none;
   -webkit-tap-highlight-color: transparent;
   transition: background 0.5s ease;
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+}
+
+/* On desktop, constrain the envelope to a phone-like card width */
+.envelope-card-wrap {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  flex: 1;
+}
+
+@media (min-width: 640px) {
+  .envelope-scene {
+    background: #080810 !important;
+  }
+  .envelope-card-wrap {
+    max-width: 480px;
+    width: 480px;
+    flex: none;
+    position: relative;
+    overflow: hidden;
+  }
+  .envelope-card-wrap .fs-half {
+    left: 0 !important;
+    right: 0 !important;
+  }
+  .envelope-card-wrap .fs-half-img {
+    width: 480px !important;
+  }
+  .envelope-card-wrap .fs-wax-seal {
+    left: 50% !important;
+  }
+  .envelope-card-wrap .fs-tap-hint {
+    left: 0 !important;
+    right: 0 !important;
+  }
+  .envelope-card-wrap .fs-expand-overlay {
+    left: 0 !important;
+    right: 0 !important;
+  }
 }
 
 /* Radial glow behind envelope area for atmospheric look on portrait mobile */

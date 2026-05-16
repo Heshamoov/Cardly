@@ -199,3 +199,6 @@
 
 ## Feature: Back-to-Envelope Button on Published Invitation
 - [x] Add envelope icon button next to language toggle that scrolls back to the top (envelope scene)
+
+## Bug Fix: Envelope Scene Too Large on Desktop
+- [x] Constrain envelope scene to max-width on desktop so it looks like a card, not a full-bleed image
