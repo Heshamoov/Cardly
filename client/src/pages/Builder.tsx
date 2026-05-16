@@ -17,6 +17,14 @@ interface InvitationData {
   sections: Record<string, boolean>;
   envelopeStyle: string;
   fontScale: number; // 0.8 – 1.4, default 1.0
+  // Arabic content fields (optional)
+  arBrideFirstName?: string;
+  arBrideLastName?: string;
+  arGroomFirstName?: string;
+  arGroomLastName?: string;
+  arVenueName?: string;
+  arVenueAddress?: string;
+  arMessage?: string;
 }
 
 const ENVELOPE_STYLES = [
@@ -103,6 +111,13 @@ const defaultData: InvitationData = {
   message: "",
   envelopeStyle: "ivory-gold",
   fontScale: 1.0,
+  arBrideFirstName: "",
+  arBrideLastName: "",
+  arGroomFirstName: "",
+  arGroomLastName: "",
+  arVenueName: "",
+  arVenueAddress: "",
+  arMessage: "",
   sections: {
     names: true,
     date: true,
@@ -295,6 +310,7 @@ export default function Builder() {
   const [previewing, setPreviewing] = useState(false);
   const [publishedSlug, setPublishedSlug] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [formLang, setFormLang] = useState<Lang>("en");
   const [, navigate] = useLocation();
 
   // Auto-save to localStorage on every change
@@ -415,6 +431,49 @@ export default function Builder() {
           <p className="font-sans text-xs opacity-40 mt-2">
             Fill in your details · Toggle sections on or off · Preview & Publish
           </p>
+          {/* Language toggle */}
+          <div style={{ display: "flex", justifyContent: "center", gap: 8, marginTop: 16 }}>
+            <button
+              onClick={() => setFormLang("en")}
+              style={{
+                padding: "6px 20px",
+                borderRadius: 20,
+                border: `1px solid ${formLang === "en" ? "rgba(201,168,76,0.9)" : "rgba(201,168,76,0.3)"}`,
+                background: formLang === "en" ? "rgba(201,168,76,0.15)" : "transparent",
+                color: formLang === "en" ? "rgba(201,168,76,1)" : "rgba(201,168,76,0.5)",
+                fontFamily: "'Lato', sans-serif",
+                fontSize: 12,
+                fontWeight: formLang === "en" ? 700 : 400,
+                letterSpacing: "0.1em",
+                cursor: "pointer",
+                transition: "all 0.2s",
+              }}
+            >
+              EN
+            </button>
+            <button
+              onClick={() => setFormLang("ar")}
+              style={{
+                padding: "6px 20px",
+                borderRadius: 20,
+                border: `1px solid ${formLang === "ar" ? "rgba(201,168,76,0.9)" : "rgba(201,168,76,0.3)"}`,
+                background: formLang === "ar" ? "rgba(201,168,76,0.15)" : "transparent",
+                color: formLang === "ar" ? "rgba(201,168,76,1)" : "rgba(201,168,76,0.5)",
+                fontFamily: `'Noto Naskh Arabic', 'Amiri', serif`,
+                fontSize: 14,
+                fontWeight: formLang === "ar" ? 700 : 400,
+                cursor: "pointer",
+                transition: "all 0.2s",
+              }}
+            >
+              عربي
+            </button>
+          </div>
+          {formLang === "ar" && (
+            <p style={{ fontFamily: `'Noto Naskh Arabic', 'Amiri', serif`, fontSize: 11, color: "rgba(201,168,76,0.5)", marginTop: 6 }}>
+              أدخل المحتوى بالعربية — سيظهر للضيوف عند اختيار العربية
+            </p>
+          )}
           <a
             href="/rsvp-dashboard"
             style={{
@@ -477,59 +536,58 @@ export default function Builder() {
 
         {/* ── Section: Names ── */}
         <SectionCard
-          label="Bride & Groom Names"
+          label={formLang === "ar" ? "أسماء العروسين" : "Bride & Groom Names"}
           sectionKey="names"
           sections={data.sections}
           onToggle={toggleSection}
         >
-          <div className="grid grid-cols-2 gap-3 mb-3">
-            <div>
-              <label className="font-sans text-xs opacity-50 block mb-1">
-                Bride's First Name
-              </label>
-              <input
-                className="wedding-input"
-                placeholder="Bride's first name"
-                value={data.brideFirstName}
-                onChange={(e) => set("brideFirstName", e.target.value)}
-              />
+          {formLang === "en" ? (
+            <>
+              <div className="grid grid-cols-2 gap-3 mb-3">
+                <div>
+                  <label className="font-sans text-xs opacity-50 block mb-1">Bride's First Name</label>
+                  <input className="wedding-input" placeholder="Bride's first name" value={data.brideFirstName} onChange={(e) => set("brideFirstName", e.target.value)} />
+                </div>
+                <div>
+                  <label className="font-sans text-xs opacity-50 block mb-1">Bride's Last Name</label>
+                  <input className="wedding-input" placeholder="Optional" value={data.brideLastName} onChange={(e) => set("brideLastName", e.target.value)} />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="font-sans text-xs opacity-50 block mb-1">Groom's First Name</label>
+                  <input className="wedding-input" placeholder="Groom's first name" value={data.groomFirstName} onChange={(e) => set("groomFirstName", e.target.value)} />
+                </div>
+                <div>
+                  <label className="font-sans text-xs opacity-50 block mb-1">Groom's Last Name</label>
+                  <input className="wedding-input" placeholder="Optional" value={data.groomLastName} onChange={(e) => set("groomLastName", e.target.value)} />
+                </div>
+              </div>
+            </>
+          ) : (
+            <div dir="rtl" style={{ fontFamily: `'Noto Naskh Arabic', 'Amiri', serif` }}>
+              <div className="grid grid-cols-2 gap-3 mb-3">
+                <div>
+                  <label className="font-sans text-xs opacity-50 block mb-1" style={{ fontFamily: `'Noto Naskh Arabic', 'Amiri', serif` }}>اسم العروس الأول</label>
+                  <input className="wedding-input" dir="rtl" style={{ fontFamily: `'Noto Naskh Arabic', 'Amiri', serif` }} placeholder="اسم العروس" value={data.arBrideFirstName ?? ""} onChange={(e) => set("arBrideFirstName", e.target.value)} />
+                </div>
+                <div>
+                  <label className="font-sans text-xs opacity-50 block mb-1" style={{ fontFamily: `'Noto Naskh Arabic', 'Amiri', serif` }}>اسم العائلة (اختياري)</label>
+                  <input className="wedding-input" dir="rtl" style={{ fontFamily: `'Noto Naskh Arabic', 'Amiri', serif` }} placeholder="اختياري" value={data.arBrideLastName ?? ""} onChange={(e) => set("arBrideLastName", e.target.value)} />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="font-sans text-xs opacity-50 block mb-1" style={{ fontFamily: `'Noto Naskh Arabic', 'Amiri', serif` }}>اسم العريس الأول</label>
+                  <input className="wedding-input" dir="rtl" style={{ fontFamily: `'Noto Naskh Arabic', 'Amiri', serif` }} placeholder="اسم العريس" value={data.arGroomFirstName ?? ""} onChange={(e) => set("arGroomFirstName", e.target.value)} />
+                </div>
+                <div>
+                  <label className="font-sans text-xs opacity-50 block mb-1" style={{ fontFamily: `'Noto Naskh Arabic', 'Amiri', serif` }}>اسم العائلة (اختياري)</label>
+                  <input className="wedding-input" dir="rtl" style={{ fontFamily: `'Noto Naskh Arabic', 'Amiri', serif` }} placeholder="اختياري" value={data.arGroomLastName ?? ""} onChange={(e) => set("arGroomLastName", e.target.value)} />
+                </div>
+              </div>
             </div>
-            <div>
-              <label className="font-sans text-xs opacity-50 block mb-1">
-                Bride's Last Name
-              </label>
-              <input
-                className="wedding-input"
-                placeholder="Optional"
-                value={data.brideLastName}
-                onChange={(e) => set("brideLastName", e.target.value)}
-              />
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="font-sans text-xs opacity-50 block mb-1">
-                Groom's First Name
-              </label>
-              <input
-                className="wedding-input"
-                placeholder="Groom's first name"
-                value={data.groomFirstName}
-                onChange={(e) => set("groomFirstName", e.target.value)}
-              />
-            </div>
-            <div>
-              <label className="font-sans text-xs opacity-50 block mb-1">
-                Groom's Last Name
-              </label>
-              <input
-                className="wedding-input"
-                placeholder="Optional"
-                value={data.groomLastName}
-                onChange={(e) => set("groomLastName", e.target.value)}
-              />
-            </div>
-          </div>
+          )}
         </SectionCard>
 
         {/* ── Section: Date ── */}
@@ -570,31 +628,46 @@ export default function Builder() {
 
         {/* ── Section: Venue ── */}
         <SectionCard
-          label="Venue & Location"
+          label={formLang === "ar" ? "مكان الحفل" : "Venue & Location"}
           sectionKey="venue"
           sections={data.sections}
           onToggle={toggleSection}
         >
-          <VenueLocationInput data={data} set={set} />
+          {formLang === "en" ? (
+            <VenueLocationInput data={data} set={set} />
+          ) : (
+            <div dir="rtl" style={{ fontFamily: `'Noto Naskh Arabic', 'Amiri', serif` }} className="space-y-3">
+              <div>
+                <label className="font-sans text-xs opacity-50 block mb-1" style={{ fontFamily: `'Noto Naskh Arabic', 'Amiri', serif` }}>اسم المكان</label>
+                <input className="wedding-input" dir="rtl" style={{ fontFamily: `'Noto Naskh Arabic', 'Amiri', serif` }} placeholder="مثال: قاعة الأفراح الكبرى" value={data.arVenueName ?? ""} onChange={(e) => set("arVenueName", e.target.value)} />
+              </div>
+              <div>
+                <label className="font-sans text-xs opacity-50 block mb-1" style={{ fontFamily: `'Noto Naskh Arabic', 'Amiri', serif` }}>العنوان</label>
+                <input className="wedding-input" dir="rtl" style={{ fontFamily: `'Noto Naskh Arabic', 'Amiri', serif` }} placeholder="مثال: شارع الورد، أبوظبي" value={data.arVenueAddress ?? ""} onChange={(e) => set("arVenueAddress", e.target.value)} />
+              </div>
+              <p className="font-sans text-xs opacity-30 mt-1" style={{ fontFamily: `'Noto Naskh Arabic', 'Amiri', serif` }}>رابط الخريطة يُحدد في تبويب اللغة الإنجليزية</p>
+            </div>
+          )}
         </SectionCard>
 
         {/* ── Section: Message ── */}
         <SectionCard
-          label="Personal Message"
+          label={formLang === "ar" ? "رسالة شخصية" : "Personal Message"}
           sectionKey="message"
           sections={data.sections}
           onToggle={toggleSection}
         >
-          <label className="font-sans text-xs opacity-50 block mb-1">
-            Message to Guests
-          </label>
-          <textarea
-            className="wedding-input"
-            rows={3}
-            placeholder="e.g. We joyfully invite you to share in our happiness as we begin our new journey together…"
-            value={data.message}
-            onChange={(e) => set("message", e.target.value)}
-          />
+          {formLang === "en" ? (
+            <>
+              <label className="font-sans text-xs opacity-50 block mb-1">Message to Guests</label>
+              <textarea className="wedding-input" rows={3} placeholder="e.g. We joyfully invite you to share in our happiness as we begin our new journey together…" value={data.message} onChange={(e) => set("message", e.target.value)} />
+            </>
+          ) : (
+            <div dir="rtl">
+              <label className="font-sans text-xs opacity-50 block mb-1" style={{ fontFamily: `'Noto Naskh Arabic', 'Amiri', serif` }}>رسالة إلى الضيوف</label>
+              <textarea className="wedding-input" dir="rtl" style={{ fontFamily: `'Noto Naskh Arabic', 'Amiri', serif` }} rows={3} placeholder="مثال: يسعدنا دعوتكم لمشاركتنا فرحة زفافنا…" value={data.arMessage ?? ""} onChange={(e) => set("arMessage", e.target.value)} />
+            </div>
+          )}
         </SectionCard>
 
         {/* ── Section: Map ── */}
@@ -856,16 +929,20 @@ function PreviewContent({ data, lang = "en", onToggleLang }: { data: InvitationD
   const isRtl = lang === "ar";
   const bodyFont = isRtl ? ARABIC_FONT : undefined;
 
-  const brideName = [data.brideFirstName, data.brideLastName]
-    .filter(Boolean)
-    .join(" ");
-  const groomName = [data.groomFirstName, data.groomLastName]
-    .filter(Boolean)
-    .join(" ");
+  // Use Arabic content when lang=ar, fall back to English if Arabic not filled in
+  const brideName = isRtl
+    ? ([data.arBrideFirstName, data.arBrideLastName].filter(Boolean).join(" ") || [data.brideFirstName, data.brideLastName].filter(Boolean).join(" "))
+    : [data.brideFirstName, data.brideLastName].filter(Boolean).join(" ");
+  const groomName = isRtl
+    ? ([data.arGroomFirstName, data.arGroomLastName].filter(Boolean).join(" ") || [data.groomFirstName, data.groomLastName].filter(Boolean).join(" "))
+    : [data.groomFirstName, data.groomLastName].filter(Boolean).join(" ");
+  const displayVenueName = isRtl ? (data.arVenueName || data.venueName) : data.venueName;
+  const displayVenueAddress = isRtl ? (data.arVenueAddress || data.venueAddress) : data.venueAddress;
+  const displayMessage = isRtl ? (data.arMessage || data.message) : data.message;
 
   const weddingDate = data.date ? new Date(data.date) : null;
   const formattedDate = weddingDate
-    ? weddingDate.toLocaleDateString("en-GB", {
+    ? weddingDate.toLocaleDateString(isRtl ? "ar-AE" : "en-GB", {
         weekday: "long",
         day: "numeric",
         month: "long",
@@ -874,7 +951,7 @@ function PreviewContent({ data, lang = "en", onToggleLang }: { data: InvitationD
     : "";
 
   const formattedTime = data.time
-    ? new Date(`2000-01-01T${data.time}`).toLocaleTimeString("en-US", {
+    ? new Date(`2000-01-01T${data.time}`).toLocaleTimeString(isRtl ? "ar-AE" : "en-US", {
         hour: "numeric",
         minute: "2-digit",
         hour12: true,
@@ -974,23 +1051,23 @@ function PreviewContent({ data, lang = "en", onToggleLang }: { data: InvitationD
           <p className="font-sans text-xs uppercase tracking-widest text-gold opacity-60 mb-2" style={{ fontFamily: bodyFont }}>
             {t.venueLabel}
           </p>
-          <p className="font-serif text-2xl text-cream">
-            {data.venueName || "Al Rekab Restaurant"}
+          <p className="font-serif text-2xl text-cream" style={{ fontFamily: bodyFont }}>
+            {displayVenueName || "Al Rekab Restaurant"}
           </p>
-          <p className="font-sans text-sm opacity-50 mt-1">
-            {data.venueAddress || "Al Ain, Abu Dhabi, UAE"}
+          <p className="font-sans text-sm opacity-50 mt-1" style={{ fontFamily: bodyFont }}>
+            {displayVenueAddress || "Al Ain, Abu Dhabi, UAE"}
           </p>
         </div>
       )}
 
       {/* Message */}
-      {data.sections.message && data.message && (
+      {data.sections.message && displayMessage && (
         <div className="invitation-section py-6 px-8">
           <div className="divider-ornament mb-4">
             <span className="text-gold text-sm">✦</span>
           </div>
-          <p className="font-serif italic text-lg opacity-80 leading-relaxed">
-            "{data.message}"
+          <p className="font-serif italic text-lg opacity-80 leading-relaxed" style={{ fontFamily: bodyFont }}>
+            "{displayMessage}"
           </p>
         </div>
       )}

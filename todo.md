@@ -118,3 +118,15 @@
 - [x] Apply RTL + Arabic translations in Builder preview when AR selected
 - [x] Add EN/AR toggle to RSVP form labels in both views
 - [x] Persist language choice in localStorage per invitation slug
+
+## Bug Fix: Missing EN/AR Toggle in Builder Form
+- [x] Add EN/AR language toggle button to the builder form panel (visible in the editing view, not just preview)
+
+## Bilingual Builder Form (EN + AR Content Input)
+- [x] Add Arabic content fields to InvitationData: arBrideFirstName, arBrideLastName, arGroomFirstName, arGroomLastName, arVenueName, arVenueAddress, arMessage
+- [x] Add EN/AR tab toggle to the builder form header
+- [x] When AR tab is active, show Arabic input fields (RTL, Arabic font) for all text content
+- [x] Persist Arabic fields in localStorage alongside English fields
+- [x] Update PreviewContent in Builder to show Arabic content when lang=ar
+- [x] Update InvitationPage in InvitationView to show Arabic content when lang=ar
+- [x] Arabic fields are optional — fall back to English if Arabic not filled in

@@ -260,11 +260,18 @@ function LangToggle({ lang, onToggle, theme }: { lang: Lang; onToggle: () => voi
 function InvitationPage({ data, slug, lang, onToggleLang }: {
   data: InvitationData; slug: string; lang: Lang; onToggleLang: () => void;
 }) {
-  const brideName = [data.brideFirstName, data.brideLastName].filter(Boolean).join(" ");
-  const groomName = [data.groomFirstName, data.groomLastName].filter(Boolean).join(" ");
+  const isRtl = lang === "ar";
+  const brideName = isRtl
+    ? ([(data as any).arBrideFirstName, (data as any).arBrideLastName].filter(Boolean).join(" ") || [data.brideFirstName, data.brideLastName].filter(Boolean).join(" "))
+    : [data.brideFirstName, data.brideLastName].filter(Boolean).join(" ");
+  const groomName = isRtl
+    ? ([(data as any).arGroomFirstName, (data as any).arGroomLastName].filter(Boolean).join(" ") || [data.groomFirstName, data.groomLastName].filter(Boolean).join(" "))
+    : [data.groomFirstName, data.groomLastName].filter(Boolean).join(" ");
+  const displayVenueName = isRtl ? ((data as any).arVenueName || data.venueName) : data.venueName;
+  const displayVenueAddress = isRtl ? ((data as any).arVenueAddress || data.venueAddress) : data.venueAddress;
+  const displayMessage = isRtl ? ((data as any).arMessage || data.message) : data.message;
   const envStyle = ENVELOPE_STYLES[(data as { envelopeStyle?: string }).envelopeStyle ?? "ivory-gold"] ?? ENVELOPE_STYLES["ivory-gold"];
   const t = translations[lang];
-  const isRtl = lang === "ar";
   const bodyFont = isRtl ? ARABIC_FONT : undefined;
 
   const weddingDate = data.date ? new Date(data.date) : null;
@@ -366,27 +373,27 @@ function InvitationPage({ data, slug, lang, onToggleLang }: {
         )}
 
         {/* Venue */}
-        {data.sections?.venue !== false && data.venueName && (
+        {data.sections?.venue !== false && displayVenueName && (
           <div className="invitation-section py-8">
             <div className="divider-ornament mb-5">
               <span className="text-gold">❧</span>
             </div>
             <p className="invite-label text-gold opacity-50 mb-3" style={{ fontFamily: bodyFont }}>{t.venueLabel}</p>
-            <p className="invite-heading text-cream text-2xl">{data.venueName}</p>
-            {data.venueAddress && (
-              <p className="invite-detail opacity-40 mt-2">{data.venueAddress}</p>
+            <p className="invite-heading text-cream text-2xl" style={{ fontFamily: bodyFont }}>{displayVenueName}</p>
+            {displayVenueAddress && (
+              <p className="invite-detail opacity-40 mt-2" style={{ fontFamily: bodyFont }}>{displayVenueAddress}</p>
             )}
           </div>
         )}
 
         {/* Personal Message */}
-        {data.sections?.message !== false && data.message && (
+        {data.sections?.message !== false && displayMessage && (
           <div className="invitation-section py-8 px-8">
             <div className="divider-ornament mb-5">
               <span className="text-gold">✦</span>
             </div>
             <p className="invite-detail text-xl opacity-75 leading-relaxed" style={{ fontFamily: bodyFont }}>
-              "{data.message}"
+              "{displayMessage}"
             </p>
           </div>
         )}
