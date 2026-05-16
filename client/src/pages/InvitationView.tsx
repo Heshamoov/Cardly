@@ -687,7 +687,7 @@ function CountdownTimer({ targetDate, label, bodyFont, isRtl }: { targetDate: st
   return (
     <div>
       <p className="invite-label text-gold opacity-50 mb-6" style={{ fontFamily: bodyFont }}>{label}</p>
-      <div style={{ display: "flex", justifyContent: "center", gap: 16 }}>
+      <div style={{ display: "flex", justifyContent: "center", gap: 24 }}>
         {([
           { unit: "days" as const, arLabel: "أيام", enLabel: "Days" },
           { unit: "hours" as const, arLabel: "ساعات", enLabel: "Hours" },
@@ -697,26 +697,31 @@ function CountdownTimer({ targetDate, label, bodyFont, isRtl }: { targetDate: st
           <div key={unit} style={{ textAlign: "center" }}>
             <div style={{
               fontFamily: "'Cormorant Garamond', serif",
-              fontSize: "clamp(2rem, 8vw, 3rem)",
+              fontSize: "clamp(2rem, 6vw, 2.5rem)",
               color: "var(--gold)",
               fontWeight: 300,
               lineHeight: 1,
-              minWidth: 56,
+              minWidth: 80,
+              width: 80,
+              height: 80,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
               border: "1px solid var(--gold-dark)",
-              borderRadius: 8,
-              padding: "8px 4px",
+              borderRadius: 10,
+              padding: "0 12px",
               background: "var(--bg-secondary, transparent)",
             }}>
               {String(timeLeft[unit]).padStart(2, "0")}
             </div>
             <div style={{
               fontFamily: isRtl ? "'Noto Naskh Arabic', 'Amiri', serif" : (bodyFont ?? "'Lato', sans-serif"),
-              fontSize: 10,
-              letterSpacing: isRtl ? 0 : "0.15em",
+              fontSize: 11,
+              letterSpacing: isRtl ? 0 : "0.12em",
               color: "var(--gold)",
-              opacity: 0.5,
+              opacity: 0.55,
               textTransform: isRtl ? "none" : "uppercase",
-              marginTop: 6,
+              marginTop: 8,
             }}>
               {isRtl ? arLabel : enLabel}
             </div>

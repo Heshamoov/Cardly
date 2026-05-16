@@ -1211,7 +1211,7 @@ function CountdownTimer({ targetDate, label = "Counting Down", bodyFont, isRtl }
       <p className="font-sans text-xs uppercase tracking-widest text-gold opacity-60 mb-4" style={{ fontFamily: bodyFont }}>
         {label}
       </p>
-      <div className="flex justify-center gap-4">
+      <div className="flex justify-center gap-6">
         {[
           { value: timeLeft.days, label: isRtl ? "أيام" : "Days" },
           { value: timeLeft.hours, label: isRtl ? "ساعات" : "Hours" },
@@ -1220,12 +1220,12 @@ function CountdownTimer({ targetDate, label = "Counting Down", bodyFont, isRtl }
         ].map(({ value, label }) => (
           <div key={label} className="text-center">
             <div
-              className="font-serif text-4xl font-light w-16 h-16 flex items-center justify-center rounded-lg"
-              style={{ color: "var(--gold)", border: "1px solid var(--gold-dark)", background: "var(--bg-secondary, transparent)" }}
+              className="font-serif text-4xl font-light flex items-center justify-center rounded-lg"
+              style={{ color: "var(--gold)", border: "1px solid var(--gold-dark)", background: "var(--bg-secondary, transparent)", width: 80, height: 80, padding: "0 12px" }}
             >
               {String(value).padStart(2, "0")}
             </div>
-            <p className="font-sans text-xs opacity-40 mt-1 uppercase tracking-wider">
+            <p className="font-sans text-xs opacity-40 mt-2" style={{ letterSpacing: isRtl ? 0 : "0.1em", textTransform: isRtl ? "none" : "uppercase", fontFamily: isRtl ? "'Noto Naskh Arabic', serif" : undefined }}>
               {label}
             </p>
           </div>

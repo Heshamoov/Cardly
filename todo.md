@@ -163,3 +163,7 @@
 ## Fix: Countdown Timer Labels Not Translating to Arabic
 - [x] Fix DAYS/HOURS/MINS/SECS labels in CountdownTimer (Builder Preview) to use Arabic when lang=ar
 - [x] Fix DAYS/HOURS/MINS/SECS labels in CountdownTimer (Invitation) to use Arabic when lang=ar
+
+## Fix: Countdown Timer Too Narrow
+- [x] Widen countdown boxes (minWidth, padding) and increase gap between units in Builder Preview
+- [x] Same fix in InvitationView CountdownTimer
