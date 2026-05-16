@@ -831,26 +831,49 @@ function PreviewWithEnvelope({
       {/* Floating banner — compact mobile-first bar */}
       <div className="fixed top-0 left-0 right-0 z-50" style={{ background: "rgba(10,8,24,0.88)", borderBottom: "1px solid rgba(201,168,76,0.2)", backdropFilter: "blur(10px)" }}>
         <div style={{ maxWidth: 480, margin: "0 auto", padding: "6px 12px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
-          {/* Font size slider — only shown when invitation content is visible */}
+          {/* Left side: font size control or preview label */}
           {showInvitation ? (
             <div style={{ display: "flex", alignItems: "center", gap: 6, flex: 1 }}>
-              <span style={{ fontFamily: "'Lato', sans-serif", fontSize: 9, letterSpacing: "0.12em", color: "rgba(201,168,76,0.7)", textTransform: "uppercase", whiteSpace: "nowrap" }}>A</span>
-              <input
-                type="range"
-                min={0.8}
-                max={1.4}
-                step={0.05}
-                value={data.fontScale}
-                onChange={(e) => onFontScaleChange(parseFloat(e.target.value))}
-                style={{ flex: 1, accentColor: "#c9a84c", cursor: "pointer", height: 3 }}
-                title={`Font size: ${Math.round(data.fontScale * 100)}%`}
-              />
-              <span style={{ fontFamily: "'Lato', sans-serif", fontSize: 13, letterSpacing: "0.12em", color: "rgba(201,168,76,0.7)", textTransform: "uppercase", whiteSpace: "nowrap" }}>A</span>
+              {/* Font size label */}
+              <span style={{ fontFamily: "'Lato', sans-serif", fontSize: 9, letterSpacing: "0.1em", color: "rgba(201,168,76,0.6)", textTransform: "uppercase", whiteSpace: "nowrap" }}>Font</span>
+              {/* A- button */}
+              <button
+                onClick={() => onFontScaleChange(Math.max(0.8, Math.round((data.fontScale - 0.05) * 100) / 100))}
+                style={{ fontFamily: "'Lato', sans-serif", fontSize: 13, fontWeight: 700, lineHeight: 1, width: 24, height: 24, borderRadius: 6, border: "1px solid rgba(201,168,76,0.5)", background: "transparent", color: "rgba(201,168,76,0.85)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}
+                title="Decrease font size"
+              >A−</button>
+              {/* Percentage indicator */}
+              <span style={{ fontFamily: "'Lato', sans-serif", fontSize: 9, letterSpacing: "0.05em", color: "rgba(201,168,76,0.55)", whiteSpace: "nowrap", minWidth: 28, textAlign: "center" }}>{Math.round(data.fontScale * 100)}%</span>
+              {/* A+ button */}
+              <button
+                onClick={() => onFontScaleChange(Math.min(1.4, Math.round((data.fontScale + 0.05) * 100) / 100))}
+                style={{ fontFamily: "'Lato', sans-serif", fontSize: 13, fontWeight: 700, lineHeight: 1, width: 24, height: 24, borderRadius: 6, border: "1px solid rgba(201,168,76,0.5)", background: "transparent", color: "rgba(201,168,76,0.85)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}
+                title="Increase font size"
+              >A+</button>
             </div>
           ) : (
             <span style={{ fontFamily: "'Lato', sans-serif", fontSize: 10, letterSpacing: "0.15em", color: "rgba(201,168,76,0.8)", textTransform: "uppercase" }}>Preview</span>
           )}
-          <div style={{ display: "flex", gap: 6 }}>
+          <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+            {/* EN/AR language toggle — always visible in preview */}
+            <button
+              onClick={toggleLang}
+              style={{
+                fontFamily: lang === "ar" ? "'Noto Naskh Arabic', serif" : "'Lato', sans-serif",
+                fontSize: 11,
+                letterSpacing: lang === "ar" ? 0 : "0.08em",
+                padding: "4px 10px",
+                borderRadius: 20,
+                border: "1px solid rgba(201,168,76,0.6)",
+                background: "rgba(201,168,76,0.12)",
+                color: "rgba(201,168,76,1)",
+                cursor: "pointer",
+                fontWeight: 600,
+                whiteSpace: "nowrap",
+              }}
+            >
+              {lang === "en" ? "عربي" : "EN"}
+            </button>
             {showInvitation && (
               <button
                 onClick={resetEnvelope}

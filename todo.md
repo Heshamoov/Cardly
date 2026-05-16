@@ -167,3 +167,7 @@
 ## Fix: Countdown Timer Too Narrow
 - [x] Widen countdown boxes (minWidth, padding) and increase gap between units in Builder Preview
 - [x] Same fix in InvitationView CountdownTimer
+
+## Fix: Preview Language Toggle + Font Size Control
+- [x] Add EN/AR toggle button inside the Preview panel (visible to visitors)
+- [x] Redesign font size control to be clearly labeled (e.g. "A-" / "A+" buttons with label "Font Size")
