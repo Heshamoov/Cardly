@@ -44,12 +44,13 @@ html, body {
 .envelope-scene {
   position: fixed;
   inset: 0;
-  background: linear-gradient(180deg, #1a1a2e 0%, #16213e 40%, #0f3460 100%);
+  background: linear-gradient(180deg, #0F172A 0%, #1E293B 100%); /* default navy; overridden by inline theme style */
   overflow: hidden;
   z-index: 10;
   cursor: pointer;
   user-select: none;
   -webkit-tap-highlight-color: transparent;
+  transition: background 0.5s ease;
 }
 
 /* Radial glow behind envelope area for atmospheric look on portrait mobile */
@@ -61,7 +62,7 @@ html, body {
   transform: translate(-50%, -50%);
   width: 120vw;
   height: 60vw;
-  background: radial-gradient(ellipse at center, rgba(201,168,76,0.12) 0%, transparent 70%);
+  background: radial-gradient(ellipse at center, color-mix(in srgb, var(--gold, #C8A96B) 12%, transparent) 0%, transparent 70%);
   pointer-events: none;
   z-index: 1;
 }
@@ -187,7 +188,7 @@ html, body {
   position: absolute;
   inset: -8px;
   border-radius: 50%;
-  border: 2px solid rgba(201,168,76,0.4);
+  border: 2px solid rgba(var(--seal-pulse-color, 201,168,76), 0.4);
   animation: sealPulse 2s ease-in-out infinite;
 }
 
@@ -196,11 +197,11 @@ html, body {
   50%       { opacity: 0.8; transform: scale(1.12); }
 }
 
-/* Expand overlay — covers screen to transition to invitation */
+/* Expand overlay — covers screen to transition to invitation; background overridden by inline theme style */
 .fs-expand-overlay {
   position: fixed;
   inset: 0;
-  background: linear-gradient(180deg, #1a1a2e 0%, #16213e 40%, #0f3460 100%);
+  background: #0F172A; /* default; overridden by inline theme style */
   z-index: 100;
   opacity: 0;
   pointer-events: none;
@@ -236,11 +237,13 @@ html, body {
 /* ─── Invitation Page ─────────────────────────── */
 .invitation-page {
   min-height: 100svh;
-  background: linear-gradient(180deg, #1a1a2e 0%, #16213e 40%, #0f3460 100%);
+  background: var(--invitation-bg, #0F172A);
   color: var(--cream);
   overflow-x: hidden;
   /* Font scale: zoom scales all child text including Tailwind rem-based classes */
   zoom: var(--font-scale, 1);
+  /* Smooth theme transition when switching envelopes */
+  transition: background 0.5s ease, color 0.5s ease;
 }
 
 .invitation-section {
@@ -276,7 +279,7 @@ html, body {
 
 .section-card {
   background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(201,168,76,0.2);
+  border: 1px solid color-mix(in srgb, var(--gold, #C8A96B) 20%, transparent);
   border-radius: 12px;
   padding: 20px;
   margin-bottom: 16px;
@@ -284,7 +287,7 @@ html, body {
   transition: border-color 0.2s;
 }
 .section-card:hover {
-  border-color: rgba(201,168,76,0.4);
+  border-color: color-mix(in srgb, var(--gold, #C8A96B) 40%, transparent);
 }
 .section-card.hidden-section {
   opacity: 0.4;
@@ -324,11 +327,11 @@ html, body {
 .wedding-input {
   width: 100%;
   background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(201,168,76,0.3);
+  border: 1px solid color-mix(in srgb, var(--gold, #C8A96B) 30%, transparent);
   border-radius: 8px;
   padding: 10px 14px;
   color: var(--cream);
-  font-family: 'Montserrat', sans-serif;
+  font-family: 'Lato', sans-serif;
   font-size: 14px;
   outline: none;
   transition: border-color 0.2s;
@@ -343,7 +346,7 @@ html, body {
 /* ─── Buttons ─────────────────────────────────── */
 .btn-gold {
   background: linear-gradient(135deg, var(--gold-dark), var(--gold), var(--gold-light));
-  color: #1a1a2e;
+  color: var(--btn-text, #1a1a2e);
   font-family: 'Montserrat', sans-serif;
   font-weight: 600;
   font-size: 15px;
@@ -353,12 +356,12 @@ html, body {
   border: none;
   border-radius: 50px;
   cursor: pointer;
-  box-shadow: 0 4px 20px rgba(201,168,76,0.4);
+  box-shadow: 0 4px 20px color-mix(in srgb, var(--gold, #C8A96B) 40%, transparent);
   transition: transform 0.2s, box-shadow 0.2s;
 }
 .btn-gold:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 30px rgba(201,168,76,0.5);
+  box-shadow: 0 8px 30px color-mix(in srgb, var(--gold, #C8A96B) 50%, transparent);
 }
 .btn-gold:active {
   transform: translateY(0);
@@ -367,7 +370,7 @@ html, body {
 .btn-outline {
   background: transparent;
   color: var(--gold);
-  font-family: 'Montserrat', sans-serif;
+  font-family: 'Lato', sans-serif;
   font-weight: 500;
   font-size: 14px;
   letter-spacing: 1px;
@@ -379,7 +382,7 @@ html, body {
   transition: background 0.2s, color 0.2s;
 }
 .btn-outline:hover {
-  background: rgba(201,168,76,0.1);
+  background: color-mix(in srgb, var(--gold, #C8A96B) 10%, transparent);
 }
 
 /* ─── Animations ──────────────────────────────── */
@@ -440,7 +443,7 @@ html, body {
   overflow: hidden;
   box-shadow:
     0 24px 64px rgba(0,0,0,0.7),
-    0 0 0 1px rgba(201,168,76,0.25);
+    0 0 0 1px color-mix(in srgb, var(--gold, #C8A96B) 25%, transparent);
   perspective: 800px;
 }
 

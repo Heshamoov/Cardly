@@ -84,3 +84,15 @@
 - [x] Top banner buttons compact and mobile-friendly (smaller, icon-only or short labels)
 - [x] TAP TO OPEN hint visible inside the envelope viewport
 - [x] Envelope image covers full portrait screen without cropping the wax seal
+
+## Envelope Theme Color Palettes (User-Specified)
+- [x] Replace all four envelope theme objects with exact user-specified color palettes
+- [x] Add secondary background, text color, and all accent variables to theme objects
+- [x] Apply --bg-secondary, --text-primary, --accent, --accent-secondary CSS variables to invitation-page
+- [x] Update invitation text colors to use --text-primary (not hardcoded cream/navy)
+- [x] Update borders, dividers, decorative lines to use theme accent
+- [x] Update Get Directions button to use theme accent colors
+- [x] Update countdown timer colors to use theme variables
+- [x] Add smooth CSS transition on .invitation-page for theme switching
+- [x] Update envelope-scene background to match selected envelope theme
+- [x] Update fs-expand-overlay background to match selected envelope theme

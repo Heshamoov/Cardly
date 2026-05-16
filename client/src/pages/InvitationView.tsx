@@ -2,30 +2,57 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { useRoute } from "wouter";
 import { trpc } from "@/lib/trpc";
 
-const ENVELOPE_STYLES: Record<string, { img: string; sealColor: string; name: string; theme: { bg: string; accent: string; accentLight: string; accentDark: string; text: string } }> = {
+const ENVELOPE_STYLES: Record<string, {
+  img: string; sealColor: string; name: string;
+  theme: {
+    bg: string; bgSecondary: string; text: string;
+    accent: string; accentLight: string; accentDark: string;
+    accentSecondary: string; buttonText: string; sceneBg: string;
+  }
+}> = {
   "ivory-gold": {
     img: "https://d2xsxph8kpxj0f.cloudfront.net/310419663029094267/cwkwQE2ZytYK5D22sZcWLW/envelope_ivory_gold-c4CMUQ9ZncnqYJ2Gq4huYK.webp",
-    sealColor: "#8b1a1a",
+    sealColor: "#7A1F2B",
     name: "Classic Ivory",
-    theme: { bg: "linear-gradient(180deg, #2a1a08 0%, #1a0f05 40%, #0f0a03 100%)", accent: "#c9a84c", accentLight: "#e8c97a", accentDark: "#a07830", text: "#f5e6c8" },
+    theme: {
+      bg: "#F8F4EC", bgSecondary: "#EFE7DA", text: "#3A3128",
+      accent: "#C8A96B", accentLight: "#DFC28A", accentDark: "#A8893B",
+      accentSecondary: "#7A1F2B", buttonText: "#F8F4EC",
+      sceneBg: "linear-gradient(180deg, #EFE7DA 0%, #F8F4EC 100%)",
+    },
   },
   "navy-gold": {
     img: "https://d2xsxph8kpxj0f.cloudfront.net/310419663029094267/cwkwQE2ZytYK5D22sZcWLW/envelope_navy_gold-4km7M5i6ZhTiMMte5zY3i4.webp",
-    sealColor: "#b8860b",
+    sealColor: "#D4AF37",
     name: "Royal Navy",
-    theme: { bg: "linear-gradient(180deg, #1a1a2e 0%, #16213e 40%, #0f3460 100%)", accent: "#c9a84c", accentLight: "#e8c97a", accentDark: "#a07830", text: "#f5e6c8" },
+    theme: {
+      bg: "#0F172A", bgSecondary: "#1E293B", text: "#E5C07B",
+      accent: "#D4AF37", accentLight: "#F5E6B3", accentDark: "#A88A1A",
+      accentSecondary: "#F5E6B3", buttonText: "#0F172A",
+      sceneBg: "linear-gradient(180deg, #0F172A 0%, #1E293B 100%)",
+    },
   },
   "blush-rose": {
     img: "https://d2xsxph8kpxj0f.cloudfront.net/310419663029094267/cwkwQE2ZytYK5D22sZcWLW/envelope_blush_rose-HByHvDtXorH2SVPndKTVVD.webp",
-    sealColor: "#b5736a",
-    name: "Blush Rose",
-    theme: { bg: "linear-gradient(180deg, #2d1018 0%, #1f0a10 40%, #150608 100%)", accent: "#d4a0a0", accentLight: "#e8c0c0", accentDark: "#b07070", text: "#fdf0f0" },
+    sealColor: "#C98C7A",
+    name: "Floral Blush",
+    theme: {
+      bg: "#F7E7E3", bgSecondary: "#EFD6D1", text: "#6E4F4B",
+      accent: "#C98C7A", accentLight: "#D8A7A0", accentDark: "#A06858",
+      accentSecondary: "#D8A7A0", buttonText: "#F7E7E3",
+      sceneBg: "linear-gradient(180deg, #EFD6D1 0%, #F7E7E3 100%)",
+    },
   },
   "black-emerald": {
     img: "https://d2xsxph8kpxj0f.cloudfront.net/310419663029094267/cwkwQE2ZytYK5D22sZcWLW/envelope_black_emerald-EEFgnZzoHwUGvwvWXt2WJN.webp",
-    sealColor: "#1a5c3a",
-    name: "Midnight Star",
-    theme: { bg: "linear-gradient(180deg, #0a1a0f 0%, #081510 40%, #050e08 100%)", accent: "#4caf7a", accentLight: "#7dd4a8", accentDark: "#2e8a55", text: "#e8f5ee" },
+    sealColor: "#1F5C4A",
+    name: "Midnight Black",
+    theme: {
+      bg: "#0B0B0B", bgSecondary: "#1A1A1A", text: "#D4AF37",
+      accent: "#B68D40", accentLight: "#D4AF37", accentDark: "#8A6A20",
+      accentSecondary: "#1F5C4A", buttonText: "#0B0B0B",
+      sceneBg: "linear-gradient(180deg, #0B0B0B 0%, #1A1A1A 100%)",
+    },
   },
 };
 
@@ -141,7 +168,7 @@ export default function InvitationView() {
   }
 
   return (
-    <div ref={sceneRef} className="envelope-scene" onClick={handleOpenEnvelope}>
+      <div ref={sceneRef} className="envelope-scene" onClick={handleOpenEnvelope} style={{ background: envStyle.theme.sceneBg }}>
       {/* Top half — shows top portion of envelope photo, slides UP */}
       <div className={`fs-half fs-half-top ${isOpen ? "open" : ""}`}>
         <img
@@ -170,19 +197,19 @@ export default function InvitationView() {
         </span>
       </div>
 
-      {/* Expand overlay — cream fade before invitation appears */}
+      {/* Expand overlay — fades to theme background before invitation appears */}
       <div
         className="fs-expand-overlay"
-        style={{ opacity: isExpanding ? 1 : 0 }}
+        style={{ opacity: isExpanding ? 1 : 0, background: envStyle.theme.bg }}
       />
 
       {/* Tap hint */}
       {animStage === "idle" && (
         <div className="fs-tap-hint">
-          <p style={{ fontFamily: "'Lato', sans-serif", fontSize: 12, letterSpacing: "0.2em", color: "rgba(201,168,76,0.7)", textTransform: "uppercase" }}>
+          <p style={{ fontFamily: "'Lato', sans-serif", fontSize: 12, letterSpacing: "0.2em", color: `${envStyle.theme.accent}BB`, textTransform: "uppercase" }}>
             Tap to open
           </p>
-          <span style={{ color: "rgba(201,168,76,0.5)", fontSize: 18, animation: "bounce 1s infinite" }}>↑</span>
+          <span style={{ color: `${envStyle.theme.accent}88`, fontSize: 18, animation: "bounce 1s infinite" }}>↑</span>
         </div>
       )}
     </div>
@@ -269,6 +296,11 @@ function InvitationPage({ data }: { data: InvitationData }) {
         "--gold-light": theme.accentLight,
         "--gold-dark": theme.accentDark,
         "--cream": theme.text,
+        "--bg-secondary": theme.bgSecondary,
+        "--text-primary": theme.text,
+        "--accent-secondary": theme.accentSecondary,
+        "--btn-text": theme.buttonText,
+        color: theme.text,
       } as React.CSSProperties}
     >
       <div className="mobile-container">
@@ -371,7 +403,7 @@ function InvitationPage({ data }: { data: InvitationData }) {
               <span className="text-gold">📍</span>
             </div>
             <p className="invite-label text-gold opacity-50 mb-4">Find Us</p>
-            <div style={{ borderRadius: 12, overflow: "hidden", border: "1px solid rgba(201,168,76,0.3)", boxShadow: "0 8px 32px rgba(0,0,0,0.4)" }}>
+            <div style={{ borderRadius: 12, overflow: "hidden", border: `1px solid ${theme.accent}44`, boxShadow: "0 8px 32px rgba(0,0,0,0.3)" }}>
               <iframe
                 src={mapSrc}
                 width="100%"
@@ -394,15 +426,16 @@ function InvitationPage({ data }: { data: InvitationData }) {
                   gap: 8,
                   marginTop: 16,
                   padding: "12px 28px",
-                  background: "linear-gradient(135deg, #c9a84c, #9a7a2e)",
-                  color: "#1a1a2e",
+                  background: `linear-gradient(135deg, ${theme.accentDark}, ${theme.accent})`,
+                  color: theme.buttonText,
                   borderRadius: 50,
                   fontFamily: "'Lato', sans-serif",
                   fontSize: 13,
                   fontWeight: 700,
                   letterSpacing: "0.08em",
                   textDecoration: "none",
-                  boxShadow: "0 4px 16px rgba(201,168,76,0.4)",
+                  boxShadow: `0 4px 16px ${theme.accent}44`,
+                  textTransform: "uppercase",
                 }}
                 onClick={(e) => e.stopPropagation()}
               >
@@ -454,10 +487,14 @@ function CountdownTimer({ targetDate }: { targetDate: string }) {
             <div style={{
               fontFamily: "'Cormorant Garamond', serif",
               fontSize: "clamp(2rem, 8vw, 3rem)",
-              color: "#c9a84c",
+              color: "var(--gold)",
               fontWeight: 300,
               lineHeight: 1,
               minWidth: 56,
+              border: "1px solid var(--gold-dark)",
+              borderRadius: 8,
+              padding: "8px 4px",
+              background: "var(--bg-secondary, transparent)",
             }}>
               {String(timeLeft[unit]).padStart(2, "0")}
             </div>
@@ -465,7 +502,8 @@ function CountdownTimer({ targetDate }: { targetDate: string }) {
               fontFamily: "'Lato', sans-serif",
               fontSize: 10,
               letterSpacing: "0.15em",
-              color: "rgba(201,168,76,0.5)",
+              color: "var(--gold)",
+              opacity: 0.5,
               textTransform: "uppercase",
               marginTop: 6,
             }}>
