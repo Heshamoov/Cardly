@@ -296,6 +296,112 @@ function Toggle({ on, onToggle }: { on: boolean; onToggle: () => void }) {
   );
 }
 
+// ── Message Suggestion Dropdown ─────────────────────────────────────────────
+const EN_SUGGESTIONS = [
+  "Together with our families, we joyfully invite you to share in our happiness as we begin our new journey together.",
+  "With hearts full of love and joy, we invite you to witness and celebrate the beginning of our forever.",
+  "Two souls, one heart. We would be honoured to have you by our side on this most special day.",
+  "Love is the greatest adventure, and we are thrilled to begin ours. Please join us as we say \u2018I do\u2019.",
+  "On this beautiful day, we invite you to celebrate with us as two hearts become one. Your presence would make our joy complete.",
+  "With great joy and love, we invite you to be part of our wedding celebration and share in the magic of this unforgettable day.",
+  "We are overjoyed to invite you to witness the union of two hearts and the start of a beautiful new chapter in our lives.",
+  "A love story written in the stars \u2014 we invite you to celebrate with us as we begin our happily ever after.",
+];
+const AR_SUGGESTIONS = [
+  "\u0645\u0639 \u0639\u0627\u0626\u0644\u062a\u064a\u0646\u0627 \u0627\u0644\u0643\u0631\u064a\u0645\u062a\u064a\u0646\u060c \u064a\u0633\u0639\u062f\u0646\u0627 \u062f\u0639\u0648\u062a\u0643\u0645 \u0644\u0645\u0634\u0627\u0631\u0643\u062a\u0646\u0627 \u0641\u0631\u062d\u0629 \u0632\u0641\u0627\u0641\u0646\u0627 \u0648\u0627\u0644\u0627\u062d\u062a\u0641\u0627\u0644 \u0628\u0647\u0630\u0647 \u0627\u0644\u0644\u062d\u0638\u0629 \u0627\u0644\u062c\u0645\u064a\u0644\u0629.",
+  "\u0628\u0642\u0644\u0648\u0628 \u0645\u0641\u0639\u0645\u0629 \u0628\u0627\u0644\u062d\u0628 \u0648\u0627\u0644\u0628\u0647\u062c\u0629\u060c \u0646\u062a\u0634\u0631\u0641 \u0628\u062f\u0639\u0648\u062a\u0643\u0645 \u0644\u062a\u0643\u0648\u0646\u0648\u0627 \u0634\u0647\u0648\u062f\u0627\u064b \u0639\u0644\u0649 \u0628\u062f\u0627\u064a\u0629 \u0631\u062d\u0644\u062a\u0646\u0627 \u0645\u0639\u0627\u064b.",
+  "\u0631\u0648\u062d\u0627\u0646 \u0627\u0644\u062a\u0642\u062a\u0627 \u0648\u0642\u0644\u0628\u0627\u0646 \u0627\u062a\u062d\u062f\u0627. \u064a\u0634\u0631\u0641\u0646\u0627 \u062d\u0636\u0648\u0631\u0643\u0645 \u0645\u0639\u0646\u0627 \u0641\u064a \u0647\u0630\u0627 \u0627\u0644\u064a\u0648\u0645 \u0627\u0644\u0627\u0633\u062a\u062b\u0646\u0627\u0626\u064a.",
+  "\u0627\u0644\u062d\u0628 \u0623\u062c\u0645\u0644 \u0631\u062d\u0644\u0629 \u0641\u064a \u0627\u0644\u062d\u064a\u0627\u0629\u060c \u0648\u0647\u0627 \u0646\u062d\u0646 \u0646\u0628\u062f\u0623\u0647\u0627 \u0645\u0639\u0627\u064b. \u0646\u062a\u0645\u0646\u0649 \u0623\u0646 \u062a\u0643\u0648\u0646\u0648\u0627 \u062c\u0632\u0621\u0627\u064b \u0645\u0646 \u0647\u0630\u0647 \u0627\u0644\u0644\u062d\u0638\u0629 \u0627\u0644\u062e\u0627\u0644\u062f\u0629.",
+  "\u0641\u064a \u0647\u0630\u0627 \u0627\u0644\u064a\u0648\u0645 \u0627\u0644\u0645\u0628\u0627\u0631\u0643\u060c \u0646\u062f\u0639\u0648\u0643\u0645 \u0644\u0645\u0634\u0627\u0631\u0643\u062a\u0646\u0627 \u0641\u0631\u062d\u0629 \u0627\u0644\u0632\u0641\u0627\u0641 \u0648\u062a\u0643\u0631\u064a\u0645 \u0647\u0630\u0647 \u0627\u0644\u0645\u0646\u0627\u0633\u0628\u0629 \u0627\u0644\u063a\u0627\u0644\u064a\u0629 \u0628\u062d\u0636\u0648\u0631\u0643\u0645 \u0627\u0644\u0643\u0631\u064a\u0645.",
+  "\u0628\u0643\u0644 \u0627\u0644\u0641\u0631\u062d \u0648\u0627\u0644\u0633\u0639\u0627\u062f\u0629\u060c \u0646\u0633\u0639\u062f \u0628\u062f\u0639\u0648\u062a\u0643\u0645 \u0644\u0644\u0627\u062d\u062a\u0641\u0627\u0644 \u0645\u0639\u0646\u0627 \u0628\u0623\u062c\u0645\u0644 \u064a\u0648\u0645 \u0641\u064a \u062d\u064a\u0627\u062a\u0646\u0627 \u0648\u0628\u062f\u0627\u064a\u0629 \u0641\u0635\u0644 \u062c\u062f\u064a\u062f \u0645\u0644\u064a\u0621 \u0628\u0627\u0644\u062d\u0628.",
+  "\u0642\u0635\u0629 \u062d\u0628 \u0643\u064f\u062a\u0628\u062a \u0641\u064a \u0627\u0644\u0646\u062c\u0648\u0645 \u2014 \u064a\u0633\u0639\u062f\u0646\u0627 \u062f\u0639\u0648\u062a\u0643\u0645 \u0644\u062a\u0643\u0648\u0646\u0648\u0627 \u062c\u0632\u0621\u0627\u064b \u0645\u0646 \u0628\u062f\u0627\u064a\u062a\u0646\u0627 \u0627\u0644\u0633\u0639\u064a\u062f\u0629.",
+  "\u064a\u0633\u0639\u062f\u0646\u0627 \u0623\u0646 \u0646\u0634\u0627\u0631\u0643\u0643\u0645 \u0623\u0633\u0639\u062f \u0644\u062d\u0638\u0627\u062a \u062d\u064a\u0627\u062a\u0646\u0627\u060c \u0648\u0646\u062a\u0637\u0644\u0639 \u0644\u0631\u0624\u064a\u062a\u0643\u0645 \u0641\u064a \u062d\u0641\u0644 \u0632\u0641\u0627\u0641\u0646\u0627.",
+];
+
+function MessageSuggestionDropdown({ lang, onSelect }: { lang: "en" | "ar"; onSelect: (v: string) => void }) {
+  const [open, setOpen] = useState(false);
+  const [hovered, setHovered] = useState<number | null>(null);
+  const ref = useRef<HTMLDivElement>(null);
+  const suggestions = lang === "en" ? EN_SUGGESTIONS : AR_SUGGESTIONS;
+  const placeholder = lang === "en" ? "\u2728 Choose a suggested message\u2026" : "\u2728 \u0627\u062e\u062a\u0631 \u0631\u0633\u0627\u0644\u0629 \u0645\u0642\u062a\u0631\u062d\u0629\u2026";
+  const arabicFont = `'Noto Naskh Arabic', 'Amiri', serif`;
+
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [open]);
+
+  return (
+    <div ref={ref} style={{ position: "relative", marginBottom: 8 }} dir={lang === "ar" ? "rtl" : "ltr"}>
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        style={{
+          width: "100%",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: "9px 14px",
+          background: "rgba(255,255,255,0.06)",
+          border: "1px solid rgba(201,168,76,0.35)",
+          borderRadius: 8,
+          color: "rgba(201,168,76,0.8)",
+          fontSize: 13,
+          fontFamily: lang === "ar" ? arabicFont : "inherit",
+          cursor: "pointer",
+          textAlign: lang === "ar" ? "right" : "left",
+        }}
+      >
+        <span>{placeholder}</span>
+        <span style={{ fontSize: 10, opacity: 0.7, marginLeft: lang === "ar" ? 0 : 6, marginRight: lang === "ar" ? 6 : 0 }}>{open ? "\u25b2" : "\u25bc"}</span>
+      </button>
+      {open && (
+        <div style={{
+          position: "absolute",
+          top: "calc(100% + 4px)",
+          left: 0,
+          right: 0,
+          zIndex: 999,
+          background: "#1a1a2e",
+          border: "1px solid rgba(201,168,76,0.4)",
+          borderRadius: 8,
+          boxShadow: "0 8px 32px rgba(0,0,0,0.6)",
+          maxHeight: 260,
+          overflowY: "auto",
+          padding: "4px 0",
+        }}>
+          {suggestions.map((s, i) => (
+            <div
+              key={i}
+              onMouseEnter={() => setHovered(i)}
+              onMouseLeave={() => setHovered(null)}
+              onClick={() => { onSelect(s); setOpen(false); }}
+              style={{
+                padding: "10px 14px",
+                fontSize: 13,
+                lineHeight: 1.5,
+                color: hovered === i ? "#c9a84c" : "#e8d5a3",
+                background: hovered === i ? "rgba(201,168,76,0.12)" : "transparent",
+                cursor: "pointer",
+                fontFamily: lang === "ar" ? arabicFont : "inherit",
+                textAlign: lang === "ar" ? "right" : "left",
+                borderBottom: i < suggestions.length - 1 ? "1px solid rgba(201,168,76,0.1)" : "none",
+                transition: "background 0.15s, color 0.15s",
+              }}
+            >
+              {s}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function SectionCard({
   label,
   sectionKey,
@@ -825,44 +931,19 @@ export default function Builder() {
           {formLang === "en" ? (
             <>
               <label className="font-sans text-xs opacity-50 block mb-1">Message to Guests</label>
-              <select
-                className="wedding-input mb-2"
-                style={{ cursor: "pointer" }}
-                value=""
-                onChange={(e) => { if (e.target.value) set("message", e.target.value); }}
-              >
-                <option value="">✨ Choose a suggested message…</option>
-                <option value="Together with our families, we joyfully invite you to share in our happiness as we begin our new journey together.">Together with our families, we joyfully invite you to share in our happiness as we begin our new journey together.</option>
-                <option value="With hearts full of love and joy, we invite you to witness and celebrate the beginning of our forever.">With hearts full of love and joy, we invite you to witness and celebrate the beginning of our forever.</option>
-                <option value="Two souls, one heart. We would be honoured to have you by our side on this most special day.">Two souls, one heart. We would be honoured to have you by our side on this most special day.</option>
-                <option value="Love is the greatest adventure, and we are thrilled to begin ours. Please join us as we say 'I do'.">Love is the greatest adventure, and we are thrilled to begin ours. Please join us as we say 'I do'.</option>
-                <option value="On this beautiful day, we invite you to celebrate with us as two hearts become one. Your presence would make our joy complete.">On this beautiful day, we invite you to celebrate with us as two hearts become one. Your presence would make our joy complete.</option>
-                <option value="With great joy and love, we invite you to be part of our wedding celebration and share in the magic of this unforgettable day.">With great joy and love, we invite you to be part of our wedding celebration and share in the magic of this unforgettable day.</option>
-                <option value="We are overjoyed to invite you to witness the union of two hearts and the start of a beautiful new chapter in our lives.">We are overjoyed to invite you to witness the union of two hearts and the start of a beautiful new chapter in our lives.</option>
-                <option value="A love story written in the stars — we invite you to celebrate with us as we begin our happily ever after.">A love story written in the stars — we invite you to celebrate with us as we begin our happily ever after.</option>
-              </select>
+              <MessageSuggestionDropdown
+                lang="en"
+                onSelect={(v) => set("message", v)}
+              />
               <textarea className="wedding-input" rows={3} placeholder="e.g. We joyfully invite you to share in our happiness as we begin our new journey together…" value={data.message} onChange={(e) => set("message", e.target.value)} />
             </>
           ) : (
             <div dir="rtl">
               <label className="font-sans text-xs opacity-50 block mb-1" style={{ fontFamily: `'Noto Naskh Arabic', 'Amiri', serif` }}>رسالة إلى الضيوف</label>
-              <select
-                className="wedding-input mb-2"
-                dir="rtl"
-                style={{ cursor: "pointer", fontFamily: `'Noto Naskh Arabic', 'Amiri', serif` }}
-                value=""
-                onChange={(e) => { if (e.target.value) set("arMessage", e.target.value); }}
-              >
-                <option value="">✨ اختر رسالة مقترحة…</option>
-                <option value="مع عائلتينا الكريمتين، يسعدنا دعوتكم لمشاركتنا فرحة زفافنا والاحتفال بهذه اللحظة الجميلة.">مع عائلتينا الكريمتين، يسعدنا دعوتكم لمشاركتنا فرحة زفافنا والاحتفال بهذه اللحظة الجميلة.</option>
-                <option value="بقلوب مفعمة بالحب والبهجة، نتشرف بدعوتكم لتكونوا شهوداً على بداية رحلتنا معاً.">بقلوب مفعمة بالحب والبهجة، نتشرف بدعوتكم لتكونوا شهوداً على بداية رحلتنا معاً.</option>
-                <option value="روحان التقتا وقلبان اتحدا. يشرفنا حضوركم معنا في هذا اليوم الاستثنائي.">روحان التقتا وقلبان اتحدا. يشرفنا حضوركم معنا في هذا اليوم الاستثنائي.</option>
-                <option value="الحب أجمل رحلة في الحياة، وها نحن نبدأها معاً. نتمنى أن تكونوا جزءاً من هذه اللحظة الخالدة.">الحب أجمل رحلة في الحياة، وها نحن نبدأها معاً. نتمنى أن تكونوا جزءاً من هذه اللحظة الخالدة.</option>
-                <option value="في هذا اليوم المبارك، ندعوكم لمشاركتنا فرحة الزفاف وتكريم هذه المناسبة الغالية بحضوركم الكريم.">في هذا اليوم المبارك، ندعوكم لمشاركتنا فرحة الزفاف وتكريم هذه المناسبة الغالية بحضوركم الكريم.</option>
-                <option value="بكل الفرح والسعادة، نسعد بدعوتكم للاحتفال معنا بأجمل يوم في حياتنا وبداية فصل جديد مليء بالحب.">بكل الفرح والسعادة، نسعد بدعوتكم للاحتفال معنا بأجمل يوم في حياتنا وبداية فصل جديد مليء بالحب.</option>
-                <option value="قصة حب كُتبت في النجوم — يسعدنا دعوتكم لتكونوا جزءاً من بدايتنا السعيدة.">قصة حب كُتبت في النجوم — يسعدنا دعوتكم لتكونوا جزءاً من بدايتنا السعيدة.</option>
-                <option value="يسعدنا أن نشارككم أسعد لحظات حياتنا، ونتطلع لرؤيتكم في حفل زفافنا.">يسعدنا أن نشارككم أسعد لحظات حياتنا، ونتطلع لرؤيتكم في حفل زفافنا.</option>
-              </select>
+              <MessageSuggestionDropdown
+                lang="ar"
+                onSelect={(v) => set("arMessage", v)}
+              />
               <textarea className="wedding-input" dir="rtl" style={{ fontFamily: `'Noto Naskh Arabic', 'Amiri', serif` }} rows={3} placeholder="مثال: يسعدنا دعوتكم لمشاركتنا فرحة زفافنا…" value={data.arMessage ?? ""} onChange={(e) => set("arMessage", e.target.value)} />
             </div>
           )}
