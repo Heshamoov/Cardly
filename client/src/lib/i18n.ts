@@ -52,7 +52,7 @@ export const translations = {
     // RSVP
     rsvpLabel: "Guest Responses",
     yourName: "Your Name *",
-    namePlaceholder: "e.g. Sarah Al-Mansouri",
+    namePlaceholder: "Enter your name",
     numberOfGuests: "Number of Guests *",
     messageOptional: "Message (optional)",
     messagePlaceholder: "A short note for the couple…",
@@ -112,7 +112,7 @@ export const translations = {
     // RSVP
     rsvpLabel: "استجابات الضيوف",
     yourName: "اسمك *",
-    namePlaceholder: "مثال: سارة المنصوري",
+    namePlaceholder: "أدخل اسمك",
     numberOfGuests: "عدد الحضور *",
     messageOptional: "رسالة (اختياري)",
     messagePlaceholder: "كلمة قصيرة للعروسين…",
