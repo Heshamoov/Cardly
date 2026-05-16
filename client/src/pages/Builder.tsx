@@ -825,11 +825,44 @@ export default function Builder() {
           {formLang === "en" ? (
             <>
               <label className="font-sans text-xs opacity-50 block mb-1">Message to Guests</label>
+              <select
+                className="wedding-input mb-2"
+                style={{ cursor: "pointer" }}
+                value=""
+                onChange={(e) => { if (e.target.value) set("message", e.target.value); }}
+              >
+                <option value="">✨ Choose a suggested message…</option>
+                <option value="Together with our families, we joyfully invite you to share in our happiness as we begin our new journey together.">Together with our families, we joyfully invite you to share in our happiness as we begin our new journey together.</option>
+                <option value="With hearts full of love and joy, we invite you to witness and celebrate the beginning of our forever.">With hearts full of love and joy, we invite you to witness and celebrate the beginning of our forever.</option>
+                <option value="Two souls, one heart. We would be honoured to have you by our side on this most special day.">Two souls, one heart. We would be honoured to have you by our side on this most special day.</option>
+                <option value="Love is the greatest adventure, and we are thrilled to begin ours. Please join us as we say 'I do'.">Love is the greatest adventure, and we are thrilled to begin ours. Please join us as we say 'I do'.</option>
+                <option value="On this beautiful day, we invite you to celebrate with us as two hearts become one. Your presence would make our joy complete.">On this beautiful day, we invite you to celebrate with us as two hearts become one. Your presence would make our joy complete.</option>
+                <option value="With great joy and love, we invite you to be part of our wedding celebration and share in the magic of this unforgettable day.">With great joy and love, we invite you to be part of our wedding celebration and share in the magic of this unforgettable day.</option>
+                <option value="We are overjoyed to invite you to witness the union of two hearts and the start of a beautiful new chapter in our lives.">We are overjoyed to invite you to witness the union of two hearts and the start of a beautiful new chapter in our lives.</option>
+                <option value="A love story written in the stars — we invite you to celebrate with us as we begin our happily ever after.">A love story written in the stars — we invite you to celebrate with us as we begin our happily ever after.</option>
+              </select>
               <textarea className="wedding-input" rows={3} placeholder="e.g. We joyfully invite you to share in our happiness as we begin our new journey together…" value={data.message} onChange={(e) => set("message", e.target.value)} />
             </>
           ) : (
             <div dir="rtl">
               <label className="font-sans text-xs opacity-50 block mb-1" style={{ fontFamily: `'Noto Naskh Arabic', 'Amiri', serif` }}>رسالة إلى الضيوف</label>
+              <select
+                className="wedding-input mb-2"
+                dir="rtl"
+                style={{ cursor: "pointer", fontFamily: `'Noto Naskh Arabic', 'Amiri', serif` }}
+                value=""
+                onChange={(e) => { if (e.target.value) set("arMessage", e.target.value); }}
+              >
+                <option value="">✨ اختر رسالة مقترحة…</option>
+                <option value="مع عائلتينا الكريمتين، يسعدنا دعوتكم لمشاركتنا فرحة زفافنا والاحتفال بهذه اللحظة الجميلة.">مع عائلتينا الكريمتين، يسعدنا دعوتكم لمشاركتنا فرحة زفافنا والاحتفال بهذه اللحظة الجميلة.</option>
+                <option value="بقلوب مفعمة بالحب والبهجة، نتشرف بدعوتكم لتكونوا شهوداً على بداية رحلتنا معاً.">بقلوب مفعمة بالحب والبهجة، نتشرف بدعوتكم لتكونوا شهوداً على بداية رحلتنا معاً.</option>
+                <option value="روحان التقتا وقلبان اتحدا. يشرفنا حضوركم معنا في هذا اليوم الاستثنائي.">روحان التقتا وقلبان اتحدا. يشرفنا حضوركم معنا في هذا اليوم الاستثنائي.</option>
+                <option value="الحب أجمل رحلة في الحياة، وها نحن نبدأها معاً. نتمنى أن تكونوا جزءاً من هذه اللحظة الخالدة.">الحب أجمل رحلة في الحياة، وها نحن نبدأها معاً. نتمنى أن تكونوا جزءاً من هذه اللحظة الخالدة.</option>
+                <option value="في هذا اليوم المبارك، ندعوكم لمشاركتنا فرحة الزفاف وتكريم هذه المناسبة الغالية بحضوركم الكريم.">في هذا اليوم المبارك، ندعوكم لمشاركتنا فرحة الزفاف وتكريم هذه المناسبة الغالية بحضوركم الكريم.</option>
+                <option value="بكل الفرح والسعادة، نسعد بدعوتكم للاحتفال معنا بأجمل يوم في حياتنا وبداية فصل جديد مليء بالحب.">بكل الفرح والسعادة، نسعد بدعوتكم للاحتفال معنا بأجمل يوم في حياتنا وبداية فصل جديد مليء بالحب.</option>
+                <option value="قصة حب كُتبت في النجوم — يسعدنا دعوتكم لتكونوا جزءاً من بدايتنا السعيدة.">قصة حب كُتبت في النجوم — يسعدنا دعوتكم لتكونوا جزءاً من بدايتنا السعيدة.</option>
+                <option value="يسعدنا أن نشارككم أسعد لحظات حياتنا، ونتطلع لرؤيتكم في حفل زفافنا.">يسعدنا أن نشارككم أسعد لحظات حياتنا، ونتطلع لرؤيتكم في حفل زفافنا.</option>
+              </select>
               <textarea className="wedding-input" dir="rtl" style={{ fontFamily: `'Noto Naskh Arabic', 'Amiri', serif` }} rows={3} placeholder="مثال: يسعدنا دعوتكم لمشاركتنا فرحة زفافنا…" value={data.arMessage ?? ""} onChange={(e) => set("arMessage", e.target.value)} />
             </div>
           )}

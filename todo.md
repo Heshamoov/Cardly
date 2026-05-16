@@ -192,3 +192,7 @@
 - [x] Fix countdown timer overflow on mobile (boxes clip off screen edges)
 - [x] Add "Can't Attend / Apology" decline button to RSVP section (alongside Confirm Attendance)
 - [x] Sync fontScale between Builder preview and published InvitationView (currently mismatched)
+
+## Feature: Personal Message Dropdown Suggestions
+- [x] Add a styled dropdown above the message textarea in Builder with pre-written EN/AR messages
+- [x] Selecting a suggestion auto-fills the message field (user can still edit freely after)
