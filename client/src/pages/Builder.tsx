@@ -573,16 +573,6 @@ export default function Builder() {
             <>
               <div className="grid grid-cols-2 gap-3 mb-3">
                 <div>
-                  <label className="font-sans text-xs opacity-50 block mb-1">Bride's First Name</label>
-                  <input className="wedding-input" placeholder="Bride's first name" value={data.brideFirstName} onChange={(e) => set("brideFirstName", e.target.value)} />
-                </div>
-                <div>
-                  <label className="font-sans text-xs opacity-50 block mb-1">Bride's Last Name</label>
-                  <input className="wedding-input" placeholder="Optional" value={data.brideLastName} onChange={(e) => set("brideLastName", e.target.value)} />
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
                   <label className="font-sans text-xs opacity-50 block mb-1">Groom's First Name</label>
                   <input className="wedding-input" placeholder="Groom's first name" value={data.groomFirstName} onChange={(e) => set("groomFirstName", e.target.value)} />
                 </div>
@@ -591,20 +581,20 @@ export default function Builder() {
                   <input className="wedding-input" placeholder="Optional" value={data.groomLastName} onChange={(e) => set("groomLastName", e.target.value)} />
                 </div>
               </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="font-sans text-xs opacity-50 block mb-1">Bride's First Name</label>
+                  <input className="wedding-input" placeholder="Bride's first name" value={data.brideFirstName} onChange={(e) => set("brideFirstName", e.target.value)} />
+                </div>
+                <div>
+                  <label className="font-sans text-xs opacity-50 block mb-1">Bride's Last Name</label>
+                  <input className="wedding-input" placeholder="Optional" value={data.brideLastName} onChange={(e) => set("brideLastName", e.target.value)} />
+                </div>
+              </div>
             </>
           ) : (
             <div dir="rtl" style={{ fontFamily: `'Noto Naskh Arabic', 'Amiri', serif` }}>
               <div className="grid grid-cols-2 gap-3 mb-3">
-                <div>
-                  <label className="font-sans text-xs opacity-50 block mb-1" style={{ fontFamily: `'Noto Naskh Arabic', 'Amiri', serif` }}>اسم العروس الأول</label>
-                  <input className="wedding-input" dir="rtl" style={{ fontFamily: `'Noto Naskh Arabic', 'Amiri', serif` }} placeholder="اسم العروس" value={data.arBrideFirstName ?? ""} onChange={(e) => set("arBrideFirstName", e.target.value)} />
-                </div>
-                <div>
-                  <label className="font-sans text-xs opacity-50 block mb-1" style={{ fontFamily: `'Noto Naskh Arabic', 'Amiri', serif` }}>اسم العائلة (اختياري)</label>
-                  <input className="wedding-input" dir="rtl" style={{ fontFamily: `'Noto Naskh Arabic', 'Amiri', serif` }} placeholder="اختياري" value={data.arBrideLastName ?? ""} onChange={(e) => set("arBrideLastName", e.target.value)} />
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="font-sans text-xs opacity-50 block mb-1" style={{ fontFamily: `'Noto Naskh Arabic', 'Amiri', serif` }}>اسم العريس الأول</label>
                   <input className="wedding-input" dir="rtl" style={{ fontFamily: `'Noto Naskh Arabic', 'Amiri', serif` }} placeholder="اسم العريس" value={data.arGroomFirstName ?? ""} onChange={(e) => set("arGroomFirstName", e.target.value)} />
@@ -612,6 +602,16 @@ export default function Builder() {
                 <div>
                   <label className="font-sans text-xs opacity-50 block mb-1" style={{ fontFamily: `'Noto Naskh Arabic', 'Amiri', serif` }}>اسم العائلة (اختياري)</label>
                   <input className="wedding-input" dir="rtl" style={{ fontFamily: `'Noto Naskh Arabic', 'Amiri', serif` }} placeholder="اختياري" value={data.arGroomLastName ?? ""} onChange={(e) => set("arGroomLastName", e.target.value)} />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="font-sans text-xs opacity-50 block mb-1" style={{ fontFamily: `'Noto Naskh Arabic', 'Amiri', serif` }}>اسم العروس الأول</label>
+                  <input className="wedding-input" dir="rtl" style={{ fontFamily: `'Noto Naskh Arabic', 'Amiri', serif` }} placeholder="اسم العروس" value={data.arBrideFirstName ?? ""} onChange={(e) => set("arBrideFirstName", e.target.value)} />
+                </div>
+                <div>
+                  <label className="font-sans text-xs opacity-50 block mb-1" style={{ fontFamily: `'Noto Naskh Arabic', 'Amiri', serif` }}>اسم العائلة (اختياري)</label>
+                  <input className="wedding-input" dir="rtl" style={{ fontFamily: `'Noto Naskh Arabic', 'Amiri', serif` }} placeholder="اختياري" value={data.arBrideLastName ?? ""} onChange={(e) => set("arBrideLastName", e.target.value)} />
                 </div>
               </div>
             </div>
@@ -904,7 +904,7 @@ function PreviewWithEnvelope({
             }}
           >
             <span style={{ fontFamily: "'Great Vibes', cursive", fontSize: 24, color: "rgba(255,255,255,0.92)", lineHeight: 1 }}>
-              {(brideName[0] || "H")}&amp;{(groomName[0] || "S")}
+              {(groomName[0] || "S")}&amp;{(brideName[0] || "H")}
             </span>
           </div>
 
@@ -1042,13 +1042,13 @@ function PreviewContent({ data, lang = "en", onToggleLang }: { data: InvitationD
           </p>
           <div className="my-6 animate-fade-in-up">
             <h1 className="font-script text-6xl gold-shimmer leading-tight">
-              {brideName || "Bride"}
+              {groomName || "Groom"}
             </h1>
             <p className="font-serif text-2xl italic text-gold opacity-60 my-2">
               &amp;
             </p>
             <h1 className="font-script text-6xl gold-shimmer leading-tight">
-              {groomName || "Groom"}
+              {brideName || "Bride"}
             </h1>
           </div>
           <div className="divider-ornament">
@@ -1182,9 +1182,9 @@ function PreviewContent({ data, lang = "en", onToggleLang }: { data: InvitationD
           <span className="text-gold text-lg">✦</span>
         </div>
         <p className="font-script text-3xl gold-shimmer">
-          {[data.brideFirstName, "&", data.groomFirstName]
+          {[data.groomFirstName, "&", data.brideFirstName]
             .filter(Boolean)
-            .join(" ") || "Bride & Groom"}
+            .join(" ") || "Groom & Bride"}
         </p>
         <p className="font-sans text-xs opacity-30 mt-4 tracking-widest uppercase" style={{ fontFamily: bodyFont }}>
           {t.withLove}

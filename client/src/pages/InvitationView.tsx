@@ -204,7 +204,7 @@ export default function InvitationView() {
           letterSpacing: "-1px",
           border: `2px solid ${envStyle.sealColor}55`,
         }}>
-          {(brideName[0] || "H")}&{(groomName[0] || "S")}
+          {(groomName[0] || "S")}&{(brideName[0] || "H")}
         </span>
       </div>
 
@@ -338,13 +338,13 @@ function InvitationPage({ data, slug, lang, onToggleLang }: {
 
             <div className="my-8 animate-fade-in-up">
               <h1 className="font-script gold-shimmer leading-tight" style={{ fontSize: "clamp(3rem, 14vw, 5rem)" }}>
-                {brideName || "Bride"}
+                {groomName || "Groom"}
               </h1>
               <p className="font-fell text-3xl text-gold opacity-50 my-3" style={{ fontStyle: "italic" }}>
                 &amp;
               </p>
               <h1 className="font-script gold-shimmer leading-tight" style={{ fontSize: "clamp(3rem, 14vw, 5rem)" }}>
-                {groomName || "Groom"}
+                {brideName || "Bride"}
               </h1>
             </div>
 

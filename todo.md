@@ -154,3 +154,8 @@
 ## Fix: Guest Responses Dashboard Arabic Toggle
 - [x] Add EN/AR language toggle to Guest Responses dashboard header
 - [x] Translate all dashboard labels to Arabic (RTL layout when AR selected)
+
+## Fix: Groom First, Bride Second
+- [x] Builder: swap groom/bride field order in EN and AR form sections
+- [x] Preview: swap groom/bride display order in PreviewContent
+- [x] Invitation: swap groom/bride display order in InvitationPage
