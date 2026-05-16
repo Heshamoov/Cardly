@@ -240,8 +240,6 @@ html, body {
   background: var(--invitation-bg, #0F172A);
   color: var(--cream);
   overflow-x: hidden;
-  /* Font scale: zoom scales all child text including Tailwind rem-based classes */
-  zoom: var(--font-scale, 1);
   /* Smooth theme transition when switching envelopes */
   transition: background 0.5s ease, color 0.5s ease;
 }

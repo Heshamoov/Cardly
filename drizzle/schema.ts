@@ -1,4 +1,4 @@
-import { int, mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
+import { boolean, int, mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
 
 /**
  * Core user table backing auth flow.
@@ -44,6 +44,7 @@ export const rsvpResponses = mysqlTable("rsvp_responses", {
   invitationSlug: varchar("invitationSlug", { length: 16 }).notNull(),
   guestName: varchar("guestName", { length: 128 }).notNull(),
   partySize: int("partySize").notNull().default(1),
+  attending: boolean("attending").notNull().default(true),
   message: text("message"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });

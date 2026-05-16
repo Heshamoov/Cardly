@@ -13,6 +13,7 @@ export const rsvpRouter = router({
         slug: z.string().min(1).max(16),
         guestName: z.string().min(1).max(128).trim(),
         partySize: z.number().int().min(1).max(50),
+        attending: z.boolean().default(true),
         message: z.string().max(500).optional(),
       })
     )
@@ -20,7 +21,8 @@ export const rsvpRouter = router({
       await insertRsvp({
         invitationSlug: input.slug,
         guestName: input.guestName,
-        partySize: input.partySize,
+        partySize: input.attending ? input.partySize : 0,
+        attending: input.attending,
         message: input.message ?? null,
       });
       return { success: true };

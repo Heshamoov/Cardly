@@ -29,6 +29,13 @@
       "when": 1778966905368,
       "tag": "0003_nifty_jackal",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "5",
+      "when": 1778973422908,
+      "tag": "0004_absent_guardian",
+      "breakpoints": true
     }
   ]
 }

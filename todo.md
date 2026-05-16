@@ -187,3 +187,8 @@
 - [x] Add "Navy Floral" envelope style to Builder gallery and InvitationView
 - [x] Add "White Floral" envelope style to Builder gallery and InvitationView
 - [x] Define matching dark/light theme palettes for both new styles
+
+## Bug Fixes (May 17 — Round 2)
+- [x] Fix countdown timer overflow on mobile (boxes clip off screen edges)
+- [x] Add "Can't Attend / Apology" decline button to RSVP section (alongside Confirm Attendance)
+- [x] Sync fontScale between Builder preview and published InvitationView (currently mismatched)

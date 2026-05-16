@@ -539,26 +539,32 @@ function RsvpSection({
   bodyFont?: string;
 }) {
   const STORAGE_KEY = `rsvp_submitted_${slug}`;
+  const DECLINED_KEY = `rsvp_declined_${slug}`;
   const [submitted, setSubmitted] = useState(() => !!localStorage.getItem(STORAGE_KEY));
+  const [declined, setDeclined] = useState(() => !!localStorage.getItem(`rsvp_declined_${slug}`));
   const [name, setName] = useState("");
   const [partySize, setPartySize] = useState(1);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
   const submitMutation = trpc.rsvp.submit.useMutation({
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       localStorage.setItem(STORAGE_KEY, "1");
+      if (variables.attending === false) {
+        localStorage.setItem(DECLINED_KEY, "1");
+        setDeclined(true);
+      }
       setSubmitted(true);
     },
     onError: (err) => setError(err.message || t.somethingWrong),
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent, attending: boolean) => {
     e.preventDefault();
     setError("");
     if (!name.trim()) { setError(t.nameRequired); return; }
-    if (partySize < 1 || partySize > 50) { setError(t.partySizeError); return; }
-    submitMutation.mutate({ slug, guestName: name.trim(), partySize, message: message.trim() || undefined });
+    if (attending && (partySize < 1 || partySize > 50)) { setError(t.partySizeError); return; }
+    submitMutation.mutate({ slug, guestName: name.trim(), partySize: attending ? partySize : 1, attending, message: message.trim() || undefined });
   };
 
   const inputStyle: React.CSSProperties = {
@@ -609,17 +615,17 @@ function RsvpSection({
             textAlign: "center",
           }}
         >
-          <div style={{ fontSize: 36, marginBottom: 12 }}>🎉</div>
+          <div style={{ fontSize: 36, marginBottom: 12 }}>{declined ? "💌" : "🎉"}</div>
           <p className="font-script" style={{ fontSize: "clamp(1.4rem, 6vw, 2rem)", color: theme.accent }}>
             {t.thankYou}
           </p>
           <p className="font-sans mt-2" style={{ fontSize: 13, color: theme.text, opacity: 0.7, fontFamily: bodyFont }}>
-            {t.rsvpReceived}
+            {declined ? t.rsvpDeclined : t.rsvpReceived}
           </p>
         </div>
       ) : (
         <form
-          onSubmit={handleSubmit}
+          onSubmit={(e) => handleSubmit(e, true)}
           style={{ textAlign: isRtl ? "right" : "left", maxWidth: 360, margin: "0 auto" }}
           dir={isRtl ? "rtl" : "ltr"}
         >
@@ -684,30 +690,55 @@ function RsvpSection({
             </p>
           )}
 
-          <button
-            type="submit"
-            disabled={submitMutation.isPending}
-            style={{
-              width: "100%",
-              padding: "13px 28px",
-              background: submitMutation.isPending
-                ? `${theme.accentDark}88`
-                : `linear-gradient(135deg, ${theme.accentDark}, ${theme.accent})`,
-              color: theme.buttonText,
-              border: "none",
-              borderRadius: 50,
-              fontFamily: bodyFont ?? "'Lato', sans-serif",
-              fontSize: 13,
-              fontWeight: 700,
-              letterSpacing: isRtl ? 0 : "0.1em",
-              textTransform: isRtl ? "none" : "uppercase" as const,
-              cursor: submitMutation.isPending ? "not-allowed" : "pointer",
-              boxShadow: `0 4px 16px ${theme.accent}44`,
-              transition: "opacity 0.2s",
-            }}
-          >
-            {submitMutation.isPending ? t.sending : t.confirmAttendance}
-          </button>
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            <button
+              type="submit"
+              disabled={submitMutation.isPending}
+              style={{
+                width: "100%",
+                padding: "13px 28px",
+                background: submitMutation.isPending
+                  ? `${theme.accentDark}88`
+                  : `linear-gradient(135deg, ${theme.accentDark}, ${theme.accent})`,
+                color: theme.buttonText,
+                border: "none",
+                borderRadius: 50,
+                fontFamily: bodyFont ?? "'Lato', sans-serif",
+                fontSize: 13,
+                fontWeight: 700,
+                letterSpacing: isRtl ? 0 : "0.1em",
+                textTransform: isRtl ? "none" : "uppercase" as const,
+                cursor: submitMutation.isPending ? "not-allowed" : "pointer",
+                boxShadow: `0 4px 16px ${theme.accent}44`,
+                transition: "opacity 0.2s",
+              }}
+            >
+              {submitMutation.isPending ? t.sending : t.confirmAttendance}
+            </button>
+            <button
+              type="button"
+              disabled={submitMutation.isPending}
+              onClick={(e) => handleSubmit(e as unknown as React.FormEvent, false)}
+              style={{
+                width: "100%",
+                padding: "11px 28px",
+                background: "transparent",
+                color: theme.text,
+                border: `1px solid ${theme.accent}55`,
+                borderRadius: 50,
+                fontFamily: bodyFont ?? "'Lato', sans-serif",
+                fontSize: 12,
+                fontWeight: 600,
+                letterSpacing: isRtl ? 0 : "0.08em",
+                textTransform: isRtl ? "none" : "uppercase" as const,
+                cursor: submitMutation.isPending ? "not-allowed" : "pointer",
+                opacity: submitMutation.isPending ? 0.5 : 0.75,
+                transition: "opacity 0.2s",
+              }}
+            >
+              {t.declineAttendance}
+            </button>
+          </div>
         </form>
       )}
     </div>
@@ -737,29 +768,27 @@ function CountdownTimer({ targetDate, label, bodyFont, isRtl }: { targetDate: st
   return (
     <div>
       <p className="invite-label text-gold opacity-50 mb-6" style={{ fontFamily: bodyFont }}>{label}</p>
-      <div style={{ display: "flex", justifyContent: "center", gap: 24 }}>
+      <div style={{ display: "flex", justifyContent: "center", gap: "clamp(8px, 3vw, 20px)", flexWrap: "wrap", maxWidth: "100%" }}>
         {([
           { unit: "days" as const, arLabel: "أيام", enLabel: "Days" },
           { unit: "hours" as const, arLabel: "ساعات", enLabel: "Hours" },
           { unit: "minutes" as const, arLabel: "دقائق", enLabel: "Mins" },
           { unit: "seconds" as const, arLabel: "ثواني", enLabel: "Secs" },
         ]).map(({ unit, arLabel, enLabel }) => (
-          <div key={unit} style={{ textAlign: "center" }}>
+          <div key={unit} style={{ textAlign: "center", flexShrink: 0 }}>
             <div style={{
               fontFamily: "'Cormorant Garamond', serif",
-              fontSize: "clamp(2rem, 6vw, 2.5rem)",
+              fontSize: "clamp(1.6rem, 5vw, 2.5rem)",
               color: "var(--gold)",
               fontWeight: 300,
               lineHeight: 1,
-              minWidth: 80,
-              width: 80,
-              height: 80,
+              width: "clamp(60px, 18vw, 80px)",
+              height: "clamp(60px, 18vw, 80px)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               border: "1px solid var(--gold-dark)",
               borderRadius: 10,
-              padding: "0 12px",
               background: "var(--bg-secondary, transparent)",
             }}>
               {String(timeLeft[unit]).padStart(2, "0")}

@@ -1,0 +1,1 @@
+ALTER TABLE `rsvp_responses` ADD `attending` boolean DEFAULT true NOT NULL;
