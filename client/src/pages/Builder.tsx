@@ -98,6 +98,40 @@ const ENVELOPE_STYLES = [
       sceneBg: "linear-gradient(180deg, #0B0B0B 0%, #1A1A1A 100%)",
     },
   },
+  {
+    id: "navy-floral",
+    name: "Navy Floral",
+    img: "/manus-storage/envelope-navy-floral_269d799e.png",
+    sealColor: "#D4AF37",
+    theme: {
+      bg: "#0D1B2A",
+      bgSecondary: "#162236",
+      text: "#F5E6B3",
+      accent: "#D4AF37",
+      accentLight: "#F5E6B3",
+      accentDark: "#A88A1A",
+      accentSecondary: "#F5E6B3",
+      buttonText: "#0D1B2A",
+      sceneBg: "linear-gradient(180deg, #0D1B2A 0%, #162236 100%)",
+    },
+  },
+  {
+    id: "white-floral",
+    name: "White Floral",
+    img: "/manus-storage/envelope-white-floral_2b139886.png",
+    sealColor: "#C8A040",
+    theme: {
+      bg: "#FDFAF4",
+      bgSecondary: "#F5EDD8",
+      text: "#3A3128",
+      accent: "#C8A040",
+      accentLight: "#E8C87A",
+      accentDark: "#A07820",
+      accentSecondary: "#7A1F2B",
+      buttonText: "#FDFAF4",
+      sceneBg: "linear-gradient(180deg, #F5EDD8 0%, #FDFAF4 100%)",
+    },
+  },
 ];
 
 const defaultData: InvitationData = {

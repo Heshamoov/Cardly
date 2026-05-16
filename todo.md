@@ -181,3 +181,9 @@
 - [x] Display circular photo above wax seal on envelope scene in Invitation (InvitationView)
 - [x] When no photo: show initials as before (no regression)
 - [x] Style: circular crop, gold ring border matching theme accent, subtle shadow
+
+## New Envelope Styles (User-Provided Images)
+- [x] Upload navy-floral and white-floral envelope images to storage
+- [x] Add "Navy Floral" envelope style to Builder gallery and InvitationView
+- [x] Add "White Floral" envelope style to Builder gallery and InvitationView
+- [x] Define matching dark/light theme palettes for both new styles
