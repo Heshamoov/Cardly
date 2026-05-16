@@ -330,6 +330,11 @@ export default function Builder() {
     }
   }, [data]);
 
+  const set = (field: keyof InvitationData, value: string | number) =>
+    setData((d) => ({ ...d, [field]: value }));
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const createMutation = trpc.invitations.create.useMutation({
     onSuccess: ({ slug }) => {
       setPublishedSlug(slug);
@@ -338,23 +343,23 @@ export default function Builder() {
 
   const uploadPhotoMutation = trpc.invitations.uploadPhoto.useMutation({
     onSuccess: ({ url }) => {
-      set("couplePhotoUrl", url);
+      setData((d) => ({ ...d, couplePhotoUrl: url }));
     },
   });
 
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    // Reset input so the same file can be re-selected
+    e.target.value = "";
     const reader = new FileReader();
     reader.onload = () => {
       const base64 = reader.result as string;
       uploadPhotoMutation.mutate({ base64, mimeType: file.type || "image/jpeg" });
     };
+    reader.onerror = () => console.error("FileReader error");
     reader.readAsDataURL(file);
   };
-
-  const set = (field: keyof InvitationData, value: string | number) =>
-    setData((d) => ({ ...d, [field]: value }));
 
   const ft = translations[formLang]; // form translations
 
@@ -548,20 +553,32 @@ export default function Builder() {
           <p className="font-sans text-xs opacity-40 mb-4" style={formLang === "ar" ? { fontFamily: ARABIC_FONT } : {}}>
             {formLang === "ar" ? "اختياري — تظهر فوق ختم الشمع على الظرف" : "Optional — displays as a circular portrait over the wax seal"}
           </p>
+          {/* Hidden file input — triggered programmatically */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handlePhotoUpload}
+            style={{ display: "none" }}
+          />
+
           {data.couplePhotoUrl ? (
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
               <div style={{ width: 90, height: 90, borderRadius: "50%", overflow: "hidden", border: "3px solid rgba(201,168,76,0.7)", boxShadow: "0 4px 16px rgba(0,0,0,0.4)" }}>
                 <img src={data.couplePhotoUrl} alt="Couple" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
               </div>
               <div style={{ display: "flex", gap: 8 }}>
-                <label
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploadPhotoMutation.isPending}
                   style={{ fontFamily: "'Lato', sans-serif", fontSize: 11, letterSpacing: "0.1em", padding: "5px 14px", borderRadius: 20, border: "1px solid rgba(201,168,76,0.5)", background: "transparent", color: "rgba(201,168,76,0.8)", cursor: "pointer", textTransform: "uppercase" }}
                 >
                   {uploadPhotoMutation.isPending ? (formLang === "ar" ? "جارٍ الرفع…" : "Uploading…") : (formLang === "ar" ? "تغيير الصورة" : "Change Photo")}
-                  <input type="file" accept="image/*" onChange={handlePhotoUpload} style={{ display: "none" }} disabled={uploadPhotoMutation.isPending} />
-                </label>
+                </button>
                 <button
-                  onClick={() => set("couplePhotoUrl", "")}
+                  type="button"
+                  onClick={() => setData((d) => ({ ...d, couplePhotoUrl: "" }))}
                   style={{ fontFamily: "'Lato', sans-serif", fontSize: 11, letterSpacing: "0.1em", padding: "5px 14px", borderRadius: 20, border: "1px solid rgba(201,168,76,0.3)", background: "transparent", color: "rgba(201,168,76,0.5)", cursor: "pointer", textTransform: "uppercase" }}
                 >
                   {formLang === "ar" ? "حذف" : "Remove"}
@@ -569,8 +586,11 @@ export default function Builder() {
               </div>
             </div>
           ) : (
-            <label
-              style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, padding: "20px", border: "2px dashed rgba(201,168,76,0.3)", borderRadius: 12, cursor: uploadPhotoMutation.isPending ? "wait" : "pointer", transition: "border-color 0.2s" }}
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploadPhotoMutation.isPending}
+              style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, padding: "20px", width: "100%", border: "2px dashed rgba(201,168,76,0.3)", borderRadius: 12, background: "transparent", cursor: uploadPhotoMutation.isPending ? "wait" : "pointer", transition: "border-color 0.2s" }}
             >
               {uploadPhotoMutation.isPending ? (
                 <>
@@ -587,8 +607,7 @@ export default function Builder() {
                   </span>
                 </>
               )}
-              <input type="file" accept="image/*" onChange={handlePhotoUpload} style={{ display: "none" }} disabled={uploadPhotoMutation.isPending} />
-            </label>
+            </button>
           )}
           {uploadPhotoMutation.isError && (
             <p style={{ fontFamily: "'Lato', sans-serif", fontSize: 11, color: "#e57373", marginTop: 8, textAlign: "center" }}>
