@@ -404,7 +404,7 @@ function InvitationPage({ data, slug, lang, onToggleLang }: {
             <div className="divider-ornament mb-5">
               <span className="text-gold">❧</span>
             </div>
-            <CountdownTimer targetDate={data.date} label={t.countdownLabel} bodyFont={bodyFont} />
+            <CountdownTimer targetDate={data.date} label={t.countdownLabel} bodyFont={bodyFont} isRtl={isRtl} />
           </div>
         )}
 
@@ -665,7 +665,7 @@ function RsvpSection({
 }
 
 // ── Countdown Timer ───────────────────────────────────────────────────────────
-function CountdownTimer({ targetDate, label, bodyFont }: { targetDate: string; label: string; bodyFont?: string }) {
+function CountdownTimer({ targetDate, label, bodyFont, isRtl }: { targetDate: string; label: string; bodyFont?: string; isRtl?: boolean }) {
   const [timeLeft, setTimeLeft] = useState(() => calcTimeLeft(targetDate));
 
   function calcTimeLeft(date: string) {
@@ -688,7 +688,12 @@ function CountdownTimer({ targetDate, label, bodyFont }: { targetDate: string; l
     <div>
       <p className="invite-label text-gold opacity-50 mb-6" style={{ fontFamily: bodyFont }}>{label}</p>
       <div style={{ display: "flex", justifyContent: "center", gap: 16 }}>
-        {(["days", "hours", "minutes", "seconds"] as const).map((unit) => (
+        {([
+          { unit: "days" as const, arLabel: "أيام", enLabel: "Days" },
+          { unit: "hours" as const, arLabel: "ساعات", enLabel: "Hours" },
+          { unit: "minutes" as const, arLabel: "دقائق", enLabel: "Mins" },
+          { unit: "seconds" as const, arLabel: "ثواني", enLabel: "Secs" },
+        ]).map(({ unit, arLabel, enLabel }) => (
           <div key={unit} style={{ textAlign: "center" }}>
             <div style={{
               fontFamily: "'Cormorant Garamond', serif",
@@ -705,15 +710,15 @@ function CountdownTimer({ targetDate, label, bodyFont }: { targetDate: string; l
               {String(timeLeft[unit]).padStart(2, "0")}
             </div>
             <div style={{
-              fontFamily: bodyFont ?? "'Lato', sans-serif",
+              fontFamily: isRtl ? "'Noto Naskh Arabic', 'Amiri', serif" : (bodyFont ?? "'Lato', sans-serif"),
               fontSize: 10,
-              letterSpacing: "0.15em",
+              letterSpacing: isRtl ? 0 : "0.15em",
               color: "var(--gold)",
               opacity: 0.5,
-              textTransform: "uppercase",
+              textTransform: isRtl ? "none" : "uppercase",
               marginTop: 6,
             }}>
-              {unit}
+              {isRtl ? arLabel : enLabel}
             </div>
           </div>
         ))}

@@ -1123,7 +1123,7 @@ function PreviewContent({ data, lang = "en", onToggleLang }: { data: InvitationD
           <div className="divider-ornament mb-4">
             <span className="text-gold text-sm">❧</span>
           </div>
-          <CountdownTimer targetDate={data.date} label={t.countdownLabel} bodyFont={bodyFont} />
+          <CountdownTimer targetDate={data.date} label={t.countdownLabel} bodyFont={bodyFont} isRtl={isRtl} />
         </div>
       )}
 
@@ -1194,7 +1194,7 @@ function PreviewContent({ data, lang = "en", onToggleLang }: { data: InvitationD
   );
 }
 
-function CountdownTimer({ targetDate, label = "Counting Down", bodyFont }: { targetDate: string; label?: string; bodyFont?: string }) {
+function CountdownTimer({ targetDate, label = "Counting Down", bodyFont, isRtl }: { targetDate: string; label?: string; bodyFont?: string; isRtl?: boolean }) {
   const [timeLeft, setTimeLeft] = useState(() => getTimeLeft(targetDate));
 
   useState(() => {
@@ -1213,10 +1213,10 @@ function CountdownTimer({ targetDate, label = "Counting Down", bodyFont }: { tar
       </p>
       <div className="flex justify-center gap-4">
         {[
-          { value: timeLeft.days, label: "Days" },
-          { value: timeLeft.hours, label: "Hours" },
-          { value: timeLeft.minutes, label: "Mins" },
-          { value: timeLeft.seconds, label: "Secs" },
+          { value: timeLeft.days, label: isRtl ? "أيام" : "Days" },
+          { value: timeLeft.hours, label: isRtl ? "ساعات" : "Hours" },
+          { value: timeLeft.minutes, label: isRtl ? "دقائق" : "Mins" },
+          { value: timeLeft.seconds, label: isRtl ? "ثواني" : "Secs" },
         ].map(({ value, label }) => (
           <div key={label} className="text-center">
             <div

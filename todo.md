@@ -159,3 +159,7 @@
 - [x] Builder: swap groom/bride field order in EN and AR form sections
 - [x] Preview: swap groom/bride display order in PreviewContent
 - [x] Invitation: swap groom/bride display order in InvitationPage
+
+## Fix: Countdown Timer Labels Not Translating to Arabic
+- [x] Fix DAYS/HOURS/MINS/SECS labels in CountdownTimer (Builder Preview) to use Arabic when lang=ar
+- [x] Fix DAYS/HOURS/MINS/SECS labels in CountdownTimer (Invitation) to use Arabic when lang=ar
