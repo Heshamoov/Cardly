@@ -26,6 +26,7 @@ interface InvitationData {
   arVenueName?: string;
   arVenueAddress?: string;
   arMessage?: string;
+  couplePhotoUrl?: string;
 }
 
 const ENVELOPE_STYLES = [
@@ -120,6 +121,7 @@ const defaultData: InvitationData = {
   arVenueName: "",
   arVenueAddress: "",
   arMessage: "",
+  couplePhotoUrl: "",
   sections: {
     names: true,
     date: true,
@@ -334,6 +336,23 @@ export default function Builder() {
     },
   });
 
+  const uploadPhotoMutation = trpc.invitations.uploadPhoto.useMutation({
+    onSuccess: ({ url }) => {
+      set("couplePhotoUrl", url);
+    },
+  });
+
+  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const base64 = reader.result as string;
+      uploadPhotoMutation.mutate({ base64, mimeType: file.type || "image/jpeg" });
+    };
+    reader.readAsDataURL(file);
+  };
+
   const set = (field: keyof InvitationData, value: string | number) =>
     setData((d) => ({ ...d, [field]: value }));
 
@@ -519,6 +538,63 @@ export default function Builder() {
           <p className="font-sans text-xs opacity-30 mt-2" style={formLang === "ar" ? { fontFamily: ARABIC_FONT } : {}}>
             {formLang === "ar" ? "يظهر في لوحة الاستجابات فقط" : "Shown in your Guest Responses dashboard only"}
           </p>
+        </div>
+
+        {/* ── Couple Photo ── */}
+        <div className="section-card mb-6 animate-fade-in-up">
+          <p className="font-sans text-xs uppercase tracking-widest text-gold opacity-80 mb-3" style={formLang === "ar" ? { fontFamily: ARABIC_FONT, textTransform: "none" } : {}}>
+            {ft.sectionPhoto}
+          </p>
+          <p className="font-sans text-xs opacity-40 mb-4" style={formLang === "ar" ? { fontFamily: ARABIC_FONT } : {}}>
+            {formLang === "ar" ? "اختياري — تظهر فوق ختم الشمع على الظرف" : "Optional — displays as a circular portrait over the wax seal"}
+          </p>
+          {data.couplePhotoUrl ? (
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
+              <div style={{ width: 90, height: 90, borderRadius: "50%", overflow: "hidden", border: "3px solid rgba(201,168,76,0.7)", boxShadow: "0 4px 16px rgba(0,0,0,0.4)" }}>
+                <img src={data.couplePhotoUrl} alt="Couple" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+              </div>
+              <div style={{ display: "flex", gap: 8 }}>
+                <label
+                  style={{ fontFamily: "'Lato', sans-serif", fontSize: 11, letterSpacing: "0.1em", padding: "5px 14px", borderRadius: 20, border: "1px solid rgba(201,168,76,0.5)", background: "transparent", color: "rgba(201,168,76,0.8)", cursor: "pointer", textTransform: "uppercase" }}
+                >
+                  {uploadPhotoMutation.isPending ? (formLang === "ar" ? "جارٍ الرفع…" : "Uploading…") : (formLang === "ar" ? "تغيير الصورة" : "Change Photo")}
+                  <input type="file" accept="image/*" onChange={handlePhotoUpload} style={{ display: "none" }} disabled={uploadPhotoMutation.isPending} />
+                </label>
+                <button
+                  onClick={() => set("couplePhotoUrl", "")}
+                  style={{ fontFamily: "'Lato', sans-serif", fontSize: 11, letterSpacing: "0.1em", padding: "5px 14px", borderRadius: 20, border: "1px solid rgba(201,168,76,0.3)", background: "transparent", color: "rgba(201,168,76,0.5)", cursor: "pointer", textTransform: "uppercase" }}
+                >
+                  {formLang === "ar" ? "حذف" : "Remove"}
+                </button>
+              </div>
+            </div>
+          ) : (
+            <label
+              style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, padding: "20px", border: "2px dashed rgba(201,168,76,0.3)", borderRadius: 12, cursor: uploadPhotoMutation.isPending ? "wait" : "pointer", transition: "border-color 0.2s" }}
+            >
+              {uploadPhotoMutation.isPending ? (
+                <>
+                  <div style={{ width: 32, height: 32, borderRadius: "50%", border: "3px solid rgba(201,168,76,0.3)", borderTopColor: "rgba(201,168,76,0.9)", animation: "spin 0.8s linear infinite" }} />
+                  <span style={{ fontFamily: "'Lato', sans-serif", fontSize: 11, color: "rgba(201,168,76,0.6)", letterSpacing: "0.1em" }}>
+                    {formLang === "ar" ? "جارٍ الرفع…" : "Uploading…"}
+                  </span>
+                </>
+              ) : (
+                <>
+                  <span style={{ fontSize: 28 }}>📷</span>
+                  <span style={{ fontFamily: "'Lato', sans-serif", fontSize: 11, color: "rgba(201,168,76,0.6)", letterSpacing: "0.1em", textTransform: "uppercase" }}>
+                    {formLang === "ar" ? "اضغط لرفع صورة" : "Tap to upload photo"}
+                  </span>
+                </>
+              )}
+              <input type="file" accept="image/*" onChange={handlePhotoUpload} style={{ display: "none" }} disabled={uploadPhotoMutation.isPending} />
+            </label>
+          )}
+          {uploadPhotoMutation.isError && (
+            <p style={{ fontFamily: "'Lato', sans-serif", fontSize: 11, color: "#e57373", marginTop: 8, textAlign: "center" }}>
+              {formLang === "ar" ? "فشل الرفع — يرجى المحاولة مرة أخرى" : "Upload failed — please try again"}
+            </p>
+          )}
         </div>
 
         {/* ── Envelope Style Picker ── */}
@@ -930,6 +1006,23 @@ function PreviewWithEnvelope({
               {(groomName[0] || "S")}&amp;{(brideName[0] || "H")}
             </span>
           </div>
+
+          {/* Couple portrait — circular photo overlapping the wax seal (only when photo is set) */}
+          {data.couplePhotoUrl && (
+            <div
+              className={`fs-wax-seal ${isOpen ? "open" : ""}`}
+              style={{
+                background: "transparent",
+                border: "none",
+                boxShadow: "none",
+                zIndex: 21,
+              }}
+            >
+              <div style={{ width: 80, height: 80, borderRadius: "50%", overflow: "hidden", border: `3px solid ${envStyle.theme.accent}`, boxShadow: `0 4px 20px rgba(0,0,0,0.5), 0 0 0 3px ${envStyle.theme.accentLight}55` }}>
+                <img src={data.couplePhotoUrl} alt="Couple" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+              </div>
+            </div>
+          )}
 
           {/* Expand overlay — fades to theme background before invitation appears */}
           <div

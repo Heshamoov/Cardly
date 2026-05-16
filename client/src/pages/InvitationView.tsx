@@ -70,6 +70,15 @@ interface InvitationData {
   message: string;
   sections: Record<string, boolean>;
   envelopeStyle?: string;
+  couplePhotoUrl?: string;
+  fontScale?: number;
+  arBrideFirstName?: string;
+  arBrideLastName?: string;
+  arGroomFirstName?: string;
+  arGroomLastName?: string;
+  arVenueName?: string;
+  arVenueAddress?: string;
+  arMessage?: string;
 }
 
 type AnimStage = "idle" | "opening" | "expand" | "done";
@@ -207,6 +216,25 @@ export default function InvitationView() {
           {(groomName[0] || "S")}&{(brideName[0] || "H")}
         </span>
       </div>
+
+      {/* Couple portrait — circular photo overlapping the wax seal (only when photo is set) */}
+      {invData.couplePhotoUrl && (
+        <div
+          className="fs-wax-seal"
+          style={{
+            opacity: isOpen ? 0 : 1,
+            transition: "opacity 0.4s ease",
+            background: "transparent",
+            border: "none",
+            boxShadow: "none",
+            zIndex: 21,
+          }}
+        >
+          <div style={{ width: 80, height: 80, borderRadius: "50%", overflow: "hidden", border: `3px solid ${envStyle.theme.accent}`, boxShadow: `0 4px 20px rgba(0,0,0,0.5), 0 0 0 3px ${envStyle.theme.accentLight}55` }}>
+            <img src={invData.couplePhotoUrl} alt="Couple" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+          </div>
+        </div>
+      )}
 
       {/* Expand overlay */}
       <div

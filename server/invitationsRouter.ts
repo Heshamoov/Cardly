@@ -101,6 +101,7 @@ export const invitationsRouter = router({
           arVenueAddress: z.string().optional(),
           arMessage: z.string().optional(),
           sections: z.record(z.string(), z.boolean()),
+          couplePhotoUrl: z.string().optional(),
         }),
       })
     )
@@ -147,6 +148,21 @@ export const invitationsRouter = router({
       // Delete the invitation
       await db.delete(invitations).where(eq(invitations.slug, input.slug));
       return { success: true };
+    }),
+
+  uploadPhoto: publicProcedure
+    .input(z.object({
+      base64: z.string(), // data:image/...;base64,... or raw base64
+      mimeType: z.string().default("image/jpeg"),
+    }))
+    .mutation(async ({ input }) => {
+      const { storagePut } = await import("./storage");
+      // Strip data URL prefix if present
+      const raw = input.base64.includes(",") ? input.base64.split(",")[1] : input.base64;
+      const buffer = Buffer.from(raw, "base64");
+      const ext = input.mimeType.split("/")[1]?.replace("jpeg", "jpg") ?? "jpg";
+      const { url } = await storagePut(`couple-photos/photo.${ext}`, buffer, input.mimeType);
+      return { url };
     }),
 
   resolveMapUrl: publicProcedure

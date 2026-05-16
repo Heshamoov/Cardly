@@ -171,3 +171,13 @@
 ## Fix: Preview Language Toggle + Font Size Control
 - [x] Add EN/AR toggle button inside the Preview panel (visible to visitors)
 - [x] Redesign font size control to be clearly labeled (e.g. "A-" / "A+" buttons with label "Font Size")
+
+## Feature: Couple Photo Upload (Circular Portrait above Wax Seal)
+- [x] Add couplePhotoUrl field to InvitationData and defaultData in Builder.tsx
+- [x] couplePhotoUrl stored inside invitation JSON data (no schema migration needed)
+- [x] Add uploadPhoto tRPC procedure (base64 → S3 → return URL) in invitationsRouter.ts
+- [x] Add optional photo upload input in Builder form (with preview + remove button)
+- [x] Display circular photo above wax seal on envelope scene in Preview (Builder)
+- [x] Display circular photo above wax seal on envelope scene in Invitation (InvitationView)
+- [x] When no photo: show initials as before (no regression)
+- [x] Style: circular crop, gold ring border matching theme accent, subtle shadow
