@@ -28,6 +28,7 @@ interface InvitationData {
   arMessage?: string;
   couplePhotoUrl?: string;
   defaultLang?: "en" | "ar";
+  musicUrl?: string;
 }
 
 const ENVELOPE_STYLES = [
@@ -158,6 +159,7 @@ const defaultData: InvitationData = {
   arMessage: "",
   couplePhotoUrl: "",
   defaultLang: "en",
+  musicUrl: "",
   sections: {
     names: true,
     date: true,
@@ -226,7 +228,7 @@ function VenueLocationInput({
         <label className="font-sans text-xs opacity-50 block mb-1">Address</label>
         <input
           className="wedding-input"
-          placeholder="e.g. 123 Rose Avenue, New York, USA"
+          placeholder="e.g. 123 Rose Avenue, London, UK"
           value={data.venueAddress}
           onChange={(e) => set("venueAddress", e.target.value)}
         />
@@ -404,6 +406,200 @@ function MessageSuggestionDropdown({ lang, onSelect }: { lang: "en" | "ar"; onSe
   );
 }
 
+// ── Genre sample tracks ──────────────────────────────────────────────────────
+const MUSIC_GENRES = [
+  { id: "western-classical", name: "Western Classical", nameAr: "كلاسيكي غربي", emoji: "🎻", url: "/manus-storage/music-western-classical_fe8f1e6b.mp3" },
+  { id: "arabic-oud", name: "Arabic Oud", nameAr: "عود عربي", emoji: "🎵", url: "/manus-storage/music-arabic-oud_519d7df8.mp3" },
+  { id: "romantic-piano", name: "Romantic Piano", nameAr: "بيانو رومانسي", emoji: "🎹", url: "/manus-storage/music-romantic-piano_1442c414.mp3" },
+  { id: "celtic", name: "Celtic", nameAr: "سلتي", emoji: "🎻", url: "/manus-storage/music-celtic_a21028b9.mp3" },
+  { id: "latin", name: "Latin", nameAr: "لاتيني", emoji: "🎸", url: "/manus-storage/music-latin_e0bac558.mp3" },
+  { id: "jazz", name: "Jazz", nameAr: "جاز", emoji: "🎺", url: "/manus-storage/music-jazz_cd4da150.mp3" },
+];
+
+function MusicSection({
+  data,
+  set,
+  formLang,
+  uploadMusicMutation,
+}: {
+  data: InvitationData;
+  set: (field: keyof InvitationData, value: string | number) => void;
+  formLang: "en" | "ar";
+  uploadMusicMutation: { isPending: boolean; isError: boolean; mutate: (args: { base64: string; mimeType: string }) => void };
+}) {
+  const ft = translations[formLang];
+  const [previewingId, setPreviewingId] = useState<string | null>(null);
+  const previewAudioRef = useRef<HTMLAudioElement | null>(null);
+  const musicFileRef = useRef<HTMLInputElement>(null);
+
+  const togglePreview = (genreId: string, url: string) => {
+    if (previewingId === genreId) {
+      // Stop preview
+      previewAudioRef.current?.pause();
+      setPreviewingId(null);
+    } else {
+      // Start preview
+      if (previewAudioRef.current) {
+        previewAudioRef.current.pause();
+      }
+      const audio = new Audio(url);
+      audio.volume = 0.5;
+      audio.play().catch(() => {});
+      audio.onended = () => setPreviewingId(null);
+      previewAudioRef.current = audio;
+      setPreviewingId(genreId);
+    }
+  };
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      previewAudioRef.current?.pause();
+    };
+  }, []);
+
+  const handleMusicUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = "";
+    const reader = new FileReader();
+    reader.onload = () => {
+      const base64 = reader.result as string;
+      uploadMusicMutation.mutate({ base64, mimeType: file.type || "audio/mpeg" });
+    };
+    reader.onerror = () => console.error("FileReader error");
+    reader.readAsDataURL(file);
+  };
+
+  const selectedGenre = MUSIC_GENRES.find((g) => g.url === data.musicUrl);
+
+  return (
+    <div className="section-card mb-6 animate-fade-in-up">
+      <p
+        className="font-sans text-xs uppercase tracking-widest text-gold opacity-80 mb-1"
+        style={formLang === "ar" ? { fontFamily: ARABIC_FONT, textTransform: "none" } : {}}
+      >
+        {ft.sectionMusic}
+      </p>
+      <p className="font-sans text-xs opacity-40 mb-4" style={formLang === "ar" ? { fontFamily: ARABIC_FONT } : {}}>
+        {ft.musicHint}
+      </p>
+
+      {/* Genre grid */}
+      <div className="grid grid-cols-3 gap-2 mb-4">
+        {MUSIC_GENRES.map((genre) => {
+          const isSelected = data.musicUrl === genre.url;
+          const isPreviewing = previewingId === genre.id;
+          return (
+            <div
+              key={genre.id}
+              style={{
+                borderRadius: 10,
+                border: `1.5px solid ${isSelected ? "rgba(201,168,76,0.9)" : "rgba(201,168,76,0.2)"}`,
+                background: isSelected ? "rgba(201,168,76,0.12)" : "rgba(255,255,255,0.03)",
+                padding: "10px 6px 8px",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: 4,
+                position: "relative",
+                transition: "all 0.2s",
+              }}
+            >
+              {/* Selected checkmark */}
+              {isSelected && (
+                <div style={{ position: "absolute", top: 4, right: 4, width: 16, height: 16, borderRadius: "50%", background: "rgba(201,168,76,0.9)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <span style={{ color: "#1a1a2e", fontSize: 9, fontWeight: 700 }}>✓</span>
+                </div>
+              )}
+              <span style={{ fontSize: 20 }}>{genre.emoji}</span>
+              <span style={{ fontFamily: "'Lato', sans-serif", fontSize: 9, letterSpacing: "0.05em", color: isSelected ? "rgba(201,168,76,1)" : "rgba(201,168,76,0.6)", textAlign: "center", lineHeight: 1.3 }}>
+                {formLang === "ar" ? genre.nameAr : genre.name}
+              </span>
+              <div style={{ display: "flex", gap: 3, marginTop: 2 }}>
+                {/* Preview button */}
+                <button
+                  type="button"
+                  onClick={() => togglePreview(genre.id, genre.url)}
+                  style={{ fontFamily: "'Lato', sans-serif", fontSize: 8, letterSpacing: "0.08em", padding: "3px 7px", borderRadius: 10, border: "1px solid rgba(201,168,76,0.4)", background: isPreviewing ? "rgba(201,168,76,0.2)" : "transparent", color: "rgba(201,168,76,0.8)", cursor: "pointer", textTransform: "uppercase" }}
+                >
+                  {isPreviewing ? "⏹" : "▶"}
+                </button>
+                {/* Select button */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    set("musicUrl", isSelected ? "" : genre.url);
+                    if (previewingId === genre.id) {
+                      previewAudioRef.current?.pause();
+                      setPreviewingId(null);
+                    }
+                  }}
+                  style={{ fontFamily: "'Lato', sans-serif", fontSize: 8, letterSpacing: "0.08em", padding: "3px 7px", borderRadius: 10, border: `1px solid ${isSelected ? "rgba(201,168,76,0.8)" : "rgba(201,168,76,0.4)"}`, background: isSelected ? "rgba(201,168,76,0.25)" : "transparent", color: isSelected ? "rgba(201,168,76,1)" : "rgba(201,168,76,0.7)", cursor: "pointer", textTransform: "uppercase" }}
+                >
+                  {isSelected ? (formLang === "ar" ? ft.musicRemove : "Remove") : (formLang === "ar" ? ft.musicSelected : "Use")}
+                </button>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Divider */}
+      <div style={{ borderTop: "1px solid rgba(201,168,76,0.15)", marginBottom: 12 }} />
+
+      {/* Custom upload */}
+      <input
+        ref={musicFileRef}
+        type="file"
+        accept="audio/mpeg,audio/mp4,audio/m4a,audio/*"
+        onChange={handleMusicUpload}
+        style={{ display: "none" }}
+      />
+      {data.musicUrl && !selectedGenre ? (
+        <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderRadius: 10, border: "1.5px solid rgba(201,168,76,0.6)", background: "rgba(201,168,76,0.08)" }}>
+          <span style={{ fontSize: 18 }}>🎵</span>
+          <span style={{ fontFamily: "'Lato', sans-serif", fontSize: 11, color: "rgba(201,168,76,0.9)", flex: 1 }}>
+            {formLang === "ar" ? "موسيقى مخصصة" : "Custom music"}
+          </span>
+          <button
+            type="button"
+            onClick={() => set("musicUrl", "")}
+            style={{ fontFamily: "'Lato', sans-serif", fontSize: 10, letterSpacing: "0.08em", padding: "4px 10px", borderRadius: 10, border: "1px solid rgba(201,168,76,0.4)", background: "transparent", color: "rgba(201,168,76,0.7)", cursor: "pointer", textTransform: "uppercase" }}
+          >
+            {ft.musicRemove}
+          </button>
+        </div>
+      ) : (
+        <button
+          type="button"
+          onClick={() => musicFileRef.current?.click()}
+          disabled={uploadMusicMutation.isPending}
+          style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 14px", width: "100%", border: "1.5px dashed rgba(201,168,76,0.3)", borderRadius: 10, background: "transparent", cursor: uploadMusicMutation.isPending ? "wait" : "pointer", transition: "border-color 0.2s" }}
+        >
+          {uploadMusicMutation.isPending ? (
+            <>
+              <div style={{ width: 20, height: 20, borderRadius: "50%", border: "2px solid rgba(201,168,76,0.3)", borderTopColor: "rgba(201,168,76,0.9)", animation: "spin 0.8s linear infinite", flexShrink: 0 }} />
+              <span style={{ fontFamily: "'Lato', sans-serif", fontSize: 11, color: "rgba(201,168,76,0.6)", letterSpacing: "0.08em" }}>{ft.musicUploading}</span>
+            </>
+          ) : (
+            <>
+              <span style={{ fontSize: 18 }}>⬆️</span>
+              <div style={{ textAlign: formLang === "ar" ? "right" : "left" }}>
+                <p style={{ fontFamily: "'Lato', sans-serif", fontSize: 11, color: "rgba(201,168,76,0.7)", letterSpacing: "0.08em", textTransform: "uppercase", margin: 0 }}>{ft.musicCustomUpload}</p>
+                <p style={{ fontFamily: "'Lato', sans-serif", fontSize: 9, color: "rgba(201,168,76,0.4)", margin: "2px 0 0" }}>{ft.musicCustomHint}</p>
+              </div>
+            </>
+          )}
+        </button>
+      )}
+      {uploadMusicMutation.isError && (
+        <p style={{ fontFamily: "'Lato', sans-serif", fontSize: 11, color: "#e57373", marginTop: 8, textAlign: "center" }}>{ft.musicUploadFailed}</p>
+      )}
+    </div>
+  );
+}
+
 function SectionCard({
   label,
   sectionKey,
@@ -486,6 +682,12 @@ export default function Builder() {
   const uploadPhotoMutation = trpc.invitations.uploadPhoto.useMutation({
     onSuccess: ({ url }) => {
       setData((d) => ({ ...d, couplePhotoUrl: url }));
+    },
+  });
+
+  const uploadMusicMutation = trpc.invitations.uploadMusic.useMutation({
+    onSuccess: ({ url }) => {
+      setData((d) => ({ ...d, musicUrl: url }));
     },
   });
 
@@ -676,7 +878,7 @@ export default function Builder() {
           </p>
           <input
             className="wedding-input"
-            placeholder={formLang === "ar" ? "مثال: حفل زفاف سارة وأحمد" : "e.g. Sara & Ahmed's Wedding"}
+            placeholder={formLang === "ar" ? "مثال: حفل زفاف ليلى وكريم" : "e.g. Jordan & Alex's Wedding"}
             value={data.title}
             onChange={(e) => set("title", e.target.value)}
             dir={formLang === "ar" ? "rtl" : undefined}
@@ -846,7 +1048,7 @@ export default function Builder() {
               <div className="grid grid-cols-2 gap-3 mb-3">
                 <div>
                   <label className="font-sans text-xs opacity-50 block mb-1">Groom's First Name</label>
-                  <input className="wedding-input" placeholder="Groom's first name" value={data.groomFirstName} onChange={(e) => set("groomFirstName", e.target.value)} />
+                  <input className="wedding-input" placeholder="e.g. Jordan" value={data.groomFirstName} onChange={(e) => set("groomFirstName", e.target.value)} />
                 </div>
                 <div>
                   <label className="font-sans text-xs opacity-50 block mb-1">Groom's Last Name</label>
@@ -856,7 +1058,7 @@ export default function Builder() {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="font-sans text-xs opacity-50 block mb-1">Bride's First Name</label>
-                  <input className="wedding-input" placeholder="Bride's first name" value={data.brideFirstName} onChange={(e) => set("brideFirstName", e.target.value)} />
+                  <input className="wedding-input" placeholder="e.g. Alex" value={data.brideFirstName} onChange={(e) => set("brideFirstName", e.target.value)} />
                 </div>
                 <div>
                   <label className="font-sans text-xs opacity-50 block mb-1">Bride's Last Name</label>
@@ -949,7 +1151,7 @@ export default function Builder() {
               </div>
               <div>
                 <label className="font-sans text-xs opacity-50 block mb-1" style={{ fontFamily: `'Noto Naskh Arabic', 'Amiri', serif` }}>العنوان</label>
-                <input className="wedding-input" dir="rtl" style={{ fontFamily: `'Noto Naskh Arabic', 'Amiri', serif` }} placeholder="مثال: شارع الورد، أبوظبي" value={data.arVenueAddress ?? ""} onChange={(e) => set("arVenueAddress", e.target.value)} />
+                <input className="wedding-input" dir="rtl" style={{ fontFamily: `'Noto Naskh Arabic', 'Amiri', serif` }} placeholder="مثال: شارع الورد، بيروت" value={data.arVenueAddress ?? ""} onChange={(e) => set("arVenueAddress", e.target.value)} />
               </div>
               <p className="font-sans text-xs opacity-30 mt-1" style={{ fontFamily: `'Noto Naskh Arabic', 'Amiri', serif` }}>رابط الخريطة يُحدد في تبويب اللغة الإنجليزية</p>
             </div>
@@ -1013,6 +1215,9 @@ export default function Builder() {
             {formLang === "ar" ? "سيظهر عداد تنازلي حتى يوم زفافكم في الدعوة." : "A live countdown to your wedding day will appear in the invitation."}
           </p>
         </SectionCard>
+
+        {/* ── Section: Music ── */}
+        <MusicSection data={data} set={set} formLang={formLang} uploadMusicMutation={uploadMusicMutation} />
 
         {/* ── Actions ── */}
         <div className="flex flex-col gap-3 mt-6 pb-8">
@@ -1417,10 +1622,10 @@ function PreviewContent({ data, lang = "en", onToggleLang }: { data: InvitationD
             {t.venueLabel}
           </p>
           <p className="font-serif text-2xl text-cream" style={{ fontFamily: bodyFont }}>
-            {displayVenueName || "Al Rekab Restaurant"}
+            {displayVenueName || "Grand Ballroom"}
           </p>
           <p className="font-sans text-sm opacity-50 mt-1" style={{ fontFamily: bodyFont }}>
-            {displayVenueAddress || "Al Ain, Abu Dhabi, UAE"}
+            {displayVenueAddress || "123 Rose Avenue, London, UK"}
           </p>
         </div>
       )}

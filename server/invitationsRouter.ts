@@ -103,6 +103,7 @@ export const invitationsRouter = router({
           sections: z.record(z.string(), z.boolean()),
           couplePhotoUrl: z.string().optional(),
           defaultLang: z.enum(["en", "ar"]).optional(),
+          musicUrl: z.string().optional(),
         }),
       })
     )
@@ -149,6 +150,20 @@ export const invitationsRouter = router({
       // Delete the invitation
       await db.delete(invitations).where(eq(invitations.slug, input.slug));
       return { success: true };
+    }),
+
+  uploadMusic: publicProcedure
+    .input(z.object({
+      base64: z.string(), // data:audio/...;base64,... or raw base64
+      mimeType: z.string().default("audio/mpeg"),
+    }))
+    .mutation(async ({ input }) => {
+      const { storagePut } = await import("./storage");
+      const raw = input.base64.includes(",") ? input.base64.split(",")[1] : input.base64;
+      const buffer = Buffer.from(raw, "base64");
+      const ext = input.mimeType.includes("mp4") || input.mimeType.includes("m4a") ? "m4a" : "mp3";
+      const { url } = await storagePut(`couple-music/music.${ext}`, buffer, input.mimeType);
+      return { url };
     }),
 
   uploadPhoto: publicProcedure

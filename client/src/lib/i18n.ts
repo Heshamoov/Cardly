@@ -65,6 +65,19 @@ export const translations = {
     nameRequired: "Please enter your name.",
     partySizeError: "Party size must be between 1 and 50.",
     somethingWrong: "Something went wrong. Please try again.",
+    // Music section
+    sectionMusic: "BACKGROUND MUSIC",
+    musicHint: "Music plays automatically when guests open the envelope",
+    musicNone: "No music selected",
+    musicCustomUpload: "Upload Your Own Music",
+    musicCustomHint: "MP3 or M4A, up to 20 MB",
+    muteMusic: "Mute",
+    unmuteMusic: "Unmute",
+    volumeHint: "🔊 Turn up your volume",
+    musicUploading: "Uploading…",
+    musicUploadFailed: "Upload failed — please try again",
+    musicRemove: "Remove",
+    musicSelected: "Selected",
   },
   ar: {
     // Builder form UI
@@ -125,6 +138,19 @@ export const translations = {
     nameRequired: "يرجى إدخال اسمك.",
     partySizeError: "يجب أن يكون عدد الحضور بين 1 و 50.",
     somethingWrong: "حدث خطأ ما. يرجى المحاولة مرة أخرى.",
+    // Music section
+    sectionMusic: "موسيقى الخلفية",
+    musicHint: "تعزف الموسيقى تلقائياً عند فتح الظرف",
+    musicNone: "لم يتم اختيار موسيقى",
+    musicCustomUpload: "ارفع موسيقاك الخاصة",
+    musicCustomHint: "MP3 أو M4A، حتى 20 ميغابايت",
+    muteMusic: "كتم الصوت",
+    unmuteMusic: "تشغيل الصوت",
+    volumeHint: "🔊 ارفع مستوى الصوت",
+    musicUploading: "جارٍ الرفع…",
+    musicUploadFailed: "فشل الرفع — يرجى المحاولة مرة أخرى",
+    musicRemove: "حذف",
+    musicSelected: "مختار",
   },
 } as const;
 

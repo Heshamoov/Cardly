@@ -214,3 +214,14 @@
 
 ## Bug Fix: SectionCard Toggle RTL Position
 - [x] Move section toggle to the left side when Arabic (RTL) mode is active in Builder
+
+## Feature: Background Music
+- [x] Generate 6 genre sample tracks (Western Classical, Arabic Oud, Romantic Piano, Celtic, Latin, Jazz)
+- [x] Upload sample tracks to S3 storage
+- [x] Add musicUrl + musicLabel fields to InvitationData and defaultData
+- [x] Add Music section card in Builder below Countdown Timer (genre grid + custom upload)
+- [x] Add musicUrl to server zod schema in invitationsRouter.ts
+- [x] Auto-play music when guest taps envelope to open it (looping, low volume)
+- [x] Add speaker volume prompt on invitation that fades after 4 seconds
+- [x] Add mute/unmute floating button on invitation
+- [x] Fix all placeholder text to be globally neutral (no UAE-specific names)

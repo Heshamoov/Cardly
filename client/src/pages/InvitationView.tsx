@@ -102,6 +102,7 @@ interface InvitationData {
   arVenueName?: string;
   arVenueAddress?: string;
   arMessage?: string;
+  musicUrl?: string;
 }
 
 type AnimStage = "idle" | "opening" | "expand" | "done";
@@ -119,6 +120,11 @@ export default function InvitationView() {
   const [showInvitation, setShowInvitation] = useState(false);
   const invitationRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<HTMLDivElement>(null);
+
+  // Music state
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [isMuted, setIsMuted] = useState(false);
+  const [showVolumeHint, setShowVolumeHint] = useState(false);
 
   // Language toggle — persisted per slug
   // Priority: 1) guest's explicit choice (localStorage), 2) couple's defaultLang, 3) "en"
@@ -171,6 +177,24 @@ export default function InvitationView() {
   const handleOpenEnvelope = () => {
     if (animStage !== "idle") return;
     setAnimStage("opening");
+
+    // Start music if a musicUrl is set
+    const musicUrl = (invitation?.data as InvitationData)?.musicUrl;
+    if (musicUrl) {
+      try {
+        if (!audioRef.current) {
+          const audio = new Audio(musicUrl);
+          audio.loop = true;
+          audio.volume = 0.45;
+          audioRef.current = audio;
+        }
+        audioRef.current.play().then(() => {
+          setShowVolumeHint(true);
+          setTimeout(() => setShowVolumeHint(false), 4000);
+        }).catch(() => {});
+      } catch {}
+    }
+
     setTimeout(() => {
       setAnimStage("expand");
       setTimeout(() => {
@@ -182,6 +206,20 @@ export default function InvitationView() {
         });
       }, 500);
     }, 2000);
+  };
+
+  const toggleMute = () => {
+    if (audioRef.current) {
+      audioRef.current.muted = !audioRef.current.muted;
+      setIsMuted(audioRef.current.muted);
+    }
+  };
+
+  // Stop music when going back to envelope
+  const handleBackToEnvelopeWithMusic = () => {
+    audioRef.current?.pause();
+    if (audioRef.current) audioRef.current.currentTime = 0;
+    setShowVolumeHint(false);
   };
 
   if (isLoading) {
@@ -218,6 +256,7 @@ export default function InvitationView() {
   const isExpanding = animStage === "expand" || animStage === "done";
 
   const handleBackToEnvelope = () => {
+    handleBackToEnvelopeWithMusic();
     setShowInvitation(false);
     setAnimStage("idle");
     requestAnimationFrame(() => {
@@ -228,7 +267,17 @@ export default function InvitationView() {
   if (showInvitation) {
     return (
       <div ref={invitationRef}>
-        <InvitationPage data={invData} slug={slug} lang={lang} onToggleLang={toggleLang} onBackToEnvelope={handleBackToEnvelope} />
+        <InvitationPage
+          data={invData}
+          slug={slug}
+          lang={lang}
+          onToggleLang={toggleLang}
+          onBackToEnvelope={handleBackToEnvelope}
+          isMuted={isMuted}
+          onToggleMute={toggleMute}
+          showVolumeHint={showVolumeHint}
+          hasMusicUrl={!!(invData as InvitationData).musicUrl}
+        />
       </div>
     );
   }
@@ -372,8 +421,9 @@ function LangToggle({ lang, onToggle, onBackToEnvelope, theme }: {
 }
 
 // ── Full Invitation Page ──────────────────────────────────────────────────────
-function InvitationPage({ data, slug, lang, onToggleLang, onBackToEnvelope }: {
+function InvitationPage({ data, slug, lang, onToggleLang, onBackToEnvelope, isMuted, onToggleMute, showVolumeHint, hasMusicUrl }: {
   data: InvitationData; slug: string; lang: Lang; onToggleLang: () => void; onBackToEnvelope: () => void;
+  isMuted?: boolean; onToggleMute?: () => void; showVolumeHint?: boolean; hasMusicUrl?: boolean;
 }) {
   const isRtl = lang === "ar";
   const brideName = isRtl
@@ -437,6 +487,65 @@ function InvitationPage({ data, slug, lang, onToggleLang, onBackToEnvelope }: {
     >
       {/* Language Toggle + Envelope Button */}
       <LangToggle lang={lang} onToggle={onToggleLang} onBackToEnvelope={onBackToEnvelope} theme={theme} />
+
+      {/* Volume hint banner — fades in/out */}
+      {hasMusicUrl && showVolumeHint && (
+        <div
+          style={{
+            position: "fixed",
+            bottom: 24,
+            left: "50%",
+            transform: "translateX(-50%)",
+            zIndex: 300,
+            background: `${theme.bgSecondary}ee`,
+            border: `1px solid ${theme.accent}66`,
+            borderRadius: 24,
+            padding: "8px 20px",
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            backdropFilter: "blur(12px)",
+            boxShadow: `0 4px 20px rgba(0,0,0,0.3)`,
+            animation: "fadeInUp 0.4s ease",
+            whiteSpace: "nowrap",
+          }}
+        >
+          <span style={{ fontSize: 18 }}>🔊</span>
+          <span style={{ fontFamily: "'Lato', sans-serif", fontSize: 12, letterSpacing: "0.08em", color: theme.accent }}>
+            {lang === "ar" ? "ارفع مستوى الصوت" : "Turn up your volume"}
+          </span>
+        </div>
+      )}
+
+      {/* Mute / unmute floating button */}
+      {hasMusicUrl && (
+        <button
+          onClick={onToggleMute}
+          title={isMuted ? (lang === "ar" ? "تشغيل الصوت" : "Unmute") : (lang === "ar" ? "كتم الصوت" : "Mute")}
+          style={{
+            position: "fixed",
+            bottom: 24,
+            right: 14,
+            zIndex: 300,
+            width: 40,
+            height: 40,
+            borderRadius: "50%",
+            background: `${theme.bgSecondary}ee`,
+            border: `1px solid ${theme.accent}66`,
+            color: theme.accent,
+            fontSize: 18,
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            backdropFilter: "blur(8px)",
+            boxShadow: `0 4px 12px rgba(0,0,0,0.25)`,
+            transition: "all 0.2s",
+          }}
+        >
+          {isMuted ? "🔇" : "🔊"}
+        </button>
+      )}
 
       <div className="mobile-container">
 
