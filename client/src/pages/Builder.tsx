@@ -424,7 +424,7 @@ function SectionCard({
   const isOn = sections[sectionKey];
   return (
     <div className={`section-card ${!isOn ? "hidden-section" : ""}`}>
-      <div className="flex items-center justify-between mb-3 pr-12">
+      <div className="flex items-center justify-between mb-3">
         <span className="font-sans text-xs uppercase tracking-widest text-gold opacity-80" style={labelFont ? { fontFamily: labelFont, textTransform: "none" } : {}}>
           {label}
         </span>

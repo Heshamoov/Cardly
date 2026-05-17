@@ -211,3 +211,6 @@
 
 ## Bug Fix: Builder Form RTL Direction
 - [x] Add dir="rtl" to Builder form container when formLang === "ar" so all section cards and labels flow right-to-left
+
+## Bug Fix: SectionCard Toggle RTL Position
+- [x] Move section toggle to the left side when Arabic (RTL) mode is active in Builder
