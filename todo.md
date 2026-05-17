@@ -202,3 +202,9 @@
 
 ## Bug Fix: Envelope Scene Too Large on Desktop
 - [x] Constrain envelope scene to max-width on desktop so it looks like a card, not a full-bleed image
+
+## Feature: Default Language Selector in Builder
+- [x] Add defaultLang field (en | ar) to InvitationData interface and defaultData
+- [x] Add language selector dropdown in Builder form (under Invitation Title section)
+- [x] Published invitation reads defaultLang from invitation data and opens in that language
+- [x] Language toggle for guests remains — they can still switch between EN and AR

@@ -94,6 +94,7 @@ interface InvitationData {
   envelopeStyle?: string;
   couplePhotoUrl?: string;
   fontScale?: number;
+  defaultLang?: "en" | "ar";
   arBrideFirstName?: string;
   arBrideLastName?: string;
   arGroomFirstName?: string;
@@ -120,14 +121,17 @@ export default function InvitationView() {
   const sceneRef = useRef<HTMLDivElement>(null);
 
   // Language toggle — persisted per slug
+  // Priority: 1) guest's explicit choice (localStorage), 2) couple's defaultLang, 3) "en"
   const LANG_KEY = `invite_lang_${slug}`;
-  const [lang, setLang] = useState<Lang>(() => {
-    try { return (localStorage.getItem(LANG_KEY) as Lang) || "en"; } catch { return "en"; }
-  });
+  const LANG_CHOSEN_KEY = `invite_lang_chosen_${slug}`;
+  const [lang, setLang] = useState<Lang>("en"); // will be updated once invitation data loads
   const toggleLang = () => {
     const next: Lang = lang === "en" ? "ar" : "en";
     setLang(next);
-    try { localStorage.setItem(LANG_KEY, next); } catch {}
+    try {
+      localStorage.setItem(LANG_KEY, next);
+      localStorage.setItem(LANG_CHOSEN_KEY, "1"); // mark that guest explicitly chose
+    } catch {}
   };
 
   const updateSplitPoint = useCallback(() => {
@@ -146,6 +150,23 @@ export default function InvitationView() {
     window.addEventListener("resize", updateSplitPoint);
     return () => window.removeEventListener("resize", updateSplitPoint);
   }, [updateSplitPoint]);
+
+  // Once invitation data is available, set the initial language:
+  // use guest's explicit choice if they've toggled before, otherwise use couple's defaultLang
+  useEffect(() => {
+    if (!invitation) return;
+    const invD = invitation.data as InvitationData;
+    try {
+      const guestChose = localStorage.getItem(LANG_CHOSEN_KEY);
+      if (guestChose) {
+        const saved = localStorage.getItem(LANG_KEY) as Lang | null;
+        if (saved === "en" || saved === "ar") { setLang(saved); return; }
+      }
+    } catch {}
+    // No explicit guest choice — use couple's default
+    setLang(invD.defaultLang === "ar" ? "ar" : "en");
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [invitation]);
 
   const handleOpenEnvelope = () => {
     if (animStage !== "idle") return;

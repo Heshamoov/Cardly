@@ -27,6 +27,7 @@ interface InvitationData {
   arVenueAddress?: string;
   arMessage?: string;
   couplePhotoUrl?: string;
+  defaultLang?: "en" | "ar";
 }
 
 const ENVELOPE_STYLES = [
@@ -156,6 +157,7 @@ const defaultData: InvitationData = {
   arVenueAddress: "",
   arMessage: "",
   couplePhotoUrl: "",
+  defaultLang: "en",
   sections: {
     names: true,
     date: true,
@@ -683,6 +685,41 @@ export default function Builder() {
           <p className="font-sans text-xs opacity-30 mt-2" style={formLang === "ar" ? { fontFamily: ARABIC_FONT } : {}}>
             {formLang === "ar" ? "يظهر في لوحة الاستجابات فقط" : "Shown in your Guest Responses dashboard only"}
           </p>
+
+          {/* Default language for guests */}
+          <div style={{ marginTop: 20 }}>
+            <p className="font-sans text-xs uppercase tracking-widest text-gold opacity-80 mb-2" style={formLang === "ar" ? { fontFamily: ARABIC_FONT, textTransform: "none" } : {}}>
+              {formLang === "ar" ? "اللغة الافتراضية للدعوة" : "Default Invitation Language"}
+            </p>
+            <p className="font-sans text-xs opacity-30 mb-3" style={formLang === "ar" ? { fontFamily: ARABIC_FONT } : {}}>
+              {formLang === "ar" ? "اللغة التي ستفتح بها الدعوة عند أول زيارة" : "Language guests see when they first open the invitation"}
+            </p>
+            <div style={{ display: "flex", gap: 8 }}>
+              {(["en", "ar"] as const).map((l) => (
+                <button
+                  key={l}
+                  type="button"
+                  onClick={() => set("defaultLang", l)}
+                  style={{
+                    flex: 1,
+                    padding: "10px 0",
+                    borderRadius: 10,
+                    border: `1.5px solid ${data.defaultLang === l ? "rgba(201,168,76,0.9)" : "rgba(201,168,76,0.25)"}`,
+                    background: data.defaultLang === l ? "rgba(201,168,76,0.15)" : "transparent",
+                    color: data.defaultLang === l ? "rgba(201,168,76,1)" : "rgba(201,168,76,0.45)",
+                    fontFamily: l === "ar" ? ARABIC_FONT : "'Lato', sans-serif",
+                    fontSize: 13,
+                    fontWeight: data.defaultLang === l ? 700 : 400,
+                    letterSpacing: l === "en" ? "0.1em" : 0,
+                    cursor: "pointer",
+                    transition: "all 0.2s ease",
+                  }}
+                >
+                  {l === "en" ? "🇬🇧  English" : "🇦🇪  عربي"}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
 
         {/* ── Couple Photo ── */}

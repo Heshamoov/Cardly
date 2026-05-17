@@ -102,6 +102,7 @@ export const invitationsRouter = router({
           arMessage: z.string().optional(),
           sections: z.record(z.string(), z.boolean()),
           couplePhotoUrl: z.string().optional(),
+          defaultLang: z.enum(["en", "ar"]).optional(),
         }),
       })
     )
