@@ -1266,6 +1266,25 @@ function PreviewWithEnvelope({
   const toggleLang = () => setLang((l) => l === "en" ? "ar" : "en");
   const sceneRef = useRef<HTMLDivElement>(null);
 
+  // Music state — mirrors InvitationView exactly
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [isMuted, setIsMuted] = useState(false);
+  const [showVolumeHint, setShowVolumeHint] = useState(false);
+
+  const toggleMute = () => {
+    if (audioRef.current) {
+      audioRef.current.muted = !audioRef.current.muted;
+      setIsMuted(audioRef.current.muted);
+    }
+  };
+
+  // Stop music when leaving preview
+  useEffect(() => {
+    return () => {
+      audioRef.current?.pause();
+    };
+  }, []);
+
   const brideName = [data.brideFirstName, data.brideLastName].filter(Boolean).join(" ");
   const groomName = [data.groomFirstName, data.groomLastName].filter(Boolean).join(" ");
   const envStyle = ENVELOPE_STYLES.find((s) => s.id === (data.envelopeStyle ?? "ivory-gold")) ?? ENVELOPE_STYLES[0];
@@ -1293,10 +1312,25 @@ function PreviewWithEnvelope({
 
   const handleOpenEnvelope = () => {
     if (animStage !== "idle") return;
-    // Stage 1: both halves slide apart (2000ms)
     setAnimStage("opening");
+
+    // Start music if selected — mirrors InvitationView behaviour
+    if (data.musicUrl) {
+      try {
+        if (!audioRef.current) {
+          const audio = new Audio(data.musicUrl);
+          audio.loop = true;
+          audio.volume = 0.45;
+          audioRef.current = audio;
+        }
+        audioRef.current.play().then(() => {
+          setShowVolumeHint(true);
+          setTimeout(() => setShowVolumeHint(false), 4000);
+        }).catch(() => {});
+      } catch {}
+    }
+
     setTimeout(() => {
-      // Stage 2: cream overlay fades in (500ms)
       setAnimStage("expand");
       setTimeout(() => {
         setAnimStage("done");
@@ -1307,6 +1341,10 @@ function PreviewWithEnvelope({
   };
 
   const resetEnvelope = () => {
+    // Stop music when going back to envelope
+    audioRef.current?.pause();
+    if (audioRef.current) audioRef.current.currentTime = 0;
+    setShowVolumeHint(false);
     setAnimStage("idle");
     setShowInvitation(false);
   };
@@ -1456,6 +1494,64 @@ function PreviewWithEnvelope({
         <div className="mobile-container" style={{ "--font-scale": data.fontScale } as React.CSSProperties}>
           <PreviewContent data={data} lang={lang} onToggleLang={toggleLang} />
         </div>
+      )}
+
+      {/* Volume hint banner — same as InvitationView */}
+      {showInvitation && data.musicUrl && showVolumeHint && (
+        <div
+          style={{
+            position: "fixed",
+            bottom: 24,
+            left: "50%",
+            transform: "translateX(-50%)",
+            zIndex: 300,
+            background: `${envStyle.theme.bgSecondary}ee`,
+            border: `1px solid ${envStyle.theme.accent}66`,
+            borderRadius: 24,
+            padding: "8px 20px",
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            backdropFilter: "blur(12px)",
+            boxShadow: "0 4px 20px rgba(0,0,0,0.3)",
+            whiteSpace: "nowrap",
+          }}
+        >
+          <span style={{ fontSize: 18 }}>🔊</span>
+          <span style={{ fontFamily: "'Lato', sans-serif", fontSize: 12, letterSpacing: "0.08em", color: envStyle.theme.accent }}>
+            {lang === "ar" ? "ارفع مستوى الصوت" : "Turn up your volume"}
+          </span>
+        </div>
+      )}
+
+      {/* Mute / unmute floating button — same as InvitationView */}
+      {showInvitation && data.musicUrl && (
+        <button
+          onClick={toggleMute}
+          title={isMuted ? (lang === "ar" ? "تشغيل الصوت" : "Unmute") : (lang === "ar" ? "كتم الصوت" : "Mute")}
+          style={{
+            position: "fixed",
+            bottom: 24,
+            right: 14,
+            zIndex: 300,
+            width: 40,
+            height: 40,
+            borderRadius: "50%",
+            background: `${envStyle.theme.bgSecondary}ee`,
+            border: `1px solid ${envStyle.theme.accent}66`,
+            color: envStyle.theme.accent,
+            fontSize: 18,
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            backdropFilter: "blur(8px)",
+            boxShadow: "0 4px 12px rgba(0,0,0,0.25)",
+            transition: "all 0.2s",
+          }}
+        >
+          {isMuted ? "🔇" : "🔊"}
+        </button>
       )}
 
     </div>

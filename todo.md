@@ -225,3 +225,9 @@
 - [x] Add speaker volume prompt on invitation that fades after 4 seconds
 - [x] Add mute/unmute floating button on invitation
 - [x] Fix all placeholder text to be globally neutral (no UAE-specific names)
+
+## Fix: Music Playback in Builder Preview
+- [x] Wire music auto-play into Builder preview envelope open (same as InvitationView)
+- [x] Show volume hint banner in Builder preview after envelope opens
+- [x] Show mute/unmute floating button in Builder preview
+- [x] Stop music when closing preview
