@@ -19,11 +19,16 @@ const DASH_TRANSLATIONS = {
     signInHint: "Please sign in to view guest responses.",
     signIn: "Sign In",
     guestName: "Guest Name",
+    phone: "Mobile",
     partySize: "Party Size",
     message: "Message",
     date: "Date",
     reply: "reply",
     replies: "replies",
+    views: "Views",
+    confirmed: "Confirmed",
+    cantAttend: "Can't Attend",
+    totalGuestsLabel: "Total Guests",
     cancel: "Cancel",
     delete: "Delete",
     deleting: "Deleting…",
@@ -43,11 +48,16 @@ const DASH_TRANSLATIONS = {
     signInHint: "يرجى تسجيل الدخول لعرض استجابات الضيوف.",
     signIn: "تسجيل الدخول",
     guestName: "اسم الضيف",
+    phone: "الهاتف",
     partySize: "عدد الأشخاص",
     message: "رسالة",
     date: "التاريخ",
     reply: "رد",
     replies: "ردود",
+    views: "مشاهدات",
+    confirmed: "مؤكدون",
+    cantAttend: "لن يحضروا",
+    totalGuestsLabel: "إجمالي الضيوف",
     cancel: "إلغاء",
     delete: "حذف",
     deleting: "جارٍ الحذف…",
@@ -346,13 +356,19 @@ export default function RsvpDashboard() {
                         /{inv.slug} · {new Date(inv.createdAt).toLocaleDateString(isAr ? "ar-AE" : "en-GB")}
                       </p>
                     </div>
-                    <div style={{ textAlign: isAr ? "left" : "right" }}>
-                      <p style={{ fontFamily: scriptFont, fontSize: 24, color: "#D4AF37" }}>
-                        {inv.totalGuests}
-                      </p>
-                      <p style={{ fontFamily: bodyFont, fontSize: 10, color: "#E5C07B", opacity: 0.5, textTransform: isAr ? "none" : "uppercase" }}>
-                        {inv.responseCount} {inv.responseCount === 1 ? t.reply : t.replies}
-                      </p>
+                    <div style={{ display: "flex", gap: 12, flexDirection: isAr ? "row-reverse" : "row", alignItems: "center" }}>
+                      {[
+                        { icon: "👁", value: (inv as any).views ?? 0, label: t.views },
+                        { icon: "✅", value: (inv as any).confirmedCount ?? 0, label: t.confirmed },
+                        { icon: "❌", value: (inv as any).declinedCount ?? 0, label: t.cantAttend },
+                        { icon: "👥", value: inv.totalGuests, label: t.totalGuestsLabel },
+                      ].map(({ icon, value, label }) => (
+                        <div key={label} style={{ textAlign: "center", minWidth: 44 }}>
+                          <div style={{ fontSize: 14 }}>{icon}</div>
+                          <div style={{ fontFamily: scriptFont, fontSize: 20, color: "#D4AF37", lineHeight: 1.1 }}>{value}</div>
+                          <div style={{ fontFamily: bodyFont, fontSize: 9, color: "#E5C07B", opacity: 0.45, textTransform: isAr ? "none" : "uppercase", letterSpacing: isAr ? 0 : "0.06em", marginTop: 2 }}>{label}</div>
+                        </div>
+                      ))}
                     </div>
                   </button>
 
@@ -405,7 +421,7 @@ export default function RsvpDashboard() {
                       <table style={{ width: "100%", borderCollapse: "collapse", direction: dir }}>
                         <thead>
                           <tr style={{ borderBottom: "1px solid #D4AF3722" }}>
-                            {[t.guestName, t.partySize, t.message, t.date].map((h) => (
+                            {[t.guestName, t.phone, t.partySize, t.message, t.date].map((h) => (
                               <th
                                 key={h}
                                 style={{
@@ -429,7 +445,20 @@ export default function RsvpDashboard() {
                           {detail?.responses.map((r) => (
                             <tr key={r.id} style={{ borderBottom: "1px solid #D4AF3711" }}>
                               <td style={{ padding: "12px 16px", fontFamily: bodyFont, fontSize: 14, color: "#E5C07B" }}>
-                                {r.guestName}
+                                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                                  <span style={{ fontSize: 14 }}>{r.attending ? "✅" : "❌"}</span>
+                                  {r.guestName}
+                                </div>
+                              </td>
+                              <td style={{ padding: "12px 16px", fontFamily: bodyFont, fontSize: 13, color: "#E5C07B", opacity: 0.7, whiteSpace: "nowrap" }}>
+                                {(r as any).phone ? (
+                                  <a
+                                    href={`tel:${(r as any).phone}`}
+                                    style={{ color: "#D4AF37", textDecoration: "none", fontFamily: "'Lato', monospace" }}
+                                  >
+                                    {(r as any).phone}
+                                  </a>
+                                ) : "—"}
                               </td>
                               <td style={{ padding: "12px 16px", fontFamily: scriptFont, fontSize: 20, color: "#D4AF37", textAlign: "center" }}>
                                 {r.partySize}

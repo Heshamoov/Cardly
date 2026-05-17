@@ -240,3 +240,15 @@
 
 ## Bug Fix: Guest Responses Dashboard
 - [x] Diagnose and fix "View Guest Responses" not working — dashboard requires sign-in (by design); fixed OAuth callback to redirect back to /rsvp-dashboard after login
+
+## Feature: Phone Number + View Stats
+- [x] Add phone column to rsvp_responses table in schema
+- [x] Add views column to invitations table in schema
+- [x] Run DB migration for both columns
+- [x] Update rsvpRouter: accept phone in submit, return phone in getBySlug/getAllSlugs
+- [x] Add trackView procedure to rsvpRouter (increment views counter)
+- [x] Update getAllSlugs to return views, confirmedCount, declinedCount, totalGuests per invitation
+- [x] Add phone input to RSVP form in InvitationView
+- [x] Call trackView when invitation page is first loaded
+- [x] Add PHONE column to guest table in RsvpDashboard (tap-to-call link)
+- [x] Add summary stats bar (Views / Confirmed / Can't Attend / Total Guests) to each invitation card header

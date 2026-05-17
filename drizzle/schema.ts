@@ -32,6 +32,8 @@ export const invitations = mysqlTable("invitations", {
   slug: varchar("slug", { length: 16 }).notNull().unique(),
   title: varchar("title", { length: 128 }).default("Untitled").notNull(),
   data: text("data").notNull(), // JSON string
+  /** Number of times the invitation page has been opened by guests */
+  views: int("views").notNull().default(0),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
@@ -46,6 +48,8 @@ export const rsvpResponses = mysqlTable("rsvp_responses", {
   partySize: int("partySize").notNull().default(1),
   attending: boolean("attending").notNull().default(true),
   message: text("message"),
+  /** Guest's mobile number for follow-up calls (optional) */
+  phone: varchar("phone", { length: 32 }),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 

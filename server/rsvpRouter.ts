@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
-import { insertRsvp, getRsvpsBySlug, getRsvpSummaryBySlug } from "./db";
+import { insertRsvp, getRsvpsBySlug, getRsvpSummaryBySlug, incrementInvitationViews } from "./db";
 import { ENV } from "./_core/env";
 
 export const rsvpRouter = router({
@@ -15,6 +15,7 @@ export const rsvpRouter = router({
         partySize: z.number().int().min(1).max(50),
         attending: z.boolean().default(true),
         message: z.string().max(500).optional(),
+        phone: z.string().max(32).optional(),
       })
     )
     .mutation(async ({ input }) => {
@@ -24,7 +25,19 @@ export const rsvpRouter = router({
         partySize: input.attending ? input.partySize : 0,
         attending: input.attending,
         message: input.message ?? null,
+        phone: input.phone ?? null,
       });
+      return { success: true };
+    }),
+
+  /**
+   * Public — called when a guest opens the invitation page.
+   * Increments the view counter for the invitation.
+   */
+  trackView: publicProcedure
+    .input(z.object({ slug: z.string().min(1).max(16) }))
+    .mutation(async ({ input }) => {
+      await incrementInvitationViews(input.slug);
       return { success: true };
     }),
 
@@ -61,21 +74,31 @@ export const rsvpRouter = router({
     const db = await getDb();
     if (!db) throw new Error("Database not available");
 
-    // Get all invitations for the owner
+    // Get all invitations for the owner (includes views column)
     const allInvitations = await db.select().from(invitations).orderBy(invitations.createdAt);
 
-    // Get per-slug RSVP summaries
+    // Get per-slug RSVP summaries: total guests, response count, confirmed guests, declined count
     const rsvpSummaries = await db
       .select({
         slug: rsvpResponses.invitationSlug,
-        totalGuests: sql<number>`SUM(${rsvpResponses.partySize})`,
+        totalGuests: sql<number>`SUM(CASE WHEN ${rsvpResponses.attending} = 1 THEN ${rsvpResponses.partySize} ELSE 0 END)`,
         responseCount: sql<number>`COUNT(*)`,
+        confirmedCount: sql<number>`SUM(CASE WHEN ${rsvpResponses.attending} = 1 THEN 1 ELSE 0 END)`,
+        declinedCount: sql<number>`SUM(CASE WHEN ${rsvpResponses.attending} = 0 THEN 1 ELSE 0 END)`,
       })
       .from(rsvpResponses)
       .groupBy(rsvpResponses.invitationSlug);
 
     const summaryMap = new Map(
-      rsvpSummaries.map((s) => [s.slug, { totalGuests: Number(s.totalGuests), responseCount: Number(s.responseCount) }])
+      rsvpSummaries.map((s) => [
+        s.slug,
+        {
+          totalGuests: Number(s.totalGuests ?? 0),
+          responseCount: Number(s.responseCount ?? 0),
+          confirmedCount: Number(s.confirmedCount ?? 0),
+          declinedCount: Number(s.declinedCount ?? 0),
+        },
+      ])
     );
 
     return {
@@ -92,8 +115,19 @@ export const rsvpRouter = router({
             if (bride || groom) title = [bride, "&", groom].filter(Boolean).join(" ");
           } catch {}
         }
-        const summary = summaryMap.get(inv.slug) ?? { totalGuests: 0, responseCount: 0 };
-        return { slug: inv.slug, title, createdAt: inv.createdAt, ...summary };
+        const summary = summaryMap.get(inv.slug) ?? {
+          totalGuests: 0,
+          responseCount: 0,
+          confirmedCount: 0,
+          declinedCount: 0,
+        };
+        return {
+          slug: inv.slug,
+          title,
+          createdAt: inv.createdAt,
+          views: Number(inv.views ?? 0),
+          ...summary,
+        };
       }),
     };
   }),

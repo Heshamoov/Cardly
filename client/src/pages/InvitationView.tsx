@@ -157,6 +157,17 @@ export default function InvitationView() {
     return () => window.removeEventListener("resize", updateSplitPoint);
   }, [updateSplitPoint]);
 
+  // Track view once when the invitation data first loads (fire-and-forget)
+  const trackViewMutation = trpc.rsvp.trackView.useMutation();
+  const viewTrackedRef = useRef(false);
+  useEffect(() => {
+    if (invitation && slug && !viewTrackedRef.current) {
+      viewTrackedRef.current = true;
+      trackViewMutation.mutate({ slug });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [invitation, slug]);
+
   // Once invitation data is available, set the initial language:
   // use guest's explicit choice if they've toggled before, otherwise use couple's defaultLang
   useEffect(() => {
@@ -725,6 +736,7 @@ function RsvpSection({
   const [submitted, setSubmitted] = useState(() => !!localStorage.getItem(STORAGE_KEY));
   const [declined, setDeclined] = useState(() => !!localStorage.getItem(`rsvp_declined_${slug}`));
   const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
   const [partySize, setPartySize] = useState(1);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -746,7 +758,7 @@ function RsvpSection({
     setError("");
     if (!name.trim()) { setError(t.nameRequired); return; }
     if (attending && (partySize < 1 || partySize > 50)) { setError(t.partySizeError); return; }
-    submitMutation.mutate({ slug, guestName: name.trim(), partySize: attending ? partySize : 1, attending, message: message.trim() || undefined });
+    submitMutation.mutate({ slug, guestName: name.trim(), partySize: attending ? partySize : 1, attending, message: message.trim() || undefined, phone: phone.trim() || undefined });
   };
 
   const inputStyle: React.CSSProperties = {
@@ -820,6 +832,18 @@ function RsvpSection({
               placeholder={t.namePlaceholder}
               style={inputStyle}
               maxLength={128}
+            />
+          </div>
+
+          <div style={{ marginBottom: 14 }}>
+            <label style={labelStyle}>{t.mobileNumber}</label>
+            <input
+              type="tel"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              placeholder={t.mobilePlaceholder}
+              style={inputStyle}
+              maxLength={32}
             />
           </div>
 
