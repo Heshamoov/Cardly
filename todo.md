@@ -237,3 +237,6 @@
 - [x] Verify font scale applies correctly in published InvitationView
 - [x] Replace mute/unmute button with pause/play toggle in Builder preview
 - [x] Replace mute/unmute button with pause/play toggle in InvitationView
+
+## Bug Fix: Guest Responses Dashboard
+- [x] Diagnose and fix "View Guest Responses" not working — dashboard requires sign-in (by design); fixed OAuth callback to redirect back to /rsvp-dashboard after login

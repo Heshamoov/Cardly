@@ -164,7 +164,7 @@ export default function RsvpDashboard() {
             {t.signInHint}
           </p>
           <a
-            href={getLoginUrl()}
+            href={getLoginUrl("/rsvp-dashboard")}
             style={{
               display: "inline-block",
               padding: "12px 32px",
