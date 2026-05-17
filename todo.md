@@ -208,3 +208,6 @@
 - [x] Add language selector dropdown in Builder form (under Invitation Title section)
 - [x] Published invitation reads defaultLang from invitation data and opens in that language
 - [x] Language toggle for guests remains — they can still switch between EN and AR
+
+## Bug Fix: Builder Form RTL Direction
+- [x] Add dir="rtl" to Builder form container when formLang === "ar" so all section cards and labels flow right-to-left

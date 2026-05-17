@@ -593,7 +593,7 @@ export default function Builder() {
   // ── Builder mode ──────────────────────────────────────────────────────────
   return (
     <div className="builder-page">
-      <div className="mobile-container px-4 pt-8">
+      <div className="mobile-container px-4 pt-8" dir={formLang === "ar" ? "rtl" : "ltr"}>
         {/* Header */}
         <div className="text-center mb-8 animate-fade-in-up">
           <p className="font-sans text-xs uppercase tracking-widest text-gold mb-1 opacity-70" style={formLang === "ar" ? { fontFamily: ARABIC_FONT } : {}}>
