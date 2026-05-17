@@ -1268,13 +1268,17 @@ function PreviewWithEnvelope({
 
   // Music state — mirrors InvitationView exactly
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const [isMuted, setIsMuted] = useState(false);
   const [showVolumeHint, setShowVolumeHint] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
 
-  const toggleMute = () => {
-    if (audioRef.current) {
-      audioRef.current.muted = !audioRef.current.muted;
-      setIsMuted(audioRef.current.muted);
+  const togglePlayPause = () => {
+    if (!audioRef.current) return;
+    if (audioRef.current.paused) {
+      audioRef.current.play().catch(() => {});
+      setIsPlaying(true);
+    } else {
+      audioRef.current.pause();
+      setIsPlaying(false);
     }
   };
 
@@ -1324,6 +1328,7 @@ function PreviewWithEnvelope({
           audioRef.current = audio;
         }
         audioRef.current.play().then(() => {
+          setIsPlaying(true);
           setShowVolumeHint(true);
           setTimeout(() => setShowVolumeHint(false), 4000);
         }).catch(() => {});
@@ -1344,6 +1349,7 @@ function PreviewWithEnvelope({
     // Stop music when going back to envelope
     audioRef.current?.pause();
     if (audioRef.current) audioRef.current.currentTime = 0;
+    setIsPlaying(false);
     setShowVolumeHint(false);
     setAnimStage("idle");
     setShowInvitation(false);
@@ -1524,11 +1530,11 @@ function PreviewWithEnvelope({
         </div>
       )}
 
-      {/* Mute / unmute floating button — same as InvitationView */}
+      {/* Play / Pause floating button — same as InvitationView */}
       {showInvitation && data.musicUrl && (
         <button
-          onClick={toggleMute}
-          title={isMuted ? (lang === "ar" ? "تشغيل الصوت" : "Unmute") : (lang === "ar" ? "كتم الصوت" : "Mute")}
+          onClick={togglePlayPause}
+          title={isPlaying ? (lang === "ar" ? "إيقاف مؤقت" : "Pause music") : (lang === "ar" ? "تشغيل الموسيقى" : "Play music")}
           style={{
             position: "fixed",
             bottom: 24,
@@ -1547,10 +1553,12 @@ function PreviewWithEnvelope({
             justifyContent: "center",
             backdropFilter: "blur(8px)",
             boxShadow: "0 4px 12px rgba(0,0,0,0.25)",
-            transition: "all 0.2s",
+            transition: "transform 0.15s ease, box-shadow 0.15s ease",
           }}
+          onMouseDown={(e) => (e.currentTarget.style.transform = "scale(0.93)")}
+          onMouseUp={(e) => (e.currentTarget.style.transform = "scale(1)")}
         >
-          {isMuted ? "🔇" : "🔊"}
+          {isPlaying ? "⏸" : "▶"}
         </button>
       )}
 
@@ -1590,7 +1598,7 @@ function FloatingPetals() {
 }
 
 // ── Preview Content (shared between preview mode and invitation page) ─────────
-function PreviewContent({ data, lang = "en", onToggleLang }: { data: InvitationData; lang?: Lang; onToggleLang?: () => void }) {
+function PreviewContent({ data, lang = "en", onToggleLang }: { data: InvitationData; lang?: Lang; onToggleLang?: () => void; }) {
   const t = translations[lang];
   const isRtl = lang === "ar";
   const bodyFont = isRtl ? ARABIC_FONT : undefined;
@@ -1637,12 +1645,15 @@ function PreviewContent({ data, lang = "en", onToggleLang }: { data: InvitationD
   const envStyle = ENVELOPE_STYLES.find((s) => s.id === data.envelopeStyle) ?? ENVELOPE_STYLES[0];
   const theme = envStyle.theme;
 
+  const fontScale = (data as { fontScale?: number }).fontScale ?? 1.0;
+
   return (
     <div
       className="invitation-page"
       dir={isRtl ? "rtl" : "ltr"}
       style={{
         background: theme.bg,
+        "--font-scale": fontScale,
         "--gold": theme.accent,
         "--gold-light": theme.accentLight,
         "--gold-dark": theme.accentDark,
@@ -1662,20 +1673,20 @@ function PreviewContent({ data, lang = "en", onToggleLang }: { data: InvitationD
             {t.togetherWith}
           </p>
           <div className="my-6 animate-fade-in-up">
-            <h1 className="font-script text-6xl gold-shimmer leading-tight">
+            <h1 className="font-script gold-shimmer leading-tight" style={{ fontSize: `calc(clamp(2.5rem, 12vw, 3.5rem) * ${fontScale})` }}>
               {groomName || "Groom"}
             </h1>
-            <p className="font-serif text-2xl italic text-gold opacity-60 my-2">
+            <p className="font-serif italic text-gold opacity-60 my-2" style={{ fontSize: `calc(1.5rem * ${fontScale})` }}>
               &amp;
             </p>
-            <h1 className="font-script text-6xl gold-shimmer leading-tight">
+            <h1 className="font-script gold-shimmer leading-tight" style={{ fontSize: `calc(clamp(2.5rem, 12vw, 3.5rem) * ${fontScale})` }}>
               {brideName || "Bride"}
             </h1>
           </div>
           <div className="divider-ornament">
             <span className="text-gold text-lg">✦</span>
           </div>
-          <p className="font-serif italic text-lg opacity-60 mt-4 animate-fade-in-up" style={{ fontFamily: bodyFont }}>
+          <p className="font-serif italic opacity-60 mt-4 animate-fade-in-up" style={{ fontFamily: bodyFont, fontSize: `calc(clamp(1.05rem, 3.5vw, 1.2rem) * ${fontScale})` }}>
             {t.requestPleasure}
           </p>
         </div>
@@ -1690,7 +1701,7 @@ function PreviewContent({ data, lang = "en", onToggleLang }: { data: InvitationD
           <p className="font-sans text-xs uppercase tracking-widest text-gold opacity-60 mb-2" style={{ fontFamily: bodyFont }}>
             {t.dateLabel}
           </p>
-          <p className="font-serif text-2xl text-cream">
+          <p className="font-serif text-cream" style={{ fontSize: `calc(clamp(1.1rem, 4vw, 1.3rem) * ${fontScale})` }}>
             {formattedDate || "Sunday, 24 May 2026"}
           </p>
         </div>
@@ -1702,7 +1713,7 @@ function PreviewContent({ data, lang = "en", onToggleLang }: { data: InvitationD
           <p className="font-sans text-xs uppercase tracking-widest text-gold opacity-60 mb-2" style={{ fontFamily: bodyFont }}>
             {t.dateLabel}
           </p>
-          <p className="font-serif text-2xl text-cream">
+          <p className="font-serif text-cream" style={{ fontSize: `calc(clamp(1.1rem, 4vw, 1.3rem) * ${fontScale})` }}>
             {formattedTime || "9:00 PM"}
           </p>
         </div>
@@ -1717,10 +1728,10 @@ function PreviewContent({ data, lang = "en", onToggleLang }: { data: InvitationD
           <p className="font-sans text-xs uppercase tracking-widest text-gold opacity-60 mb-2" style={{ fontFamily: bodyFont }}>
             {t.venueLabel}
           </p>
-          <p className="font-serif text-2xl text-cream" style={{ fontFamily: bodyFont }}>
+          <p className="font-serif text-cream" style={{ fontFamily: bodyFont, fontSize: `calc(clamp(1.1rem, 4vw, 1.3rem) * ${fontScale})` }}>
             {displayVenueName || "Grand Ballroom"}
           </p>
-          <p className="font-sans text-sm opacity-50 mt-1" style={{ fontFamily: bodyFont }}>
+          <p className="font-sans opacity-50 mt-1" style={{ fontFamily: bodyFont, fontSize: `calc(0.875rem * ${fontScale})` }}>
             {displayVenueAddress || "123 Rose Avenue, London, UK"}
           </p>
         </div>
@@ -1732,7 +1743,7 @@ function PreviewContent({ data, lang = "en", onToggleLang }: { data: InvitationD
           <div className="divider-ornament mb-4">
             <span className="text-gold text-sm">✦</span>
           </div>
-          <p className="font-serif italic text-lg opacity-80 leading-relaxed" style={{ fontFamily: bodyFont }}>
+          <p className="font-serif italic opacity-80 leading-relaxed" style={{ fontFamily: bodyFont, fontSize: `calc(clamp(1.05rem, 3.5vw, 1.2rem) * ${fontScale})` }}>
             "{displayMessage}"
           </p>
         </div>
@@ -1802,7 +1813,7 @@ function PreviewContent({ data, lang = "en", onToggleLang }: { data: InvitationD
         <div className="divider-ornament mb-6">
           <span className="text-gold text-lg">✦</span>
         </div>
-        <p className="font-script text-3xl gold-shimmer">
+        <p className="font-script gold-shimmer" style={{ fontSize: `calc(clamp(1.5rem, 6vw, 2rem) * ${fontScale})` }}>
           {[data.groomFirstName, "&", data.brideFirstName]
             .filter(Boolean)
             .join(" ") || "Groom & Bride"}

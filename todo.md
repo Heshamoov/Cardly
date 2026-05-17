@@ -231,3 +231,9 @@
 - [x] Show volume hint banner in Builder preview after envelope opens
 - [x] Show mute/unmute floating button in Builder preview
 - [x] Stop music when closing preview
+
+## Bug Fix: Font Scale & Music Controls
+- [x] Fix font scale (A-/A+) not applying in Builder preview
+- [x] Verify font scale applies correctly in published InvitationView
+- [x] Replace mute/unmute button with pause/play toggle in Builder preview
+- [x] Replace mute/unmute button with pause/play toggle in InvitationView

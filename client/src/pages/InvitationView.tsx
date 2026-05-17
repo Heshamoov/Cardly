@@ -123,7 +123,7 @@ export default function InvitationView() {
 
   // Music state
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const [isMuted, setIsMuted] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
   const [showVolumeHint, setShowVolumeHint] = useState(false);
 
   // Language toggle — persisted per slug
@@ -189,6 +189,7 @@ export default function InvitationView() {
           audioRef.current = audio;
         }
         audioRef.current.play().then(() => {
+          setIsPlaying(true);
           setShowVolumeHint(true);
           setTimeout(() => setShowVolumeHint(false), 4000);
         }).catch(() => {});
@@ -208,10 +209,14 @@ export default function InvitationView() {
     }, 2000);
   };
 
-  const toggleMute = () => {
-    if (audioRef.current) {
-      audioRef.current.muted = !audioRef.current.muted;
-      setIsMuted(audioRef.current.muted);
+  const togglePlayPause = () => {
+    if (!audioRef.current) return;
+    if (audioRef.current.paused) {
+      audioRef.current.play().catch(() => {});
+      setIsPlaying(true);
+    } else {
+      audioRef.current.pause();
+      setIsPlaying(false);
     }
   };
 
@@ -219,6 +224,7 @@ export default function InvitationView() {
   const handleBackToEnvelopeWithMusic = () => {
     audioRef.current?.pause();
     if (audioRef.current) audioRef.current.currentTime = 0;
+    setIsPlaying(false);
     setShowVolumeHint(false);
   };
 
@@ -273,8 +279,8 @@ export default function InvitationView() {
           lang={lang}
           onToggleLang={toggleLang}
           onBackToEnvelope={handleBackToEnvelope}
-          isMuted={isMuted}
-          onToggleMute={toggleMute}
+          isMuted={isPlaying}
+          onToggleMute={togglePlayPause}
           showVolumeHint={showVolumeHint}
           hasMusicUrl={!!(invData as InvitationData).musicUrl}
         />
@@ -517,11 +523,11 @@ function InvitationPage({ data, slug, lang, onToggleLang, onBackToEnvelope, isMu
         </div>
       )}
 
-      {/* Mute / unmute floating button */}
+      {/* Play / Pause floating button */}
       {hasMusicUrl && (
         <button
           onClick={onToggleMute}
-          title={isMuted ? (lang === "ar" ? "تشغيل الصوت" : "Unmute") : (lang === "ar" ? "كتم الصوت" : "Mute")}
+          title={isMuted ? (lang === "ar" ? "إيقاف مؤقت" : "Pause music") : (lang === "ar" ? "تشغيل الموسيقى" : "Play music")}
           style={{
             position: "fixed",
             bottom: 24,
@@ -540,10 +546,12 @@ function InvitationPage({ data, slug, lang, onToggleLang, onBackToEnvelope, isMu
             justifyContent: "center",
             backdropFilter: "blur(8px)",
             boxShadow: `0 4px 12px rgba(0,0,0,0.25)`,
-            transition: "all 0.2s",
+            transition: "transform 0.15s ease, box-shadow 0.15s ease",
           }}
+          onMouseDown={(e) => (e.currentTarget.style.transform = "scale(0.93)")}
+          onMouseUp={(e) => (e.currentTarget.style.transform = "scale(1)")}
         >
-          {isMuted ? "🔇" : "🔊"}
+          {isMuted ? "⏸" : "▶"}
         </button>
       )}
 
