@@ -175,6 +175,7 @@ const defaultData: InvitationData = {
     date: true,
     time: true,
     venue: true,
+    rsvp: true,
     message: true,
     map: true,
     countdown: true,
@@ -1291,13 +1292,15 @@ export default function Builder() {
           </p>
         </SectionCard>
 
-        {/* ── Section: RSVP Deadline ── */}
-        <div className="rounded-xl border border-white/10 bg-white/5 p-4">
-          <div className="flex items-center justify-between mb-3">
-            <span className="font-sans text-xs uppercase tracking-widest text-gold" style={formLang === "ar" ? { fontFamily: ARABIC_FONT } : {}}>
-              {formLang === "ar" ? "آخر موعد للتأكيد" : "RSVP DEADLINE"}
-            </span>
-          </div>
+        {/* ── Section: Reply Deadline ── */}
+        <SectionCard
+          label={formLang === "ar" ? "آخر موعد للتأكيد" : "REPLY DEADLINE"}
+          sectionKey="rsvp"
+          sections={data.sections}
+          onToggle={toggleSection}
+          hiddenText={formLang === "ar" ? "القسم مخفي — اضغط للتفعيل" : undefined}
+          labelFont={formLang === "ar" ? ARABIC_FONT : undefined}
+        >
           <label className="font-sans text-xs opacity-50 block mb-1" style={formLang === "ar" ? { fontFamily: ARABIC_FONT } : {}}>
             {formLang === "ar" ? "يُرجى التأكيد قبل" : "Please Confirm before"}
           </label>
@@ -1310,9 +1313,9 @@ export default function Builder() {
           <p className="font-sans text-xs opacity-40 mt-2" style={formLang === "ar" ? { fontFamily: ARABIC_FONT } : {}}>
             {formLang === "ar"
               ? "بعد هذا التاريخ سيظهر للضيوف رسالة “تم إغلاق باب التأكيد” بدلاً من نموذج التسجيل."
-              : "After this date, guests will see \"Responses are now closed\" instead of the RSVP form."}
+              : "After this date, guests will see \"Responses are now closed\" instead of the reply form."}
           </p>
-        </div>
+        </SectionCard>
 
         {/* ── Section: Music ── */}
         <MusicSection data={data} set={set} formLang={formLang} uploadMusicMutation={uploadMusicMutation} />
