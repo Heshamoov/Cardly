@@ -599,14 +599,21 @@ html, body {
 [dir="rtl"] .invite-body,
 [dir="rtl"] .invite-label,
 [dir="rtl"] .invite-detail,
-[dir="rtl"] .font-script,
-[dir="rtl"] .font-fell,
-[dir="rtl"] .font-serif,
-[dir="rtl"] .font-sans {
+[dir="rtl"] .font-fell {
   font-family: 'Noto Naskh Arabic', 'Amiri', serif !important;
   font-style: normal !important;
   letter-spacing: 0 !important;
   text-transform: none !important;
+}
+
+/* RTL: suppress Latin-only decorative styles but let inline fontFamily win */
+[dir="rtl"] .font-script,
+[dir="rtl"] .font-serif,
+[dir="rtl"] .font-sans {
+  font-style: normal !important;
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+  /* font-family intentionally NOT set here so inline style from font picker wins */
 }
 
 /* Section labels in Arabic should NOT be uppercase (Arabic has no case) */
