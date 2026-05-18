@@ -265,3 +265,12 @@
 - [x] Reduce space between sub-headline and the divider line
 - [x] Reduce space between divider and DATE & TIME section
 - [x] Apply same fixes to Builder PreviewContent
+
+## Feature: Editable Hosting Line
+- [x] Add hostingLine and arHostingLine to InvitationData interface and defaultData in Builder.tsx
+- [x] Add hostingLine and arHostingLine translation keys to i18n.ts
+- [x] Add hostingLine and arHostingLine to server Zod schema in invitationsRouter.ts
+- [x] Add Hosting Line EN input to BRIDE & GROOM NAMES section in Builder form
+- [x] Add Hosting Line AR input to Arabic names section in Builder form
+- [x] Wire hostingLine into Builder PreviewContent (replace hardcoded text)
+- [x] Wire hostingLine into InvitationView (replace hardcoded text)

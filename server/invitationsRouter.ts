@@ -106,6 +106,8 @@ export const invitationsRouter = router({
           musicUrl: z.string().optional(),
           subHeadline: z.string().optional(),
           arSubHeadline: z.string().optional(),
+          hostingLine: z.string().optional(),
+          arHostingLine: z.string().optional(),
         }),
       })
     )

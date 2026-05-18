@@ -105,6 +105,8 @@ interface InvitationData {
   musicUrl?: string;
   subHeadline?: string;
   arSubHeadline?: string;
+  hostingLine?: string;
+  arHostingLine?: string;
 }
 
 type AnimStage = "idle" | "opening" | "expand" | "done";
@@ -578,7 +580,7 @@ function InvitationPage({ data, slug, lang, onToggleLang, onBackToEnvelope, isMu
             </div>
 
             <p className="invite-label text-gold opacity-60 animate-fade-in-up" style={{ fontFamily: bodyFont }}>
-              {t.togetherWith}
+              {(isRtl ? (data.arHostingLine || t.togetherWith) : (data.hostingLine || t.togetherWith))}
             </p>
 
             <div className="my-2 animate-fade-in-up">

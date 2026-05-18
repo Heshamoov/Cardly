@@ -31,6 +31,8 @@ interface InvitationData {
   musicUrl?: string;
   subHeadline?: string;
   arSubHeadline?: string;
+  hostingLine?: string;
+  arHostingLine?: string;
 }
 
 const ENVELOPE_STYLES = [
@@ -164,6 +166,8 @@ const defaultData: InvitationData = {
   musicUrl: "",
   subHeadline: "",
   arSubHeadline: "",
+  hostingLine: "",
+  arHostingLine: "",
   sections: {
     names: true,
     date: true,
@@ -1070,6 +1074,15 @@ export default function Builder() {
                 </div>
               </div>
               <div className="mt-3">
+                <label className="font-sans text-xs opacity-50 block mb-1">Hosting line (above names)</label>
+                <input
+                  className="wedding-input"
+                  placeholder="Together with their families"
+                  value={data.hostingLine ?? ""}
+                  onChange={(e) => set("hostingLine", e.target.value)}
+                />
+              </div>
+              <div className="mt-3">
                 <label className="font-sans text-xs opacity-50 block mb-1">Welcome message (under names)</label>
                 <textarea
                   className="wedding-input"
@@ -1102,6 +1115,17 @@ export default function Builder() {
                   <label className="font-sans text-xs opacity-50 block mb-1" style={{ fontFamily: `'Noto Naskh Arabic', 'Amiri', serif` }}>اسم العائلة (اختياري)</label>
                   <input className="wedding-input" dir="rtl" style={{ fontFamily: `'Noto Naskh Arabic', 'Amiri', serif` }} placeholder="اختياري" value={data.arBrideLastName ?? ""} onChange={(e) => set("arBrideLastName", e.target.value)} />
                 </div>
+              </div>
+              <div className="mt-3">
+                <label className="font-sans text-xs opacity-50 block mb-1" style={{ fontFamily: `'Noto Naskh Arabic', 'Amiri', serif` }}>سطر الاستضافة (فوق الأسماء)</label>
+                <input
+                  className="wedding-input"
+                  dir="rtl"
+                  placeholder="بمشاركة عائلتيهما"
+                  value={data.arHostingLine ?? ""}
+                  onChange={(e) => set("arHostingLine", e.target.value)}
+                  style={{ fontFamily: `'Noto Naskh Arabic', 'Amiri', serif` }}
+                />
               </div>
               <div className="mt-3">
                 <label className="font-sans text-xs opacity-50 block mb-1" style={{ fontFamily: `'Noto Naskh Arabic', 'Amiri', serif` }}>رسالة الترحيب (تحت الأسماء)</label>
@@ -1697,7 +1721,7 @@ function PreviewContent({ data, lang = "en", onToggleLang }: { data: InvitationD
       {data.sections.names && (
         <div className="invitation-section stagger" style={{ paddingTop: 12, paddingBottom: 8 }}>
           <p className="font-sans text-xs uppercase tracking-widest text-gold opacity-70 animate-fade-in-up" style={{ fontFamily: bodyFont }}>
-            {t.togetherWith}
+            {(isRtl ? (data.arHostingLine || t.togetherWith) : (data.hostingLine || t.togetherWith))}
           </p>
           <div className="my-2 animate-fade-in-up">
             <h1 className="font-script gold-shimmer leading-tight" style={{ fontSize: `calc(clamp(2.5rem, 12vw, 3.5rem) * ${fontScale})` }}>
