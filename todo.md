@@ -259,3 +259,9 @@
 - [x] Keep default sub-headline text as placeholder in both EN and AR fields
 - [x] Unify section title font size (e.g. "DATE & TIME" heading matches date/time value size)
 - [x] Fix multi-owner RSVP: add ownerOpenId column to invitations, store on create, filter dashboard by caller's openId
+
+## Fix: Excessive Spacing in Names Hero & Between Sections (May 18)
+- [x] Reduce gap between groom name, ampersand, and bride name in names hero
+- [x] Reduce space between sub-headline and the divider line
+- [x] Reduce space between divider and DATE & TIME section
+- [x] Apply same fixes to Builder PreviewContent

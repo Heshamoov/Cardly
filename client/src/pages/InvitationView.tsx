@@ -572,8 +572,8 @@ function InvitationPage({ data, slug, lang, onToggleLang, onBackToEnvelope, isMu
 
         {/* Hero — Names */}
         {data.sections?.names !== false && (
-          <div className="invitation-section pt-10 pb-5 stagger">
-            <div className="flex justify-center mb-6">
+          <div className="invitation-section pt-6 pb-3 stagger">
+            <div className="flex justify-center mb-3">
               <div className="w-24 h-px bg-gradient-to-r from-transparent via-gold to-transparent" />
             </div>
 
@@ -581,11 +581,11 @@ function InvitationPage({ data, slug, lang, onToggleLang, onBackToEnvelope, isMu
               {t.togetherWith}
             </p>
 
-            <div className="my-4 animate-fade-in-up">
+            <div className="my-2 animate-fade-in-up">
               <h1 className="font-script gold-shimmer leading-tight" style={{ fontSize: "clamp(3rem, 14vw, 5rem)" }}>
                 {groomName || "Groom"}
               </h1>
-              <p className="font-fell text-3xl text-gold opacity-50 my-3" style={{ fontStyle: "italic" }}>
+              <p className="font-fell text-2xl text-gold opacity-50 my-1" style={{ fontStyle: "italic" }}>
                 &amp;
               </p>
               <h1 className="font-script gold-shimmer leading-tight" style={{ fontSize: "clamp(3rem, 14vw, 5rem)" }}>
@@ -593,11 +593,11 @@ function InvitationPage({ data, slug, lang, onToggleLang, onBackToEnvelope, isMu
               </h1>
             </div>
 
-            <div className="divider-ornament">
+            <div className="divider-ornament" style={{ margin: "6px 0" }}>
               <span className="text-gold text-xl">✦</span>
             </div>
 
-            <p className="invite-detail opacity-60 mt-3 animate-fade-in-up" style={{ fontFamily: bodyFont }}>
+            <p className="invite-detail opacity-60 mt-1 animate-fade-in-up" style={{ fontFamily: bodyFont }}>
               {(isRtl ? (data.arSubHeadline || t.requestPleasure) : (data.subHeadline || t.requestPleasure))}
             </p>
           </div>
@@ -605,8 +605,8 @@ function InvitationPage({ data, slug, lang, onToggleLang, onBackToEnvelope, isMu
 
         {/* Date */}
         {data.sections?.date !== false && formattedDate && (
-          <div className="invitation-section py-5">
-            <div className="divider-ornament mb-5">
+          <div className="invitation-section py-3">
+            <div className="divider-ornament mb-3">
               <span className="text-gold">❧</span>
             </div>
             <p className="invite-label text-gold opacity-50 mb-3" style={{ fontFamily: bodyFont, fontSize: `calc(clamp(1rem, 3.5vw, 1.15rem) * var(--font-scale, 1))` }}>{t.dateLabel}</p>
@@ -619,8 +619,8 @@ function InvitationPage({ data, slug, lang, onToggleLang, onBackToEnvelope, isMu
 
         {/* Venue */}
         {data.sections?.venue !== false && displayVenueName && (
-          <div className="invitation-section py-5">
-            <div className="divider-ornament mb-5">
+          <div className="invitation-section py-3">
+            <div className="divider-ornament mb-3">
               <span className="text-gold">❧</span>
             </div>
             <p className="invite-label text-gold opacity-50 mb-3" style={{ fontFamily: bodyFont, fontSize: `calc(clamp(1rem, 3.5vw, 1.15rem) * var(--font-scale, 1))` }}>{t.venueLabel}</p>
@@ -633,8 +633,8 @@ function InvitationPage({ data, slug, lang, onToggleLang, onBackToEnvelope, isMu
 
         {/* Personal Message */}
         {data.sections?.message !== false && displayMessage && (
-          <div className="invitation-section py-5 px-8">
-            <div className="divider-ornament mb-5">
+          <div className="invitation-section py-3 px-8">
+            <div className="divider-ornament mb-3">
               <span className="text-gold">✦</span>
             </div>
             <p className="invite-detail text-xl opacity-75 leading-relaxed" style={{ fontFamily: bodyFont }}>
@@ -645,8 +645,8 @@ function InvitationPage({ data, slug, lang, onToggleLang, onBackToEnvelope, isMu
 
         {/* Countdown */}
         {data.sections?.countdown !== false && data.date && (
-          <div className="invitation-section py-5">
-            <div className="divider-ornament mb-5">
+          <div className="invitation-section py-3">
+            <div className="divider-ornament mb-3">
               <span className="text-gold">❧</span>
             </div>
             <CountdownTimer targetDate={data.date} label={t.countdownLabel} bodyFont={bodyFont} isRtl={isRtl} />
@@ -655,8 +655,8 @@ function InvitationPage({ data, slug, lang, onToggleLang, onBackToEnvelope, isMu
 
         {/* Map */}
         {data.sections?.map !== false && mapSrc && (
-          <div className="invitation-section py-5 px-4">
-            <div className="divider-ornament mb-5">
+          <div className="invitation-section py-3 px-4">
+            <div className="divider-ornament mb-3">
               <span className="text-gold">📍</span>
             </div>
             <p className="invite-label text-gold opacity-50 mb-4" style={{ fontFamily: bodyFont, fontSize: `calc(clamp(1rem, 3.5vw, 1.15rem) * var(--font-scale, 1))` }}>{t.findUs}</p>

@@ -1695,25 +1695,25 @@ function PreviewContent({ data, lang = "en", onToggleLang }: { data: InvitationD
     >
       {/* Hero / Names */}
       {data.sections.names && (
-        <div className="invitation-section pt-10 pb-5 stagger">
+        <div className="invitation-section pt-6 pb-3 stagger">
           <p className="font-sans text-xs uppercase tracking-widest text-gold opacity-70 animate-fade-in-up" style={{ fontFamily: bodyFont }}>
             {t.togetherWith}
           </p>
-          <div className="my-4 animate-fade-in-up">
+          <div className="my-2 animate-fade-in-up">
             <h1 className="font-script gold-shimmer leading-tight" style={{ fontSize: `calc(clamp(2.5rem, 12vw, 3.5rem) * ${fontScale})` }}>
               {groomName || "Groom"}
             </h1>
-            <p className="font-serif italic text-gold opacity-60 my-2" style={{ fontSize: `calc(1.5rem * ${fontScale})` }}>
+            <p className="font-serif italic text-gold opacity-60 my-1" style={{ fontSize: `calc(1.5rem * ${fontScale})` }}>
               &amp;
             </p>
             <h1 className="font-script gold-shimmer leading-tight" style={{ fontSize: `calc(clamp(2.5rem, 12vw, 3.5rem) * ${fontScale})` }}>
               {brideName || "Bride"}
             </h1>
           </div>
-          <div className="divider-ornament">
+          <div className="divider-ornament" style={{ margin: "6px 0" }}>
             <span className="text-gold text-lg">✦</span>
           </div>
-          <p className="font-serif italic opacity-60 mt-3 animate-fade-in-up" style={{ fontFamily: bodyFont, fontSize: `calc(clamp(1.05rem, 3.5vw, 1.2rem) * ${fontScale})` }}>
+          <p className="font-serif italic opacity-60 mt-1 animate-fade-in-up" style={{ fontFamily: bodyFont, fontSize: `calc(clamp(1.05rem, 3.5vw, 1.2rem) * ${fontScale})` }}>
             {(isRtl ? (data.arSubHeadline || t.requestPleasure) : (data.subHeadline || t.requestPleasure))}
           </p>
         </div>
@@ -1721,8 +1721,8 @@ function PreviewContent({ data, lang = "en", onToggleLang }: { data: InvitationD
 
       {/* Date */}
       {data.sections.date && (
-        <div className="invitation-section py-5">
-          <div className="divider-ornament mb-4">
+        <div className="invitation-section py-3">
+          <div className="divider-ornament mb-3">
             <span className="text-gold text-sm">❧</span>
           </div>
           <p className="font-sans uppercase tracking-widest text-gold opacity-60 mb-2" style={{ fontFamily: bodyFont, fontSize: `calc(clamp(1.1rem, 4vw, 1.3rem) * ${fontScale})` }}>
@@ -1748,8 +1748,8 @@ function PreviewContent({ data, lang = "en", onToggleLang }: { data: InvitationD
 
       {/* Venue */}
       {data.sections.venue && (
-        <div className="invitation-section py-5">
-          <div className="divider-ornament mb-4">
+        <div className="invitation-section py-3">
+          <div className="divider-ornament mb-3">
             <span className="text-gold text-sm">❧</span>
           </div>
           <p className="font-sans uppercase tracking-widest text-gold opacity-60 mb-2" style={{ fontFamily: bodyFont, fontSize: `calc(clamp(1.1rem, 4vw, 1.3rem) * ${fontScale})` }}>
@@ -1766,8 +1766,8 @@ function PreviewContent({ data, lang = "en", onToggleLang }: { data: InvitationD
 
       {/* Message */}
       {data.sections.message && displayMessage && (
-        <div className="invitation-section py-5 px-8">
-          <div className="divider-ornament mb-4">
+        <div className="invitation-section py-3 px-8">
+          <div className="divider-ornament mb-3">
             <span className="text-gold text-sm">✦</span>
           </div>
           <p className="font-serif italic opacity-80 leading-relaxed" style={{ fontFamily: bodyFont, fontSize: `calc(clamp(1.05rem, 3.5vw, 1.2rem) * ${fontScale})` }}>
@@ -1778,8 +1778,8 @@ function PreviewContent({ data, lang = "en", onToggleLang }: { data: InvitationD
 
       {/* Countdown */}
       {data.sections.countdown && data.date && (
-        <div className="invitation-section py-5">
-          <div className="divider-ornament mb-4">
+        <div className="invitation-section py-3">
+          <div className="divider-ornament mb-3">
             <span className="text-gold text-sm">❧</span>
           </div>
           <CountdownTimer targetDate={data.date} label={t.countdownLabel} bodyFont={bodyFont} isRtl={isRtl} />
@@ -1788,8 +1788,8 @@ function PreviewContent({ data, lang = "en", onToggleLang }: { data: InvitationD
 
       {/* Map */}
       {data.sections.map && mapSrc && (
-        <div className="invitation-section py-5 px-4">
-          <div className="divider-ornament mb-4">
+        <div className="invitation-section py-3 px-4">
+          <div className="divider-ornament mb-3">
             <span className="text-gold text-sm">❧</span>
           </div>
           <p className="font-sans uppercase tracking-widest text-gold opacity-60 mb-4" style={{ fontFamily: bodyFont, fontSize: `calc(clamp(1.1rem, 4vw, 1.3rem) * ${fontScale})` }}>
