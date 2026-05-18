@@ -34,6 +34,8 @@ export const invitations = mysqlTable("invitations", {
   data: text("data").notNull(), // JSON string
   /** Number of times the invitation page has been opened by guests */
   views: int("views").notNull().default(0),
+  /** The openId of the user who created this invitation (null = legacy/public) */
+  ownerOpenId: varchar("ownerOpenId", { length: 64 }),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });

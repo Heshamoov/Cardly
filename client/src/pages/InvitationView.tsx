@@ -103,6 +103,8 @@ interface InvitationData {
   arVenueAddress?: string;
   arMessage?: string;
   musicUrl?: string;
+  subHeadline?: string;
+  arSubHeadline?: string;
 }
 
 type AnimStage = "idle" | "opening" | "expand" | "done";
@@ -570,7 +572,7 @@ function InvitationPage({ data, slug, lang, onToggleLang, onBackToEnvelope, isMu
 
         {/* Hero — Names */}
         {data.sections?.names !== false && (
-          <div className="invitation-section pt-16 pb-8 stagger">
+          <div className="invitation-section pt-10 pb-5 stagger">
             <div className="flex justify-center mb-6">
               <div className="w-24 h-px bg-gradient-to-r from-transparent via-gold to-transparent" />
             </div>
@@ -579,7 +581,7 @@ function InvitationPage({ data, slug, lang, onToggleLang, onBackToEnvelope, isMu
               {t.togetherWith}
             </p>
 
-            <div className="my-8 animate-fade-in-up">
+            <div className="my-4 animate-fade-in-up">
               <h1 className="font-script gold-shimmer leading-tight" style={{ fontSize: "clamp(3rem, 14vw, 5rem)" }}>
                 {groomName || "Groom"}
               </h1>
@@ -595,34 +597,34 @@ function InvitationPage({ data, slug, lang, onToggleLang, onBackToEnvelope, isMu
               <span className="text-gold text-xl">✦</span>
             </div>
 
-            <p className="invite-detail opacity-60 mt-5 animate-fade-in-up" style={{ fontFamily: bodyFont }}>
-              {t.requestPleasure}
+            <p className="invite-detail opacity-60 mt-3 animate-fade-in-up" style={{ fontFamily: bodyFont }}>
+              {(isRtl ? (data.arSubHeadline || t.requestPleasure) : (data.subHeadline || t.requestPleasure))}
             </p>
           </div>
         )}
 
         {/* Date */}
         {data.sections?.date !== false && formattedDate && (
-          <div className="invitation-section py-8">
+          <div className="invitation-section py-5">
             <div className="divider-ornament mb-5">
               <span className="text-gold">❧</span>
             </div>
-            <p className="invite-label text-gold opacity-50 mb-3" style={{ fontFamily: bodyFont }}>{t.dateLabel}</p>
-            <p className="invite-heading text-cream text-2xl leading-relaxed" style={{ fontFamily: bodyFont }}>{formattedDate}</p>
+            <p className="invite-label text-gold opacity-50 mb-3" style={{ fontFamily: bodyFont, fontSize: `calc(clamp(1rem, 3.5vw, 1.15rem) * var(--font-scale, 1))` }}>{t.dateLabel}</p>
+            <p className="invite-heading text-cream leading-relaxed" style={{ fontFamily: bodyFont, fontSize: `calc(clamp(1rem, 3.5vw, 1.15rem) * var(--font-scale, 1))` }}>{formattedDate}</p>
             {formattedTime && (
-              <p className="invite-heading text-cream text-xl mt-2 opacity-80" style={{ fontFamily: bodyFont }}>{formattedTime}</p>
+              <p className="invite-heading text-cream mt-2 opacity-80" style={{ fontFamily: bodyFont, fontSize: `calc(clamp(1rem, 3.5vw, 1.15rem) * var(--font-scale, 1))` }}>{formattedTime}</p>
             )}
           </div>
         )}
 
         {/* Venue */}
         {data.sections?.venue !== false && displayVenueName && (
-          <div className="invitation-section py-8">
+          <div className="invitation-section py-5">
             <div className="divider-ornament mb-5">
               <span className="text-gold">❧</span>
             </div>
-            <p className="invite-label text-gold opacity-50 mb-3" style={{ fontFamily: bodyFont }}>{t.venueLabel}</p>
-            <p className="invite-heading text-cream text-2xl" style={{ fontFamily: bodyFont }}>{displayVenueName}</p>
+            <p className="invite-label text-gold opacity-50 mb-3" style={{ fontFamily: bodyFont, fontSize: `calc(clamp(1rem, 3.5vw, 1.15rem) * var(--font-scale, 1))` }}>{t.venueLabel}</p>
+            <p className="invite-heading text-cream" style={{ fontFamily: bodyFont, fontSize: `calc(clamp(1rem, 3.5vw, 1.15rem) * var(--font-scale, 1))` }}>{displayVenueName}</p>
             {displayVenueAddress && (
               <p className="invite-detail opacity-40 mt-2" style={{ fontFamily: bodyFont }}>{displayVenueAddress}</p>
             )}
@@ -631,7 +633,7 @@ function InvitationPage({ data, slug, lang, onToggleLang, onBackToEnvelope, isMu
 
         {/* Personal Message */}
         {data.sections?.message !== false && displayMessage && (
-          <div className="invitation-section py-8 px-8">
+          <div className="invitation-section py-5 px-8">
             <div className="divider-ornament mb-5">
               <span className="text-gold">✦</span>
             </div>
@@ -643,7 +645,7 @@ function InvitationPage({ data, slug, lang, onToggleLang, onBackToEnvelope, isMu
 
         {/* Countdown */}
         {data.sections?.countdown !== false && data.date && (
-          <div className="invitation-section py-8">
+          <div className="invitation-section py-5">
             <div className="divider-ornament mb-5">
               <span className="text-gold">❧</span>
             </div>
@@ -653,11 +655,11 @@ function InvitationPage({ data, slug, lang, onToggleLang, onBackToEnvelope, isMu
 
         {/* Map */}
         {data.sections?.map !== false && mapSrc && (
-          <div className="invitation-section py-8 px-4">
+          <div className="invitation-section py-5 px-4">
             <div className="divider-ornament mb-5">
               <span className="text-gold">📍</span>
             </div>
-            <p className="invite-label text-gold opacity-50 mb-4" style={{ fontFamily: bodyFont }}>{t.findUs}</p>
+            <p className="invite-label text-gold opacity-50 mb-4" style={{ fontFamily: bodyFont, fontSize: `calc(clamp(1rem, 3.5vw, 1.15rem) * var(--font-scale, 1))` }}>{t.findUs}</p>
             <div style={{ borderRadius: 12, overflow: "hidden", border: `1px solid ${theme.accent}44`, boxShadow: "0 8px 32px rgba(0,0,0,0.3)" }}>
               <iframe
                 src={mapSrc}
@@ -704,7 +706,7 @@ function InvitationPage({ data, slug, lang, onToggleLang, onBackToEnvelope, isMu
         <RsvpSection slug={slug} theme={theme} t={t} isRtl={isRtl} bodyFont={bodyFont} />
 
         {/* Footer */}
-        <div className="invitation-section py-12">
+        <div className="invitation-section py-8">
           <div className="divider-ornament mb-6">
             <span className="text-gold text-xl">✶</span>
           </div>

@@ -40,6 +40,8 @@ export const translations = {
     // Section labels
     togetherWith: "Together with their families",
     requestPleasure: "request the pleasure of your company at the celebration of their marriage",
+    subHeadlineLabel: "Sub-headline (under names)",
+    subHeadlinePlaceholder: "request the pleasure of your company at the celebration of their marriage",
     dateLabel: "Date & Time",
     venueLabel: "Venue",
     messageLabel: "A Personal Message",
@@ -115,6 +117,8 @@ export const translations = {
     // Section labels
     togetherWith: "بمشاركة عائلتيهما",
     requestPleasure: "يطلبان شرف حضوركم لمشاركتهم فرحة زفافهم",
+    subHeadlineLabel: "العنوان الفرعي (تحت الأسماء)",
+    subHeadlinePlaceholder: "يطلبان شرف حضوركم لمشاركتهم فرحة زفافهم",
     dateLabel: "التاريخ والوقت",
     venueLabel: "مكان الحفل",
     messageLabel: "رسالة شخصية",

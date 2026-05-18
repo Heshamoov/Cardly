@@ -1,0 +1,1 @@
+ALTER TABLE `invitations` ADD `ownerOpenId` varchar(64);

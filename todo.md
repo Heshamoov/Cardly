@@ -252,3 +252,10 @@
 - [x] Call trackView when invitation page is first loaded
 - [x] Add PHONE column to guest table in RsvpDashboard (tap-to-call link)
 - [x] Add summary stats bar (Views / Confirmed / Can't Attend / Total Guests) to each invitation card header
+
+## Fix: 4 Issues (May 18)
+- [x] Reduce vertical spacing between invitation sections (too much scrolling)
+- [x] Add editable sub-headline field (EN + AR) to Builder form, PreviewContent, InvitationPage
+- [x] Keep default sub-headline text as placeholder in both EN and AR fields
+- [x] Unify section title font size (e.g. "DATE & TIME" heading matches date/time value size)
+- [x] Fix multi-owner RSVP: add ownerOpenId column to invitations, store on create, filter dashboard by caller's openId

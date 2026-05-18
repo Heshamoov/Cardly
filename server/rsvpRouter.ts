@@ -42,16 +42,28 @@ export const rsvpRouter = router({
     }),
 
   /**
-   * Protected — only the logged-in owner can view RSVP responses.
+   * Protected — only the invitation's creator (or the app owner) can view RSVP responses.
    * Returns the full list of responses plus a summary for a given slug.
    */
   getBySlug: protectedProcedure
     .input(z.object({ slug: z.string().min(1).max(16) }))
     .query(async ({ input, ctx }) => {
-      // Only the app owner can view RSVP responses
-      if (ctx.user.openId !== ENV.ownerOpenId) {
-        return { responses: [], summary: { totalGuests: 0, responseCount: 0 } };
-      }
+      const { getDb } = await import("./db");
+      const { invitations } = await import("../drizzle/schema");
+      const { eq } = await import("drizzle-orm");
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+
+      // Check that the caller owns this invitation (or is the global app owner)
+      const inv = await db.select().from(invitations).where(eq(invitations.slug, input.slug)).limit(1);
+      if (inv.length === 0) return { responses: [], summary: { totalGuests: 0, responseCount: 0 } };
+
+      const isOwner =
+        inv[0].ownerOpenId === ctx.user.openId ||
+        ctx.user.openId === ENV.ownerOpenId;
+
+      if (!isOwner) return { responses: [], summary: { totalGuests: 0, responseCount: 0 } };
+
       const [responses, summary] = await Promise.all([
         getRsvpsBySlug(input.slug),
         getRsvpSummaryBySlug(input.slug),
@@ -60,24 +72,31 @@ export const rsvpRouter = router({
     }),
 
   /**
-   * Protected — returns all RSVPs across every invitation owned by the logged-in user,
-   * grouped by invitation slug. Used by the RSVP dashboard.
+   * Protected — returns all invitations owned by the signed-in user,
+   * grouped with their RSVP summaries. Used by the RSVP dashboard.
+   * The global app owner sees ALL invitations (for admin purposes).
    */
   getAllSlugs: protectedProcedure.query(async ({ ctx }) => {
-    // Verify the caller is the app owner (single-owner app)
-    if (ctx.user.openId !== ENV.ownerOpenId) {
-      return { slugs: [] };
-    }
     const { getDb } = await import("./db");
     const { rsvpResponses, invitations } = await import("../drizzle/schema");
-    const { sql } = await import("drizzle-orm");
+    const { sql, eq, or, isNull } = await import("drizzle-orm");
     const db = await getDb();
     if (!db) throw new Error("Database not available");
 
-    // Get all invitations for the owner (includes views column)
-    const allInvitations = await db.select().from(invitations).orderBy(invitations.createdAt);
+      const isAppOwner = ctx.user.openId === ENV.ownerOpenId;
 
-    // Get per-slug RSVP summaries: total guests, response count, confirmed guests, declined count
+    // App owner sees all invitations; other users see only their own
+    const allInvitations = isAppOwner
+      ? await db.select().from(invitations).orderBy(invitations.createdAt)
+      : await db
+          .select()
+          .from(invitations)
+          .where(eq(invitations.ownerOpenId, ctx.user.openId))
+          .orderBy(invitations.createdAt);
+
+    if (allInvitations.length === 0) return { slugs: [] };
+
+    // Get per-slug RSVP summaries
     const rsvpSummaries = await db
       .select({
         slug: rsvpResponses.invitationSlug,
@@ -103,7 +122,6 @@ export const rsvpRouter = router({
 
     return {
       slugs: allInvitations.map((inv) => {
-        // Use the dedicated title column; fall back to parsing names from data JSON for old rows
         let title = inv.title || "Untitled";
         if (!title || title === "Untitled") {
           try {

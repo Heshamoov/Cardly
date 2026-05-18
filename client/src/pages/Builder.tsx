@@ -29,6 +29,8 @@ interface InvitationData {
   couplePhotoUrl?: string;
   defaultLang?: "en" | "ar";
   musicUrl?: string;
+  subHeadline?: string;
+  arSubHeadline?: string;
 }
 
 const ENVELOPE_STYLES = [
@@ -160,6 +162,8 @@ const defaultData: InvitationData = {
   couplePhotoUrl: "",
   defaultLang: "en",
   musicUrl: "",
+  subHeadline: "",
+  arSubHeadline: "",
   sections: {
     names: true,
     date: true,
@@ -1065,6 +1069,17 @@ export default function Builder() {
                   <input className="wedding-input" placeholder="Optional" value={data.brideLastName} onChange={(e) => set("brideLastName", e.target.value)} />
                 </div>
               </div>
+              <div className="mt-3">
+                <label className="font-sans text-xs opacity-50 block mb-1">Sub-headline (under names)</label>
+                <textarea
+                  className="wedding-input"
+                  rows={2}
+                  placeholder="request the pleasure of your company at the celebration of their marriage"
+                  value={data.subHeadline ?? ""}
+                  onChange={(e) => set("subHeadline", e.target.value)}
+                  style={{ resize: "vertical" }}
+                />
+              </div>
             </>
           ) : (
             <div dir="rtl" style={{ fontFamily: `'Noto Naskh Arabic', 'Amiri', serif` }}>
@@ -1087,6 +1102,18 @@ export default function Builder() {
                   <label className="font-sans text-xs opacity-50 block mb-1" style={{ fontFamily: `'Noto Naskh Arabic', 'Amiri', serif` }}>اسم العائلة (اختياري)</label>
                   <input className="wedding-input" dir="rtl" style={{ fontFamily: `'Noto Naskh Arabic', 'Amiri', serif` }} placeholder="اختياري" value={data.arBrideLastName ?? ""} onChange={(e) => set("arBrideLastName", e.target.value)} />
                 </div>
+              </div>
+              <div className="mt-3">
+                <label className="font-sans text-xs opacity-50 block mb-1" style={{ fontFamily: `'Noto Naskh Arabic', 'Amiri', serif` }}>العنوان الفرعي (تحت الأسماء)</label>
+                <textarea
+                  className="wedding-input"
+                  dir="rtl"
+                  rows={2}
+                  placeholder="يطلبان شرف حضوركم لمشاركتهم فرحة زفافهم"
+                  value={data.arSubHeadline ?? ""}
+                  onChange={(e) => set("arSubHeadline", e.target.value)}
+                  style={{ resize: "vertical", fontFamily: `'Noto Naskh Arabic', 'Amiri', serif` }}
+                />
               </div>
             </div>
           )}
@@ -1668,11 +1695,11 @@ function PreviewContent({ data, lang = "en", onToggleLang }: { data: InvitationD
     >
       {/* Hero / Names */}
       {data.sections.names && (
-        <div className="invitation-section pt-16 pb-8 stagger">
+        <div className="invitation-section pt-10 pb-5 stagger">
           <p className="font-sans text-xs uppercase tracking-widest text-gold opacity-70 animate-fade-in-up" style={{ fontFamily: bodyFont }}>
             {t.togetherWith}
           </p>
-          <div className="my-6 animate-fade-in-up">
+          <div className="my-4 animate-fade-in-up">
             <h1 className="font-script gold-shimmer leading-tight" style={{ fontSize: `calc(clamp(2.5rem, 12vw, 3.5rem) * ${fontScale})` }}>
               {groomName || "Groom"}
             </h1>
@@ -1686,19 +1713,19 @@ function PreviewContent({ data, lang = "en", onToggleLang }: { data: InvitationD
           <div className="divider-ornament">
             <span className="text-gold text-lg">✦</span>
           </div>
-          <p className="font-serif italic opacity-60 mt-4 animate-fade-in-up" style={{ fontFamily: bodyFont, fontSize: `calc(clamp(1.05rem, 3.5vw, 1.2rem) * ${fontScale})` }}>
-            {t.requestPleasure}
+          <p className="font-serif italic opacity-60 mt-3 animate-fade-in-up" style={{ fontFamily: bodyFont, fontSize: `calc(clamp(1.05rem, 3.5vw, 1.2rem) * ${fontScale})` }}>
+            {(isRtl ? (data.arSubHeadline || t.requestPleasure) : (data.subHeadline || t.requestPleasure))}
           </p>
         </div>
       )}
 
       {/* Date */}
       {data.sections.date && (
-        <div className="invitation-section py-6">
+        <div className="invitation-section py-5">
           <div className="divider-ornament mb-4">
             <span className="text-gold text-sm">❧</span>
           </div>
-          <p className="font-sans text-xs uppercase tracking-widest text-gold opacity-60 mb-2" style={{ fontFamily: bodyFont }}>
+          <p className="font-sans uppercase tracking-widest text-gold opacity-60 mb-2" style={{ fontFamily: bodyFont, fontSize: `calc(clamp(1.1rem, 4vw, 1.3rem) * ${fontScale})` }}>
             {t.dateLabel}
           </p>
           <p className="font-serif text-cream" style={{ fontSize: `calc(clamp(1.1rem, 4vw, 1.3rem) * ${fontScale})` }}>
@@ -1709,8 +1736,8 @@ function PreviewContent({ data, lang = "en", onToggleLang }: { data: InvitationD
 
       {/* Time */}
       {data.sections.time && (
-        <div className="invitation-section py-4">
-          <p className="font-sans text-xs uppercase tracking-widest text-gold opacity-60 mb-2" style={{ fontFamily: bodyFont }}>
+        <div className="invitation-section py-3">
+          <p className="font-sans uppercase tracking-widest text-gold opacity-60 mb-2" style={{ fontFamily: bodyFont, fontSize: `calc(clamp(1.1rem, 4vw, 1.3rem) * ${fontScale})` }}>
             {t.dateLabel}
           </p>
           <p className="font-serif text-cream" style={{ fontSize: `calc(clamp(1.1rem, 4vw, 1.3rem) * ${fontScale})` }}>
@@ -1721,11 +1748,11 @@ function PreviewContent({ data, lang = "en", onToggleLang }: { data: InvitationD
 
       {/* Venue */}
       {data.sections.venue && (
-        <div className="invitation-section py-6">
+        <div className="invitation-section py-5">
           <div className="divider-ornament mb-4">
             <span className="text-gold text-sm">❧</span>
           </div>
-          <p className="font-sans text-xs uppercase tracking-widest text-gold opacity-60 mb-2" style={{ fontFamily: bodyFont }}>
+          <p className="font-sans uppercase tracking-widest text-gold opacity-60 mb-2" style={{ fontFamily: bodyFont, fontSize: `calc(clamp(1.1rem, 4vw, 1.3rem) * ${fontScale})` }}>
             {t.venueLabel}
           </p>
           <p className="font-serif text-cream" style={{ fontFamily: bodyFont, fontSize: `calc(clamp(1.1rem, 4vw, 1.3rem) * ${fontScale})` }}>
@@ -1739,7 +1766,7 @@ function PreviewContent({ data, lang = "en", onToggleLang }: { data: InvitationD
 
       {/* Message */}
       {data.sections.message && displayMessage && (
-        <div className="invitation-section py-6 px-8">
+        <div className="invitation-section py-5 px-8">
           <div className="divider-ornament mb-4">
             <span className="text-gold text-sm">✦</span>
           </div>
@@ -1751,7 +1778,7 @@ function PreviewContent({ data, lang = "en", onToggleLang }: { data: InvitationD
 
       {/* Countdown */}
       {data.sections.countdown && data.date && (
-        <div className="invitation-section py-6">
+        <div className="invitation-section py-5">
           <div className="divider-ornament mb-4">
             <span className="text-gold text-sm">❧</span>
           </div>
@@ -1761,11 +1788,11 @@ function PreviewContent({ data, lang = "en", onToggleLang }: { data: InvitationD
 
       {/* Map */}
       {data.sections.map && mapSrc && (
-        <div className="invitation-section py-6 px-4">
+        <div className="invitation-section py-5 px-4">
           <div className="divider-ornament mb-4">
             <span className="text-gold text-sm">❧</span>
           </div>
-          <p className="font-sans text-xs uppercase tracking-widest text-gold opacity-60 mb-4" style={{ fontFamily: bodyFont }}>
+          <p className="font-sans uppercase tracking-widest text-gold opacity-60 mb-4" style={{ fontFamily: bodyFont, fontSize: `calc(clamp(1.1rem, 4vw, 1.3rem) * ${fontScale})` }}>
             {t.findUs}
           </p>
           <div style={{ borderRadius: 12, overflow: "hidden", border: `1px solid ${theme.accent}44`, boxShadow: `0 8px 32px rgba(0,0,0,0.3)` }}>
@@ -1809,7 +1836,7 @@ function PreviewContent({ data, lang = "en", onToggleLang }: { data: InvitationD
       )}
 
       {/* Footer */}
-      <div className="invitation-section py-10">
+      <div className="invitation-section py-8">
         <div className="divider-ornament mb-6">
           <span className="text-gold text-lg">✦</span>
         </div>

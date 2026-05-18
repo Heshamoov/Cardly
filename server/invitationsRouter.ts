@@ -104,10 +104,12 @@ export const invitationsRouter = router({
           couplePhotoUrl: z.string().optional(),
           defaultLang: z.enum(["en", "ar"]).optional(),
           musicUrl: z.string().optional(),
+          subHeadline: z.string().optional(),
+          arSubHeadline: z.string().optional(),
         }),
       })
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
 
@@ -125,10 +127,14 @@ export const invitationsRouter = router({
         attempts++;
       }
 
+      // Store the creator's openId so they can see their own responses later
+      const ownerOpenId = ctx?.user?.openId ?? null;
+
       await db.insert(invitations).values({
         slug,
         title: input.title || "Untitled",
         data: JSON.stringify(input.data),
+        ownerOpenId,
       } as any);
 
       return { slug };
@@ -139,11 +145,13 @@ export const invitationsRouter = router({
     .mutation(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
-      // Only the app owner can delete invitations
+      // Only the invitation's creator (or the app owner) can delete it
       const { ENV } = await import("./_core/env");
-      if (ctx.user.openId !== ENV.ownerOpenId) {
-        throw new Error("Forbidden");
-      }
+      const existing = await db.select().from(invitations).where(eq(invitations.slug, input.slug)).limit(1);
+      if (existing.length === 0) throw new Error("Not found");
+      const inv = existing[0];
+      const isOwner = inv.ownerOpenId === ctx.user.openId || ctx.user.openId === ENV.ownerOpenId;
+      if (!isOwner) throw new Error("Forbidden");
       // Delete related RSVP responses first (cascade)
       const { rsvpResponses } = await import("../drizzle/schema");
       await db.delete(rsvpResponses).where(eq(rsvpResponses.invitationSlug, input.slug));
