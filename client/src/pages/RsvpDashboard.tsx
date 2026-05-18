@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { getLoginUrl } from "@/const";
@@ -33,6 +34,11 @@ const DASH_TRANSLATIONS = {
     delete: "Delete",
     deleting: "Deleting…",
     deleteConfirm: (title: string) => `Delete "${title}"? This cannot be undone.`,
+    downloadCsv: "Download CSV",
+    attendance: "Attendance",
+    duplicate: "Duplicate",
+    duplicating: "Duplicating…",
+    editInBuilder: "Edit in Builder",
   },
   ar: {
     title: "استجابات الضيوف",
@@ -60,12 +66,39 @@ const DASH_TRANSLATIONS = {
     totalGuestsLabel: "إجمالي الضيوف",
     cancel: "إلغاء",
     delete: "حذف",
-    deleting: "جارٍ الحذف…",
+    deleting: "جارِ الحذف…",
     deleteConfirm: (title: string) => `حذف "${title}"؟ لا يمكن التراجع عن هذا الإجراء.`,
+    downloadCsv: "تحميل CSV",
+    attendance: "الحضور",
+    duplicate: "نسخ",
+    duplicating: "جارِ النسخ…",
+    editInBuilder: "تعديل في المنشئ",
   },
 };
 
 type DashLang = "en" | "ar";
+
+function downloadCsv(responses: Array<{ guestName: string; phone?: string | null; partySize: number; attending: boolean; message?: string | null; createdAt: number | Date }>, invTitle: string) {
+  const headers = ["Guest Name", "Phone", "Party Size", "Attendance", "Message", "Submitted At"];
+  const rows = responses.map((r) => [
+    r.guestName,
+    (r as any).phone ?? "",
+    String(r.partySize),
+    r.attending ? "Confirmed" : "Declined",
+    r.message ?? "",
+    new Date(r.createdAt).toLocaleString("en-GB"),
+  ]);
+  const csvContent = [headers, ...rows]
+    .map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(","))
+    .join("\n");
+  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `${invTitle.replace(/[^a-z0-9]/gi, "_")}_guests.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
 
 export default function RsvpDashboard() {
   const { user, loading: authLoading } = useAuth();
@@ -73,6 +106,7 @@ export default function RsvpDashboard() {
   const [deletingSlug, setDeletingSlug] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const [lang, setLang] = useState<DashLang>("en");
+  const [duplicatingSlug, setDuplicatingSlug] = useState<string | null>(null);
 
   const isAr = lang === "ar";
   const t = DASH_TRANSLATIONS[lang];
@@ -81,6 +115,16 @@ export default function RsvpDashboard() {
   const dir = isAr ? "rtl" : "ltr";
 
   const utils = trpc.useUtils();
+  const [, navigate] = useLocation();
+
+  const duplicateMutation = trpc.invitations.duplicate.useMutation({
+    onSuccess: (data) => {
+      setDuplicatingSlug(null);
+      utils.rsvp.getAllSlugs.invalidate();
+      navigate(`/?slug=${data.slug}`);
+    },
+    onError: () => setDuplicatingSlug(null),
+  });
 
   const { data: overview, isLoading: overviewLoading } = trpc.rsvp.getAllSlugs.useQuery(undefined, {
     enabled: !!user,
@@ -372,6 +416,32 @@ export default function RsvpDashboard() {
                     </div>
                   </button>
 
+                  {/* Duplicate button */}
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setDuplicatingSlug(inv.slug); duplicateMutation.mutate({ slug: inv.slug }); }}
+                    title={t.duplicate}
+                    disabled={duplicatingSlug === inv.slug}
+                    style={{
+                      width: 40,
+                      flexShrink: 0,
+                      background: "transparent",
+                      border: "1px solid #D4AF3744",
+                      borderRadius: 10,
+                      cursor: duplicatingSlug === inv.slug ? "not-allowed" : "pointer",
+                      color: "#D4AF37",
+                      fontSize: 16,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      transition: "all 0.2s",
+                      opacity: duplicatingSlug === inv.slug ? 0.5 : 1,
+                    }}
+                    onMouseEnter={(e) => { if (duplicatingSlug !== inv.slug) (e.currentTarget as HTMLButtonElement).style.background = "#D4AF3722"; }}
+                    onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "transparent"; }}
+                  >
+                    {duplicatingSlug === inv.slug ? "⏳" : "📋"}
+                  </button>
+
                   {/* Delete button */}
                   <button
                     onClick={(e) => handleDeleteClick(inv.slug, e)}
@@ -409,6 +479,35 @@ export default function RsvpDashboard() {
                       overflow: "hidden",
                     }}
                   >
+                    {/* CSV download bar */}
+                    {!detailLoading && detail && detail.responses.length > 0 && (
+                      <div style={{ padding: "10px 16px", borderBottom: "1px solid #D4AF3722", display: "flex", justifyContent: isAr ? "flex-start" : "flex-end" }}>
+                        <button
+                          onClick={() => downloadCsv(detail.responses, inv.title)}
+                          style={{
+                            padding: "6px 16px",
+                            borderRadius: 20,
+                            border: "1px solid #D4AF3766",
+                            background: "transparent",
+                            color: "#D4AF37",
+                            fontFamily: bodyFont,
+                            fontSize: 11,
+                            fontWeight: 700,
+                            letterSpacing: isAr ? 0 : "0.08em",
+                            textTransform: isAr ? "none" : "uppercase",
+                            cursor: "pointer",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 6,
+                            transition: "all 0.2s",
+                          }}
+                          onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "#D4AF3722"; }}
+                          onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "transparent"; }}
+                        >
+                          ↓ {t.downloadCsv}
+                        </button>
+                      </div>
+                    )}
                     {detailLoading ? (
                       <div style={{ padding: 24, textAlign: "center" }}>
                         <div className="w-6 h-6 border-2 border-t-transparent rounded-full animate-spin mx-auto" style={{ borderColor: "#D4AF37", borderTopColor: "transparent" }} />

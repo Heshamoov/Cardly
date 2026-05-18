@@ -107,6 +107,7 @@ interface InvitationData {
   arSubHeadline?: string;
   hostingLine?: string;
   arHostingLine?: string;
+  rsvpDeadline?: string;
 }
 
 type AnimStage = "idle" | "opening" | "expand" | "done";
@@ -709,7 +710,7 @@ function InvitationPage({ data, slug, lang, onToggleLang, onBackToEnvelope, isMu
         )}
 
         {/* RSVP Section */}
-        <RsvpSection slug={slug} theme={theme} t={t} isRtl={isRtl} bodyFont={bodyFont} />
+        <RsvpSection slug={slug} theme={theme} t={t} isRtl={isRtl} bodyFont={bodyFont} rsvpDeadline={data.rsvpDeadline} />
 
         {/* Footer */}
         <div className="invitation-section py-8">
@@ -731,14 +732,19 @@ function InvitationPage({ data, slug, lang, onToggleLang, onBackToEnvelope, isMu
 
 // ── RSVP Section ─────────────────────────────────────────────────────────────
 function RsvpSection({
-  slug, theme, t, isRtl, bodyFont,
+  slug, theme, t, isRtl, bodyFont, rsvpDeadline,
 }: {
   slug: string;
   theme: Theme;
   t: (typeof translations)["en"] | (typeof translations)["ar"];
   isRtl: boolean;
   bodyFont?: string;
+  rsvpDeadline?: string;
 }) {
+  // Check if deadline has passed
+  const deadlinePassed = rsvpDeadline
+    ? new Date() > new Date(rsvpDeadline + "T23:59:59")
+    : false;
   const STORAGE_KEY = `rsvp_submitted_${slug}`;
   const DECLINED_KEY = `rsvp_declined_${slug}`;
   const [submitted, setSubmitted] = useState(() => !!localStorage.getItem(STORAGE_KEY));
@@ -795,6 +801,24 @@ function RsvpSection({
     marginBottom: 6,
   };
 
+  // Deadline countdown state
+  const [deadlineTimeLeft, setDeadlineTimeLeft] = useState(() => calcDeadlineTimeLeft(rsvpDeadline));
+  function calcDeadlineTimeLeft(d?: string) {
+    if (!d) return null;
+    const diff = new Date(d + "T23:59:59").getTime() - Date.now();
+    if (diff <= 0) return null;
+    return {
+      days: Math.floor(diff / 86400000),
+      hours: Math.floor((diff % 86400000) / 3600000),
+      minutes: Math.floor((diff % 3600000) / 60000),
+    };
+  }
+  useEffect(() => {
+    if (!rsvpDeadline) return;
+    const id = setInterval(() => setDeadlineTimeLeft(calcDeadlineTimeLeft(rsvpDeadline)), 60000);
+    return () => clearInterval(id);
+  }, [rsvpDeadline]);
+
   return (
     <div className="invitation-section" style={{ paddingTop: 32, paddingBottom: 40 }}>
       <div className="divider-ornament mb-6">
@@ -807,7 +831,49 @@ function RsvpSection({
         {t.rsvpLabel}
       </p>
 
-      {submitted ? (
+      {/* RSVP Deadline display */}
+      {rsvpDeadline && (
+        <div style={{
+          background: `${theme.bgSecondary}99`,
+          border: `1px solid ${theme.accent}44`,
+          borderRadius: 10,
+          padding: "12px 16px",
+          marginBottom: 20,
+          textAlign: "center",
+        }}>
+          <p style={{ fontFamily: bodyFont, fontSize: 11, letterSpacing: "0.1em", color: theme.accent, opacity: 0.7, textTransform: "uppercase", marginBottom: 4 }}>
+            {isRtl ? "يُرجى التأكيد قبل" : "Please Confirm before"}
+          </p>
+          <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 18, color: theme.accent, marginBottom: deadlineTimeLeft ? 8 : 0 }}>
+            {new Date(rsvpDeadline).toLocaleDateString(isRtl ? "ar-AE" : "en-GB", { day: "numeric", month: "long", year: "numeric" })}
+          </p>
+          {deadlineTimeLeft && (
+            <p style={{ fontFamily: bodyFont, fontSize: 12, color: theme.text, opacity: 0.55 }}>
+              {isRtl
+                ? `${deadlineTimeLeft.days} يوم · ${deadlineTimeLeft.hours} ساعة · ${deadlineTimeLeft.minutes} دقيقة`
+                : `${deadlineTimeLeft.days}d · ${deadlineTimeLeft.hours}h · ${deadlineTimeLeft.minutes}m remaining`}
+            </p>
+          )}
+        </div>
+      )}
+
+      {deadlinePassed ? (
+        <div style={{
+          background: `${theme.bgSecondary}cc`,
+          border: `1px solid ${theme.accent}44`,
+          borderRadius: 12,
+          padding: "28px 20px",
+          textAlign: "center",
+        }}>
+          <div style={{ fontSize: 36, marginBottom: 12 }}>🔒</div>
+          <p className="font-script" style={{ fontSize: "clamp(1.4rem, 6vw, 2rem)", color: theme.accent }}>
+            {isRtl ? "تم إغلاق باب التأكيد" : "Responses are now closed"}
+          </p>
+          <p className="font-sans mt-2" style={{ fontSize: 13, color: theme.text, opacity: 0.6, fontFamily: bodyFont }}>
+            {isRtl ? "انتهت فترة التسجيل، شكراً لاهتمامكم." : "The RSVP period has ended. Thank you for your interest."}
+          </p>
+        </div>
+      ) : submitted ? (
         <div
           style={{
             background: `${theme.bgSecondary}cc`,

@@ -33,6 +33,7 @@ interface InvitationData {
   arSubHeadline?: string;
   hostingLine?: string;
   arHostingLine?: string;
+  rsvpDeadline?: string; // ISO date string YYYY-MM-DD
 }
 
 const ENVELOPE_STYLES = [
@@ -168,6 +169,7 @@ const defaultData: InvitationData = {
   arSubHeadline: "",
   hostingLine: "",
   arHostingLine: "",
+  rsvpDeadline: "",
   sections: {
     names: true,
     date: true,
@@ -1288,6 +1290,29 @@ export default function Builder() {
             {formLang === "ar" ? "سيظهر عداد تنازلي حتى يوم زفافكم في الدعوة." : "A live countdown to your wedding day will appear in the invitation."}
           </p>
         </SectionCard>
+
+        {/* ── Section: RSVP Deadline ── */}
+        <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+          <div className="flex items-center justify-between mb-3">
+            <span className="font-sans text-xs uppercase tracking-widest text-gold" style={formLang === "ar" ? { fontFamily: ARABIC_FONT } : {}}>
+              {formLang === "ar" ? "آخر موعد للتأكيد" : "RSVP DEADLINE"}
+            </span>
+          </div>
+          <label className="font-sans text-xs opacity-50 block mb-1" style={formLang === "ar" ? { fontFamily: ARABIC_FONT } : {}}>
+            {formLang === "ar" ? "يُرجى التأكيد قبل" : "Please Confirm before"}
+          </label>
+          <input
+            type="date"
+            className="wedding-input"
+            value={data.rsvpDeadline ?? ""}
+            onChange={(e) => set("rsvpDeadline", e.target.value)}
+          />
+          <p className="font-sans text-xs opacity-40 mt-2" style={formLang === "ar" ? { fontFamily: ARABIC_FONT } : {}}>
+            {formLang === "ar"
+              ? "بعد هذا التاريخ سيظهر للضيوف رسالة “تم إغلاق باب التأكيد” بدلاً من نموذج التسجيل."
+              : "After this date, guests will see \"Responses are now closed\" instead of the RSVP form."}
+          </p>
+        </div>
 
         {/* ── Section: Music ── */}
         <MusicSection data={data} set={set} formLang={formLang} uploadMusicMutation={uploadMusicMutation} />

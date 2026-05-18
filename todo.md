@@ -286,3 +286,20 @@
 - [x] Wire showSubHeadline toggle into Builder PreviewContent (conditionally render welcome message)
 - [x] Wire showHostingLine toggle into InvitationView (conditionally render hosting line)
 - [x] Wire showSubHeadline toggle into InvitationView (conditionally render welcome message)
+
+## Feature: RSVP Deadline ("Please Confirm before")
+- [x] Add rsvpDeadline field to InvitationData interface and defaultData in Builder.tsx
+- [x] Add rsvpDeadline to server Zod schema in invitationsRouter.ts
+- [x] Add "Please Confirm before" date input to Builder form (RSVP section)
+- [x] Show "Please confirm before [date]" label + countdown timer on InvitationView above RSVP form
+- [x] Block RSVP form after deadline: show "Responses are now closed" message instead
+
+## Feature: Export Guest List to CSV
+- [x] Add "Download CSV" button to Guest Responses dashboard
+- [x] Generate CSV with columns: Name, Phone, Party Size, Attendance, Message, Submitted At
+- [x] Trigger browser download of the CSV file client-side
+
+## Feature: Duplicate Invitation
+- [x] Add duplicate tRPC mutation in invitationsRouter.ts
+- [x] Add "Duplicate" button to My Invitations list (next to each invitation)
+- [x] On click: clone the invitation data, generate new slug, save to DB, navigate to builder with new slug
