@@ -109,6 +109,8 @@ export const invitationsRouter = router({
           hostingLine: z.string().optional(),
           arHostingLine: z.string().optional(),
           rsvpDeadline: z.string().optional(),
+          scriptFont: z.string().optional(),
+          bodyFontChoice: z.string().optional(),
         }),
       })
     )

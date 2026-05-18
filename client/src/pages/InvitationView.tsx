@@ -108,6 +108,8 @@ interface InvitationData {
   hostingLine?: string;
   arHostingLine?: string;
   rsvpDeadline?: string;
+  scriptFont?: string;
+  bodyFontChoice?: string;
 }
 
 type AnimStage = "idle" | "opening" | "expand" | "done";
@@ -459,7 +461,9 @@ function InvitationPage({ data, slug, lang, onToggleLang, onBackToEnvelope, isMu
   const displayMessage = isRtl ? ((data as any).arMessage || data.message) : data.message;
   const envStyle = ENVELOPE_STYLES[(data as { envelopeStyle?: string }).envelopeStyle ?? "ivory-gold"] ?? ENVELOPE_STYLES["ivory-gold"];
   const t = translations[lang];
-  const bodyFont = isRtl ? ARABIC_FONT : undefined;
+  const scriptFont = data.scriptFont ?? (isRtl ? "Amiri" : "Cormorant Garamond");
+  const bodyFontChoice = data.bodyFontChoice ?? (isRtl ? "Noto Naskh Arabic" : "Lato");
+  const bodyFont = isRtl ? (data.bodyFontChoice ?? ARABIC_FONT) : (data.bodyFontChoice ?? undefined);
 
   const weddingDate = data.date ? new Date(data.date) : null;
   const formattedDate = weddingDate
@@ -581,19 +585,19 @@ function InvitationPage({ data, slug, lang, onToggleLang, onBackToEnvelope, isMu
             </div>
 
             {data.sections?.showHostingLine !== false && (
-              <p className="invite-label text-gold opacity-60 animate-fade-in-up" style={{ fontFamily: bodyFont, whiteSpace: "pre-line" }}>
+              <p className="invite-label text-gold opacity-60 animate-fade-in-up" style={{ fontFamily: `'${scriptFont}', serif`, whiteSpace: "pre-line" }}>
                 {(isRtl ? (data.arHostingLine || t.togetherWith) : (data.hostingLine || t.togetherWith))}
               </p>
             )}
 
             <div className="my-2 animate-fade-in-up">
-              <h1 className="font-script gold-shimmer leading-tight" style={{ fontSize: "clamp(3rem, 14vw, 5rem)" }}>
+              <h1 className="gold-shimmer leading-tight" style={{ fontFamily: `'${scriptFont}', serif`, fontSize: "clamp(3rem, 14vw, 5rem)" }}>
                 {groomName || "Groom"}
               </h1>
-              <p className="font-fell text-2xl text-gold opacity-50 my-1" style={{ fontStyle: "italic" }}>
+              <p className="text-2xl text-gold opacity-50 my-1" style={{ fontFamily: `'${scriptFont}', serif`, fontStyle: "italic" }}>
                 &amp;
               </p>
-              <h1 className="font-script gold-shimmer leading-tight" style={{ fontSize: "clamp(3rem, 14vw, 5rem)" }}>
+              <h1 className="gold-shimmer leading-tight" style={{ fontFamily: `'${scriptFont}', serif`, fontSize: "clamp(3rem, 14vw, 5rem)" }}>
                 {brideName || "Bride"}
               </h1>
             </div>
@@ -603,7 +607,7 @@ function InvitationPage({ data, slug, lang, onToggleLang, onBackToEnvelope, isMu
             </div>
 
             {data.sections?.showSubHeadline !== false && (
-              <p className="invite-detail opacity-60 mt-1 animate-fade-in-up" style={{ fontFamily: bodyFont }}>
+              <p className="invite-detail opacity-60 mt-1 animate-fade-in-up" style={{ fontFamily: `'${bodyFontChoice}', sans-serif` }}>
                 {(isRtl ? (data.arSubHeadline || t.requestPleasure) : (data.subHeadline || t.requestPleasure))}
               </p>
             )}

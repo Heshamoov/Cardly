@@ -303,3 +303,23 @@
 - [x] Add duplicate tRPC mutation in invitationsRouter.ts
 - [x] Add "Duplicate" button to My Invitations list (next to each invitation)
 - [x] On click: clone the invitation data, generate new slug, save to DB, navigate to builder with new slug
+
+## Feature: Font Selection
+- [x] Add scriptFont and bodyFontChoice fields to InvitationData interface and defaultData
+- [x] Add font fields to server Zod schema in invitationsRouter.ts
+- [x] Add TYPOGRAPHY section card to Builder form with font pickers (script + body)
+- [x] Include Arabic calligraphy fonts: Amiri, Scheherazade New, Reem Kufi, Noto Naskh Arabic
+- [x] Include English script fonts: Great Vibes, Playfair Display, Cormorant Garamond, Alex Brush
+- [x] Load all font options via Google Fonts in index.html
+- [x] Wire scriptFont into PreviewContent names/hosting line rendering
+- [x] Wire bodyFontChoice into PreviewContent welcome message rendering
+- [x] Wire scriptFont into InvitationView names/hosting line rendering
+- [x] Wire bodyFontChoice into InvitationView welcome message rendering
+
+## Feature: RSVP Preview in Builder
+- [x] Add RSVP form section to Builder PreviewContent (matching InvitationView RsvpSection visually)
+- [x] Show deadline countdown in preview if rsvpDeadline is set
+- [x] Show "Responses are now closed" state if deadline has passed in preview
+
+## Fix: Mobile CSV/Clear Toolbar
+- [x] Make the CSV/Clear toolbar wrap on small screens (flexWrap + full-width buttons on mobile)

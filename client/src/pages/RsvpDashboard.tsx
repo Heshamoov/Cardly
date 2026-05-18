@@ -537,7 +537,7 @@ export default function RsvpDashboard() {
                   >
                     {/* CSV download bar + Clear Responses */}
                     {!detailLoading && detail && (
-                      <div style={{ padding: "10px 16px", borderBottom: "1px solid #D4AF3722", display: "flex", justifyContent: "space-between", alignItems: "center", flexDirection: isAr ? "row-reverse" : "row", gap: 8 }}>
+                      <div style={{ padding: "10px 16px", borderBottom: "1px solid #D4AF3722", display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", flexDirection: isAr ? "row-reverse" : "row", gap: 8 }}>
                         {/* Download CSV */}
                         {detail.responses.length > 0 && (
                           <button
@@ -568,8 +568,8 @@ export default function RsvpDashboard() {
                         {/* Clear Responses */}
                         {detail.responses.length > 0 && (
                           confirmClear === inv.slug ? (
-                            <div style={{ display: "flex", alignItems: "center", gap: 6, flexDirection: isAr ? "row-reverse" : "row" }}>
-                              <span style={{ fontFamily: bodyFont, fontSize: 11, color: "#ef4444", opacity: 0.8 }}>{t.clearConfirm}</span>
+                            <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 6, flexDirection: isAr ? "row-reverse" : "row" }}>
+                              <span style={{ fontFamily: bodyFont, fontSize: 11, color: "#ef4444", opacity: 0.8, flex: "1 1 auto", minWidth: 0 }}>{t.clearConfirm}</span>
                               <button
                                 onClick={() => { setClearingSlug(inv.slug); clearMutation.mutate({ slug: inv.slug }); }}
                                 disabled={clearingSlug === inv.slug}

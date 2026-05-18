@@ -34,6 +34,8 @@ interface InvitationData {
   hostingLine?: string;
   arHostingLine?: string;
   rsvpDeadline?: string; // ISO date string YYYY-MM-DD
+  scriptFont?: string; // font for names & hosting line
+  bodyFontChoice?: string; // font for welcome message & body text
 }
 
 const ENVELOPE_STYLES = [
@@ -170,6 +172,8 @@ const defaultData: InvitationData = {
   hostingLine: "",
   arHostingLine: "",
   rsvpDeadline: "",
+  scriptFont: "Cormorant Garamond",
+  bodyFontChoice: "Lato",
   sections: {
     names: true,
     date: true,
@@ -415,6 +419,133 @@ function MessageSuggestionDropdown({ lang, onSelect }: { lang: "en" | "ar"; onSe
           ))}
         </div>
       )}
+    </div>
+  );
+}
+
+// ── Font options ────────────────────────────────────────────────────────────
+const SCRIPT_FONTS_EN = [
+  { value: "Cormorant Garamond", label: "Cormorant Garamond", preview: "Cormorant Garamond" },
+  { value: "Great Vibes", label: "Great Vibes", preview: "Great Vibes" },
+  { value: "Alex Brush", label: "Alex Brush", preview: "Alex Brush" },
+  { value: "Playfair Display", label: "Playfair Display", preview: "Playfair Display" },
+  { value: "Cinzel", label: "Cinzel", preview: "Cinzel" },
+  { value: "IM Fell English", label: "IM Fell English", preview: "IM Fell English" },
+  { value: "Libre Baskerville", label: "Libre Baskerville", preview: "Libre Baskerville" },
+];
+
+const SCRIPT_FONTS_AR = [
+  { value: "Amiri", label: "أميري", preview: "أميري" },
+  { value: "Scheherazade New", label: "شهرزاد", preview: "شهرزاد" },
+  { value: "Reem Kufi", label: "ريم كوفي", preview: "ريم كوفي" },
+  { value: "Noto Naskh Arabic", label: "نوتو نسخ", preview: "نوتو نسخ" },
+  { value: "Lateef", label: "لطيف", preview: "لطيف" },
+];
+
+const BODY_FONTS_EN = [
+  { value: "Lato", label: "Lato" },
+  { value: "Montserrat", label: "Montserrat" },
+  { value: "Cormorant Garamond", label: "Cormorant Garamond" },
+  { value: "Playfair Display", label: "Playfair Display" },
+  { value: "Libre Baskerville", label: "Libre Baskerville" },
+];
+
+const BODY_FONTS_AR = [
+  { value: "Noto Naskh Arabic", label: "نوتو نسخ" },
+  { value: "Amiri", label: "أميري" },
+  { value: "Scheherazade New", label: "شهرزاد" },
+  { value: "Reem Kufi", label: "ريم كوفي" },
+];
+
+function TypographySection({
+  data,
+  set,
+  formLang,
+}: {
+  data: InvitationData;
+  set: (field: keyof InvitationData, value: string | number) => void;
+  formLang: "en" | "ar";
+}) {
+  const isAr = formLang === "ar";
+  const scriptFonts = isAr ? SCRIPT_FONTS_AR : SCRIPT_FONTS_EN;
+  const bodyFonts = isAr ? BODY_FONTS_AR : BODY_FONTS_EN;
+  const currentScript = data.scriptFont ?? (isAr ? "Amiri" : "Cormorant Garamond");
+  const currentBody = data.bodyFontChoice ?? (isAr ? "Noto Naskh Arabic" : "Lato");
+
+  return (
+    <div className="section-card">
+      <div className="flex items-center justify-between mb-3">
+        <span
+          className="font-sans text-xs uppercase tracking-widest text-gold opacity-80"
+          style={isAr ? { fontFamily: ARABIC_FONT, textTransform: "none" } : {}}
+        >
+          {isAr ? "الخطوط" : "TYPOGRAPHY"}
+        </span>
+      </div>
+
+      {/* Script font — names & hosting line */}
+      <div className="mb-4">
+        <label
+          className="font-sans text-xs opacity-50 block mb-2"
+          style={isAr ? { fontFamily: ARABIC_FONT } : {}}
+        >
+          {isAr ? "خط الأسماء وسطر الاستضافة" : "Names & Hosting Line font"}
+        </label>
+        <div className="flex flex-col gap-2">
+          {scriptFonts.map((f) => (
+            <button
+              key={f.value}
+              onClick={() => set("scriptFont", f.value)}
+              className={`w-full text-left px-3 py-2 rounded-lg border transition-all ${
+                currentScript === f.value
+                  ? "border-gold bg-gold/10 text-gold"
+                  : "border-white/10 text-white/60 hover:border-gold/40"
+              }`}
+              style={{ fontFamily: `'${f.value}', serif`, fontSize: "1.1rem" }}
+            >
+              {isAr ? "سامي وهند" : "Sami & Hend"}
+              <span
+                className="block text-xs opacity-50 mt-0.5"
+                style={{ fontFamily: "inherit", fontSize: "0.7rem" }}
+              >
+                {f.label}
+              </span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Body font — welcome message */}
+      <div>
+        <label
+          className="font-sans text-xs opacity-50 block mb-2"
+          style={isAr ? { fontFamily: ARABIC_FONT } : {}}
+        >
+          {isAr ? "خط رسالة الترحيب" : "Welcome message font"}
+        </label>
+        <div className="flex flex-col gap-2">
+          {bodyFonts.map((f) => (
+            <button
+              key={f.value}
+              onClick={() => set("bodyFontChoice", f.value)}
+              className={`w-full text-left px-3 py-2 rounded-lg border transition-all ${
+                currentBody === f.value
+                  ? "border-gold bg-gold/10 text-gold"
+                  : "border-white/10 text-white/60 hover:border-gold/40"
+              }`}
+              style={{ fontFamily: `'${f.value}', sans-serif`, fontSize: "0.95rem" }}
+            >
+              {isAr ? "نص الرسالة" : "Welcome message text"}
+              <span
+                className="block text-xs opacity-50 mt-0.5"
+                style={{ fontFamily: "inherit", fontSize: "0.7rem" }}
+              >
+                {f.label}
+              </span>
+            </button>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
@@ -1317,6 +1448,9 @@ export default function Builder() {
           </p>
         </SectionCard>
 
+        {/* ── Section: Typography ── */}
+        <TypographySection data={data} set={set} formLang={formLang} />
+
         {/* ── Section: Music ── */}
         <MusicSection data={data} set={set} formLang={formLang} uploadMusicMutation={uploadMusicMutation} />
 
@@ -1702,7 +1836,9 @@ function FloatingPetals() {
 function PreviewContent({ data, lang = "en", onToggleLang }: { data: InvitationData; lang?: Lang; onToggleLang?: () => void; }) {
   const t = translations[lang];
   const isRtl = lang === "ar";
-  const bodyFont = isRtl ? ARABIC_FONT : undefined;
+  const scriptFont = data.scriptFont ?? (isRtl ? "Amiri" : "Cormorant Garamond");
+  const bodyFontChoice = data.bodyFontChoice ?? (isRtl ? "Noto Naskh Arabic" : "Lato");
+  const bodyFont = isRtl ? (data.bodyFontChoice ?? ARABIC_FONT) : (data.bodyFontChoice ?? undefined);
 
   // Use Arabic content when lang=ar, fall back to English if Arabic not filled in
   const brideName = isRtl
@@ -1771,18 +1907,18 @@ function PreviewContent({ data, lang = "en", onToggleLang }: { data: InvitationD
       {data.sections.names && (
         <div className="invitation-section stagger" style={{ paddingTop: 12, paddingBottom: 8 }}>
           {data.sections.showHostingLine !== false && (
-            <p className="font-sans text-xs uppercase tracking-widest text-gold opacity-70 animate-fade-in-up" style={{ fontFamily: bodyFont, whiteSpace: "pre-line" }}>
+            <p className="font-sans text-xs uppercase tracking-widest text-gold opacity-70 animate-fade-in-up" style={{ fontFamily: `'${scriptFont}', serif`, whiteSpace: "pre-line" }}>
               {(isRtl ? (data.arHostingLine || t.togetherWith) : (data.hostingLine || t.togetherWith))}
             </p>
           )}
           <div className="my-2 animate-fade-in-up">
-            <h1 className="font-script gold-shimmer leading-tight" style={{ fontSize: `calc(clamp(2.5rem, 12vw, 3.5rem) * ${fontScale})` }}>
+            <h1 className="gold-shimmer leading-tight" style={{ fontFamily: `'${scriptFont}', serif`, fontSize: `calc(clamp(2.5rem, 12vw, 3.5rem) * ${fontScale})` }}>
               {groomName || "Groom"}
             </h1>
-            <p className="font-serif italic text-gold opacity-60 my-1" style={{ fontSize: `calc(1.5rem * ${fontScale})` }}>
+            <p className="font-serif italic text-gold opacity-60 my-1" style={{ fontFamily: `'${scriptFont}', serif`, fontSize: `calc(1.5rem * ${fontScale})` }}>
               &amp;
             </p>
-            <h1 className="font-script gold-shimmer leading-tight" style={{ fontSize: `calc(clamp(2.5rem, 12vw, 3.5rem) * ${fontScale})` }}>
+            <h1 className="gold-shimmer leading-tight" style={{ fontFamily: `'${scriptFont}', serif`, fontSize: `calc(clamp(2.5rem, 12vw, 3.5rem) * ${fontScale})` }}>
               {brideName || "Bride"}
             </h1>
           </div>
@@ -1790,7 +1926,7 @@ function PreviewContent({ data, lang = "en", onToggleLang }: { data: InvitationD
             <span className="text-gold text-lg">✦</span>
           </div>
           {data.sections.showSubHeadline !== false && (
-            <p className="font-serif italic opacity-60 mt-1 animate-fade-in-up" style={{ fontFamily: bodyFont, fontSize: `calc(clamp(1.05rem, 3.5vw, 1.2rem) * ${fontScale})` }}>
+            <p className="font-serif italic opacity-60 mt-1 animate-fade-in-up" style={{ fontFamily: `'${bodyFontChoice}', sans-serif`, fontSize: `calc(clamp(1.05rem, 3.5vw, 1.2rem) * ${fontScale})` }}>
               {(isRtl ? (data.arSubHeadline || t.requestPleasure) : (data.subHeadline || t.requestPleasure))}
             </p>
           )}
@@ -1910,6 +2046,101 @@ function PreviewContent({ data, lang = "en", onToggleLang }: { data: InvitationD
               {t.getDirections}
             </a>
           )}
+        </div>
+      )}
+
+      {/* RSVP Preview */}
+      {data.sections.rsvp && (
+        <div className="invitation-section py-6">
+          <div className="divider-ornament mb-3">
+            <span className="text-gold text-sm">❧</span>
+          </div>
+          <p className="font-sans uppercase tracking-widest text-gold opacity-60 mb-4" style={{ fontFamily: bodyFont, fontSize: `calc(clamp(1.1rem, 4vw, 1.3rem) * ${fontScale})` }}>
+            {isRtl ? "تأكيد الحضور" : "RSVP"}
+          </p>
+          {data.rsvpDeadline && (() => {
+            const deadline = new Date(data.rsvpDeadline);
+            const now = new Date();
+            const passed = now > deadline;
+            const diffMs = deadline.getTime() - now.getTime();
+            const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+            return (
+              <div style={{ marginBottom: 16 }}>
+                <p style={{ fontFamily: bodyFont, fontSize: 13, color: theme.accent, opacity: 0.8, marginBottom: 4 }}>
+                  {isRtl ? `يُرجى التأكيد قبل ${deadline.toLocaleDateString("ar-AE")}` : `Please confirm before ${deadline.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}`}
+                </p>
+                {!passed && diffDays > 0 && (
+                  <p style={{ fontFamily: bodyFont, fontSize: 12, color: theme.text, opacity: 0.5 }}>
+                    {isRtl ? `متبقي ${diffDays} يوم` : `${diffDays} day${diffDays !== 1 ? "s" : ""} remaining`}
+                  </p>
+                )}
+                {passed && (
+                  <p style={{ fontFamily: bodyFont, fontSize: 12, color: theme.accentSecondary, opacity: 0.8 }}>
+                    {isRtl ? "تم إغلاق باب التأكيد" : "Responses are now closed"}
+                  </p>
+                )}
+              </div>
+            );
+          })()}
+          <div
+            style={{
+              background: theme.bgSecondary,
+              borderRadius: 16,
+              padding: "24px 20px",
+              border: `1px solid ${theme.accent}33`,
+              textAlign: isRtl ? "right" : "left",
+            }}
+          >
+            <div style={{ marginBottom: 14 }}>
+              <label style={{ display: "block", fontSize: 11, color: theme.accent, opacity: 0.7, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 6, fontFamily: bodyFont }}>
+                {isRtl ? "اسمك" : "Your Name"}
+              </label>
+              <div style={{ background: theme.bg, border: `1px solid ${theme.accent}44`, borderRadius: 8, padding: "10px 14px", color: theme.text, opacity: 0.4, fontSize: 14, fontFamily: bodyFont }}>
+                {isRtl ? "اكتب اسمك هنا" : "Enter your name"}
+              </div>
+            </div>
+            <div style={{ marginBottom: 14 }}>
+              <label style={{ display: "block", fontSize: 11, color: theme.accent, opacity: 0.7, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 6, fontFamily: bodyFont }}>
+                {isRtl ? "رقم الجوال" : "Mobile Number"}
+              </label>
+              <div style={{ background: theme.bg, border: `1px solid ${theme.accent}44`, borderRadius: 8, padding: "10px 14px", color: theme.text, opacity: 0.4, fontSize: 14, fontFamily: bodyFont }}>
+                {isRtl ? "رقم الجوال" : "e.g. 050 123 4567"}
+              </div>
+            </div>
+            <div style={{ marginBottom: 20 }}>
+              <label style={{ display: "block", fontSize: 11, color: theme.accent, opacity: 0.7, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 10, fontFamily: bodyFont }}>
+                {isRtl ? "هل ستحضر؟" : "Will you attend?"}
+              </label>
+              <div style={{ display: "flex", gap: 10 }}>
+                <div style={{ flex: 1, padding: "10px 0", borderRadius: 8, border: `1px solid ${theme.accent}66`, textAlign: "center", color: theme.accent, fontSize: 13, fontFamily: bodyFont }}>
+                  {isRtl ? "✅ سأحضر" : "✅ Attending"}
+                </div>
+                <div style={{ flex: 1, padding: "10px 0", borderRadius: 8, border: `1px solid ${theme.accent}33`, textAlign: "center", color: theme.text, opacity: 0.5, fontSize: 13, fontFamily: bodyFont }}>
+                  {isRtl ? "❌ لن أحضر" : "❌ Can't Attend"}
+                </div>
+              </div>
+            </div>
+            <div
+              style={{
+                display: "block",
+                width: "100%",
+                padding: "14px 0",
+                borderRadius: 50,
+                background: `linear-gradient(135deg, ${theme.accentDark}, ${theme.accent})`,
+                color: theme.buttonText,
+                fontFamily: bodyFont ?? "'Lato', sans-serif",
+                fontSize: 13,
+                fontWeight: 700,
+                letterSpacing: "0.08em",
+                textAlign: "center",
+                textTransform: "uppercase",
+                boxShadow: `0 4px 16px ${theme.accent}44`,
+                opacity: 0.85,
+              }}
+            >
+              {isRtl ? "إرسال التأكيد" : "Send Reply"}
+            </div>
+          </div>
         </div>
       )}
 
