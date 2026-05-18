@@ -1075,11 +1075,13 @@ export default function Builder() {
               </div>
               <div className="mt-3">
                 <label className="font-sans text-xs opacity-50 block mb-1">Hosting line (above names)</label>
-                <input
+                <textarea
                   className="wedding-input"
+                  rows={2}
                   placeholder="Together with their families"
                   value={data.hostingLine ?? ""}
                   onChange={(e) => set("hostingLine", e.target.value)}
+                  style={{ resize: "vertical" }}
                 />
               </div>
               <div className="mt-3">
@@ -1118,13 +1120,14 @@ export default function Builder() {
               </div>
               <div className="mt-3">
                 <label className="font-sans text-xs opacity-50 block mb-1" style={{ fontFamily: `'Noto Naskh Arabic', 'Amiri', serif` }}>سطر الاستضافة (فوق الأسماء)</label>
-                <input
+                <textarea
                   className="wedding-input"
                   dir="rtl"
+                  rows={2}
                   placeholder="بمشاركة عائلتيهما"
                   value={data.arHostingLine ?? ""}
                   onChange={(e) => set("arHostingLine", e.target.value)}
-                  style={{ fontFamily: `'Noto Naskh Arabic', 'Amiri', serif` }}
+                  style={{ resize: "vertical", fontFamily: `'Noto Naskh Arabic', 'Amiri', serif` }}
                 />
               </div>
               <div className="mt-3">
@@ -1720,7 +1723,7 @@ function PreviewContent({ data, lang = "en", onToggleLang }: { data: InvitationD
       {/* Hero / Names */}
       {data.sections.names && (
         <div className="invitation-section stagger" style={{ paddingTop: 12, paddingBottom: 8 }}>
-          <p className="font-sans text-xs uppercase tracking-widest text-gold opacity-70 animate-fade-in-up" style={{ fontFamily: bodyFont }}>
+          <p className="font-sans text-xs uppercase tracking-widest text-gold opacity-70 animate-fade-in-up" style={{ fontFamily: bodyFont, whiteSpace: "pre-line" }}>
             {(isRtl ? (data.arHostingLine || t.togetherWith) : (data.hostingLine || t.togetherWith))}
           </p>
           <div className="my-2 animate-fade-in-up">

@@ -579,7 +579,7 @@ function InvitationPage({ data, slug, lang, onToggleLang, onBackToEnvelope, isMu
               <div className="w-24 h-px bg-gradient-to-r from-transparent via-gold to-transparent" />
             </div>
 
-            <p className="invite-label text-gold opacity-60 animate-fade-in-up" style={{ fontFamily: bodyFont }}>
+            <p className="invite-label text-gold opacity-60 animate-fade-in-up" style={{ fontFamily: bodyFont, whiteSpace: "pre-line" }}>
               {(isRtl ? (data.arHostingLine || t.togetherWith) : (data.hostingLine || t.togetherWith))}
             </p>
 
