@@ -323,3 +323,9 @@
 
 ## Fix: Mobile CSV/Clear Toolbar
 - [x] Make the CSV/Clear toolbar wrap on small screens (flexWrap + full-width buttons on mobile)
+
+## Fix: Preview Toolbar Redesign
+- [x] Replace ENVELOPE and EDIT text labels with icons only (💌 and ✏️)
+- [x] Add compact inline font picker (script font) to the preview toolbar
+- [x] Font picker updates preview in real time when creator selects a font
+- [x] Remove TYPOGRAPHY section card from Builder form

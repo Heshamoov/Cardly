@@ -457,99 +457,6 @@ const BODY_FONTS_AR = [
   { value: "Reem Kufi", label: "ريم كوفي" },
 ];
 
-function TypographySection({
-  data,
-  set,
-  formLang,
-}: {
-  data: InvitationData;
-  set: (field: keyof InvitationData, value: string | number) => void;
-  formLang: "en" | "ar";
-}) {
-  const isAr = formLang === "ar";
-  const scriptFonts = isAr ? SCRIPT_FONTS_AR : SCRIPT_FONTS_EN;
-  const bodyFonts = isAr ? BODY_FONTS_AR : BODY_FONTS_EN;
-  const currentScript = data.scriptFont ?? (isAr ? "Amiri" : "Cormorant Garamond");
-  const currentBody = data.bodyFontChoice ?? (isAr ? "Noto Naskh Arabic" : "Lato");
-
-  return (
-    <div className="section-card">
-      <div className="flex items-center justify-between mb-3">
-        <span
-          className="font-sans text-xs uppercase tracking-widest text-gold opacity-80"
-          style={isAr ? { fontFamily: ARABIC_FONT, textTransform: "none" } : {}}
-        >
-          {isAr ? "الخطوط" : "TYPOGRAPHY"}
-        </span>
-      </div>
-
-      {/* Script font — names & hosting line */}
-      <div className="mb-4">
-        <label
-          className="font-sans text-xs opacity-50 block mb-2"
-          style={isAr ? { fontFamily: ARABIC_FONT } : {}}
-        >
-          {isAr ? "خط الأسماء وسطر الاستضافة" : "Names & Hosting Line font"}
-        </label>
-        <div className="flex flex-col gap-2">
-          {scriptFonts.map((f) => (
-            <button
-              key={f.value}
-              onClick={() => set("scriptFont", f.value)}
-              className={`w-full text-left px-3 py-2 rounded-lg border transition-all ${
-                currentScript === f.value
-                  ? "border-gold bg-gold/10 text-gold"
-                  : "border-white/10 text-white/60 hover:border-gold/40"
-              }`}
-              style={{ fontFamily: `'${f.value}', serif`, fontSize: "1.1rem" }}
-            >
-              {isAr ? "سامي وهند" : "Sami & Hend"}
-              <span
-                className="block text-xs opacity-50 mt-0.5"
-                style={{ fontFamily: "inherit", fontSize: "0.7rem" }}
-              >
-                {f.label}
-              </span>
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Body font — welcome message */}
-      <div>
-        <label
-          className="font-sans text-xs opacity-50 block mb-2"
-          style={isAr ? { fontFamily: ARABIC_FONT } : {}}
-        >
-          {isAr ? "خط رسالة الترحيب" : "Welcome message font"}
-        </label>
-        <div className="flex flex-col gap-2">
-          {bodyFonts.map((f) => (
-            <button
-              key={f.value}
-              onClick={() => set("bodyFontChoice", f.value)}
-              className={`w-full text-left px-3 py-2 rounded-lg border transition-all ${
-                currentBody === f.value
-                  ? "border-gold bg-gold/10 text-gold"
-                  : "border-white/10 text-white/60 hover:border-gold/40"
-              }`}
-              style={{ fontFamily: `'${f.value}', sans-serif`, fontSize: "0.95rem" }}
-            >
-              {isAr ? "نص الرسالة" : "Welcome message text"}
-              <span
-                className="block text-xs opacity-50 mt-0.5"
-                style={{ fontFamily: "inherit", fontSize: "0.7rem" }}
-              >
-                {f.label}
-              </span>
-            </button>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-
 // ── Genre sample tracks ──────────────────────────────────────────────────────
 const MUSIC_GENRES = [
   { id: "western-classical", name: "Western Classical", nameAr: "كلاسيكي غربي", emoji: "🎻", url: "/manus-storage/music-western-classical_fe8f1e6b.mp3" },
@@ -933,7 +840,7 @@ export default function Builder() {
 
   // ── Preview mode ──────────────────────────────────────────────────────────
   if (previewing) {
-    return <PreviewWithEnvelope data={data} onEdit={() => setPreviewing(false)} onPublish={handlePublish} isPublishing={createMutation.isPending} onFontScaleChange={(scale) => set("fontScale", scale)} initialLang={formLang} />;
+    return <PreviewWithEnvelope data={data} onEdit={() => setPreviewing(false)} onPublish={handlePublish} isPublishing={createMutation.isPending} onFontScaleChange={(scale) => set("fontScale", scale)} onScriptFontChange={(font) => set("scriptFont", font)} initialLang={formLang} />;
   }
 
   // ── Builder mode ──────────────────────────────────────────────────────────
@@ -1448,9 +1355,6 @@ export default function Builder() {
           </p>
         </SectionCard>
 
-        {/* ── Section: Typography ── */}
-        <TypographySection data={data} set={set} formLang={formLang} />
-
         {/* ── Section: Music ── */}
         <MusicSection data={data} set={set} formLang={formLang} uploadMusicMutation={uploadMusicMutation} />
 
@@ -1479,6 +1383,23 @@ export default function Builder() {
   );
 }
 
+
+// Shared toolbar button style
+const btnTool: React.CSSProperties = {
+  fontFamily: "'Lato',sans-serif",
+  fontSize: 11,
+  fontWeight: 700,
+  lineHeight: 1,
+  padding: '5px 9px',
+  borderRadius: 20,
+  border: '1px solid rgba(201,168,76,0.5)',
+  background: 'transparent',
+  color: 'rgba(201,168,76,0.9)',
+  cursor: 'pointer',
+  flexShrink: 0,
+  whiteSpace: 'nowrap' as const,
+};
+
 // ── Preview With Envelope (full guest experience in preview mode) ────────────
 function PreviewWithEnvelope({
   data,
@@ -1486,6 +1407,7 @@ function PreviewWithEnvelope({
   onPublish,
   isPublishing,
   onFontScaleChange,
+  onScriptFontChange,
   initialLang = "en",
 }: {
   data: InvitationData;
@@ -1493,6 +1415,7 @@ function PreviewWithEnvelope({
   onPublish: () => void;
   isPublishing: boolean;
   onFontScaleChange: (scale: number) => void;
+  onScriptFontChange: (font: string) => void;
   initialLang?: Lang;
 }) {
   const [animStage, setAnimStage] = useState<"idle" | "opening" | "expand" | "done">("idle");
@@ -1593,69 +1516,65 @@ function PreviewWithEnvelope({
   return (
     <div className="builder-page" style={{ position: "relative" }}>
       {/* Floating banner — compact mobile-first bar */}
-      <div className="fixed top-0 left-0 right-0 z-50" style={{ background: "rgba(10,8,24,0.88)", borderBottom: "1px solid rgba(201,168,76,0.2)", backdropFilter: "blur(10px)" }}>
-        <div style={{ maxWidth: 480, margin: "0 auto", padding: "6px 12px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
-          {/* Left side: font size control or preview label */}
-          {showInvitation ? (
-            <div style={{ display: "flex", alignItems: "center", gap: 6, flex: 1 }}>
-              {/* Font size label */}
-              <span style={{ fontFamily: "'Lato', sans-serif", fontSize: 9, letterSpacing: "0.1em", color: "rgba(201,168,76,0.6)", textTransform: "uppercase", whiteSpace: "nowrap" }}>Font</span>
-              {/* A- button */}
-              <button
-                onClick={() => onFontScaleChange(Math.max(0.8, Math.round((data.fontScale - 0.05) * 100) / 100))}
-                style={{ fontFamily: "'Lato', sans-serif", fontSize: 13, fontWeight: 700, lineHeight: 1, width: 24, height: 24, borderRadius: 6, border: "1px solid rgba(201,168,76,0.5)", background: "transparent", color: "rgba(201,168,76,0.85)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}
-                title="Decrease font size"
-              >A−</button>
-              {/* Percentage indicator */}
-              <span style={{ fontFamily: "'Lato', sans-serif", fontSize: 9, letterSpacing: "0.05em", color: "rgba(201,168,76,0.55)", whiteSpace: "nowrap", minWidth: 28, textAlign: "center" }}>{Math.round(data.fontScale * 100)}%</span>
-              {/* A+ button */}
-              <button
-                onClick={() => onFontScaleChange(Math.min(1.4, Math.round((data.fontScale + 0.05) * 100) / 100))}
-                style={{ fontFamily: "'Lato', sans-serif", fontSize: 13, fontWeight: 700, lineHeight: 1, width: 24, height: 24, borderRadius: 6, border: "1px solid rgba(201,168,76,0.5)", background: "transparent", color: "rgba(201,168,76,0.85)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}
-                title="Increase font size"
-              >A+</button>
-            </div>
-          ) : (
-            <span style={{ fontFamily: "'Lato', sans-serif", fontSize: 10, letterSpacing: "0.15em", color: "rgba(201,168,76,0.8)", textTransform: "uppercase" }}>Preview</span>
-          )}
-          <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-            {/* EN/AR language toggle — always visible in preview */}
+      <div className="fixed top-0 left-0 right-0 z-50" style={{ background: "rgba(10,8,24,0.92)", borderBottom: "1px solid rgba(201,168,76,0.2)", backdropFilter: "blur(10px)" }}>
+        <div style={{ maxWidth: 480, margin: "0 auto", padding: "6px 10px", display: "flex", alignItems: "center", gap: 6 }}>
+
+          {/* ── Left: font size A−/A+ ── */}
+          <div style={{ display: "flex", alignItems: "center", gap: 4, flexShrink: 0 }}>
             <button
-              onClick={toggleLang}
+              onClick={() => onFontScaleChange(Math.max(0.8, Math.round((data.fontScale - 0.05) * 100) / 100))}
+              title="Decrease font size"
+              style={btnTool}
+            >A−</button>
+            <span style={{ fontSize: 9, color: "rgba(201,168,76,0.5)", minWidth: 26, textAlign: "center", fontFamily: "'Lato',sans-serif" }}>{Math.round(data.fontScale * 100)}%</span>
+            <button
+              onClick={() => onFontScaleChange(Math.min(1.4, Math.round((data.fontScale + 0.05) * 100) / 100))}
+              title="Increase font size"
+              style={btnTool}
+            >A+</button>
+          </div>
+
+          {/* ── Centre: font picker ── */}
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <select
+              value={data.scriptFont ?? (lang === "ar" ? "Amiri" : "Cormorant Garamond")}
+              onChange={(e) => onScriptFontChange(e.target.value)}
               style={{
-                fontFamily: lang === "ar" ? "'Noto Naskh Arabic', serif" : "'Lato', sans-serif",
-                fontSize: 11,
-                letterSpacing: lang === "ar" ? 0 : "0.08em",
-                padding: "4px 10px",
+                width: "100%",
+                background: "rgba(201,168,76,0.08)",
+                border: "1px solid rgba(201,168,76,0.35)",
                 borderRadius: 20,
-                border: "1px solid rgba(201,168,76,0.6)",
-                background: "rgba(201,168,76,0.12)",
-                color: "rgba(201,168,76,1)",
+                color: "rgba(201,168,76,0.95)",
+                fontSize: 11,
+                padding: "4px 10px",
+                fontFamily: `'${data.scriptFont ?? (lang === "ar" ? "Amiri" : "Cormorant Garamond")}', serif`,
                 cursor: "pointer",
-                fontWeight: 600,
-                whiteSpace: "nowrap",
+                outline: "none",
+                appearance: "none",
+                textAlign: "center",
               }}
             >
+              {(lang === "ar" ? SCRIPT_FONTS_AR : SCRIPT_FONTS_EN).map((f) => (
+                <option key={f.value} value={f.value} style={{ fontFamily: `'${f.value}', serif`, background: "#0a0818", color: "#c9a84c" }}>
+                  {f.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* ── Right: EN/AR · 💌 · ✏️ · Publish ── */}
+          <div style={{ display: "flex", gap: 5, alignItems: "center", flexShrink: 0 }}>
+            <button onClick={toggleLang} style={{ ...btnTool, fontFamily: lang === "ar" ? "'Noto Naskh Arabic',serif" : "'Lato',sans-serif", minWidth: 32 }}>
               {lang === "en" ? "عربي" : "EN"}
             </button>
             {showInvitation && (
-              <button
-                onClick={resetEnvelope}
-                style={{ fontFamily: "'Lato', sans-serif", fontSize: 10, letterSpacing: "0.1em", padding: "5px 10px", borderRadius: 20, border: "1px solid rgba(201,168,76,0.5)", background: "transparent", color: "rgba(201,168,76,0.9)", cursor: "pointer", textTransform: "uppercase" }}
-              >
-                💌 Envelope
-              </button>
+              <button onClick={resetEnvelope} title="Back to envelope" style={btnTool}>💌</button>
             )}
-            <button
-              onClick={onEdit}
-              style={{ fontFamily: "'Lato', sans-serif", fontSize: 10, letterSpacing: "0.1em", padding: "5px 10px", borderRadius: 20, border: "1px solid rgba(201,168,76,0.5)", background: "transparent", color: "rgba(201,168,76,0.9)", cursor: "pointer", textTransform: "uppercase" }}
-            >
-              ← Edit
-            </button>
+            <button onClick={onEdit} title="Back to editor" style={btnTool}>✏️</button>
             <button
               onClick={onPublish}
               disabled={isPublishing}
-              style={{ fontFamily: "'Lato', sans-serif", fontSize: 10, letterSpacing: "0.1em", padding: "5px 12px", borderRadius: 20, background: "linear-gradient(135deg, #c9a84c, #e8d48b)", color: "#1a1a2e", border: "none", cursor: "pointer", fontWeight: 700, textTransform: "uppercase" }}
+              style={{ fontFamily: "'Lato',sans-serif", fontSize: 10, letterSpacing: "0.1em", padding: "5px 12px", borderRadius: 20, background: "linear-gradient(135deg,#c9a84c,#e8d48b)", color: "#1a1a2e", border: "none", cursor: "pointer", fontWeight: 700, textTransform: "uppercase", flexShrink: 0 }}
             >
               {isPublishing ? "⏳" : "Publish"}
             </button>
