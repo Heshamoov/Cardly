@@ -1524,7 +1524,7 @@ function PreviewWithEnvelope({
 
       {/* Invitation content after envelope opens */}
       {showInvitation && (
-        <div className="mobile-container" style={{ "--font-scale": data.fontScale } as React.CSSProperties}>
+        <div className="mobile-container" style={{ "--font-scale": data.fontScale, paddingTop: 56 } as React.CSSProperties}>
           <PreviewContent data={data} lang={lang} onToggleLang={toggleLang} />
         </div>
       )}
@@ -1695,7 +1695,7 @@ function PreviewContent({ data, lang = "en", onToggleLang }: { data: InvitationD
     >
       {/* Hero / Names */}
       {data.sections.names && (
-        <div className="invitation-section stagger" style={{ paddingTop: 20, paddingBottom: 8 }}>
+        <div className="invitation-section stagger" style={{ paddingTop: 12, paddingBottom: 8 }}>
           <p className="font-sans text-xs uppercase tracking-widest text-gold opacity-70 animate-fade-in-up" style={{ fontFamily: bodyFont }}>
             {t.togetherWith}
           </p>

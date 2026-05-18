@@ -568,11 +568,11 @@ function InvitationPage({ data, slug, lang, onToggleLang, onBackToEnvelope, isMu
         </button>
       )}
 
-      <div className="mobile-container">
+      <div className="mobile-container" style={{ paddingTop: 56 }}>
 
         {/* Hero — Names */}
         {data.sections?.names !== false && (
-          <div className="invitation-section stagger" style={{ paddingTop: 20, paddingBottom: 8 }}>
+          <div className="invitation-section stagger" style={{ paddingTop: 12, paddingBottom: 8 }}>
             <div className="flex justify-center mb-3">
               <div className="w-24 h-px bg-gradient-to-r from-transparent via-gold to-transparent" />
             </div>
