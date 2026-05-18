@@ -42,6 +42,8 @@ const DASH_TRANSLATIONS = {
     clearResponses: "Clear Responses",
     clearing: "Clearing…",
     clearConfirm: "Delete ALL responses for this invitation? This cannot be undone.",
+    copyLink: "Copy Link",
+    linkCopied: "Copied!",
   },
   ar: {
     title: "استجابات الضيوف",
@@ -79,6 +81,8 @@ const DASH_TRANSLATIONS = {
     clearResponses: "مسح الردود",
     clearing: "جارِ المسح…",
     clearConfirm: "حذف جميع ردود هذه الدعوة؟ لا يمكن التراجع عن هذا الإجراء.",
+    copyLink: "نسخ الرابط",
+    linkCopied: "تم النسخ!",
   },
 };
 
@@ -115,6 +119,16 @@ export default function RsvpDashboard() {
   const [duplicatingSlug, setDuplicatingSlug] = useState<string | null>(null);
   const [confirmClear, setConfirmClear] = useState<string | null>(null);
   const [clearingSlug, setClearingSlug] = useState<string | null>(null);
+  const [copiedSlug, setCopiedSlug] = useState<string | null>(null);
+
+  const handleCopyLink = (slug: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const url = `${window.location.origin}/i/${slug}`;
+    navigator.clipboard.writeText(url).then(() => {
+      setCopiedSlug(slug);
+      setTimeout(() => setCopiedSlug(null), 2000);
+    });
+  };
 
   const isAr = lang === "ar";
   const t = DASH_TRANSLATIONS[lang];
@@ -432,6 +446,30 @@ export default function RsvpDashboard() {
                         </div>
                       ))}
                     </div>
+                  </button>
+
+                  {/* Copy Link button */}
+                  <button
+                    onClick={(e) => handleCopyLink(inv.slug, e)}
+                    title={t.copyLink}
+                    style={{
+                      width: 40,
+                      flexShrink: 0,
+                      background: copiedSlug === inv.slug ? "#D4AF3722" : "transparent",
+                      border: `1px solid ${copiedSlug === inv.slug ? "#D4AF37" : "#D4AF3744"}`,
+                      borderRadius: 10,
+                      cursor: "pointer",
+                      color: "#D4AF37",
+                      fontSize: 15,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      transition: "all 0.2s",
+                    }}
+                    onMouseEnter={(e) => { if (copiedSlug !== inv.slug) (e.currentTarget as HTMLButtonElement).style.background = "#D4AF3722"; }}
+                    onMouseLeave={(e) => { if (copiedSlug !== inv.slug) (e.currentTarget as HTMLButtonElement).style.background = "transparent"; }}
+                  >
+                    {copiedSlug === inv.slug ? "✓" : "🔗"}
                   </button>
 
                   {/* Duplicate button */}
