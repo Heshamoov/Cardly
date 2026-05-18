@@ -572,7 +572,7 @@ function InvitationPage({ data, slug, lang, onToggleLang, onBackToEnvelope, isMu
 
         {/* Hero — Names */}
         {data.sections?.names !== false && (
-          <div className="invitation-section pt-6 pb-3 stagger">
+          <div className="invitation-section stagger" style={{ paddingTop: 20, paddingBottom: 8 }}>
             <div className="flex justify-center mb-3">
               <div className="w-24 h-px bg-gradient-to-r from-transparent via-gold to-transparent" />
             </div>

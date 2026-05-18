@@ -1695,7 +1695,7 @@ function PreviewContent({ data, lang = "en", onToggleLang }: { data: InvitationD
     >
       {/* Hero / Names */}
       {data.sections.names && (
-        <div className="invitation-section pt-6 pb-3 stagger">
+        <div className="invitation-section stagger" style={{ paddingTop: 20, paddingBottom: 8 }}>
           <p className="font-sans text-xs uppercase tracking-widest text-gold opacity-70 animate-fade-in-up" style={{ fontFamily: bodyFont }}>
             {t.togetherWith}
           </p>
