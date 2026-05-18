@@ -1070,7 +1070,7 @@ export default function Builder() {
                 </div>
               </div>
               <div className="mt-3">
-                <label className="font-sans text-xs opacity-50 block mb-1">Sub-headline (under names)</label>
+                <label className="font-sans text-xs opacity-50 block mb-1">Welcome message (under names)</label>
                 <textarea
                   className="wedding-input"
                   rows={2}
@@ -1104,7 +1104,7 @@ export default function Builder() {
                 </div>
               </div>
               <div className="mt-3">
-                <label className="font-sans text-xs opacity-50 block mb-1" style={{ fontFamily: `'Noto Naskh Arabic', 'Amiri', serif` }}>العنوان الفرعي (تحت الأسماء)</label>
+                <label className="font-sans text-xs opacity-50 block mb-1" style={{ fontFamily: `'Noto Naskh Arabic', 'Amiri', serif` }}>رسالة الترحيب (تحت الأسماء)</label>
                 <textarea
                   className="wedding-input"
                   dir="rtl"
