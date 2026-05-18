@@ -39,6 +39,9 @@ const DASH_TRANSLATIONS = {
     duplicate: "Duplicate",
     duplicating: "Duplicating…",
     editInBuilder: "Edit in Builder",
+    clearResponses: "Clear Responses",
+    clearing: "Clearing…",
+    clearConfirm: "Delete ALL responses for this invitation? This cannot be undone.",
   },
   ar: {
     title: "استجابات الضيوف",
@@ -73,6 +76,9 @@ const DASH_TRANSLATIONS = {
     duplicate: "نسخ",
     duplicating: "جارِ النسخ…",
     editInBuilder: "تعديل في المنشئ",
+    clearResponses: "مسح الردود",
+    clearing: "جارِ المسح…",
+    clearConfirm: "حذف جميع ردود هذه الدعوة؟ لا يمكن التراجع عن هذا الإجراء.",
   },
 };
 
@@ -107,6 +113,8 @@ export default function RsvpDashboard() {
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const [lang, setLang] = useState<DashLang>("en");
   const [duplicatingSlug, setDuplicatingSlug] = useState<string | null>(null);
+  const [confirmClear, setConfirmClear] = useState<string | null>(null);
+  const [clearingSlug, setClearingSlug] = useState<string | null>(null);
 
   const isAr = lang === "ar";
   const t = DASH_TRANSLATIONS[lang];
@@ -134,6 +142,16 @@ export default function RsvpDashboard() {
     { slug: selectedSlug! },
     { enabled: !!selectedSlug }
   );
+
+  const clearMutation = trpc.rsvp.clearResponses.useMutation({
+    onSuccess: () => {
+      setClearingSlug(null);
+      setConfirmClear(null);
+      utils.rsvp.getAllSlugs.invalidate();
+      utils.rsvp.getBySlug.invalidate({ slug: selectedSlug! });
+    },
+    onError: () => setClearingSlug(null),
+  });
 
   const deleteMutation = trpc.invitations.delete.useMutation({
     onSuccess: () => {
@@ -479,33 +497,82 @@ export default function RsvpDashboard() {
                       overflow: "hidden",
                     }}
                   >
-                    {/* CSV download bar */}
-                    {!detailLoading && detail && detail.responses.length > 0 && (
-                      <div style={{ padding: "10px 16px", borderBottom: "1px solid #D4AF3722", display: "flex", justifyContent: isAr ? "flex-start" : "flex-end" }}>
-                        <button
-                          onClick={() => downloadCsv(detail.responses, inv.title)}
-                          style={{
-                            padding: "6px 16px",
-                            borderRadius: 20,
-                            border: "1px solid #D4AF3766",
-                            background: "transparent",
-                            color: "#D4AF37",
-                            fontFamily: bodyFont,
-                            fontSize: 11,
-                            fontWeight: 700,
-                            letterSpacing: isAr ? 0 : "0.08em",
-                            textTransform: isAr ? "none" : "uppercase",
-                            cursor: "pointer",
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 6,
-                            transition: "all 0.2s",
-                          }}
-                          onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "#D4AF3722"; }}
-                          onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "transparent"; }}
-                        >
-                          ↓ {t.downloadCsv}
-                        </button>
+                    {/* CSV download bar + Clear Responses */}
+                    {!detailLoading && detail && (
+                      <div style={{ padding: "10px 16px", borderBottom: "1px solid #D4AF3722", display: "flex", justifyContent: "space-between", alignItems: "center", flexDirection: isAr ? "row-reverse" : "row", gap: 8 }}>
+                        {/* Download CSV */}
+                        {detail.responses.length > 0 && (
+                          <button
+                            onClick={() => downloadCsv(detail.responses, inv.title)}
+                            style={{
+                              padding: "6px 16px",
+                              borderRadius: 20,
+                              border: "1px solid #D4AF3766",
+                              background: "transparent",
+                              color: "#D4AF37",
+                              fontFamily: bodyFont,
+                              fontSize: 11,
+                              fontWeight: 700,
+                              letterSpacing: isAr ? 0 : "0.08em",
+                              textTransform: isAr ? "none" : "uppercase",
+                              cursor: "pointer",
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 6,
+                              transition: "all 0.2s",
+                            }}
+                            onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "#D4AF3722"; }}
+                            onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "transparent"; }}
+                          >
+                            ↓ {t.downloadCsv}
+                          </button>
+                        )}
+                        {/* Clear Responses */}
+                        {detail.responses.length > 0 && (
+                          confirmClear === inv.slug ? (
+                            <div style={{ display: "flex", alignItems: "center", gap: 6, flexDirection: isAr ? "row-reverse" : "row" }}>
+                              <span style={{ fontFamily: bodyFont, fontSize: 11, color: "#ef4444", opacity: 0.8 }}>{t.clearConfirm}</span>
+                              <button
+                                onClick={() => { setClearingSlug(inv.slug); clearMutation.mutate({ slug: inv.slug }); }}
+                                disabled={clearingSlug === inv.slug}
+                                style={{ padding: "4px 12px", borderRadius: 16, border: "1px solid #ef444488", background: "#ef444422", color: "#ef4444", fontFamily: bodyFont, fontSize: 11, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" }}
+                              >
+                                {clearingSlug === inv.slug ? t.clearing : "✓ " + t.clearResponses}
+                              </button>
+                              <button
+                                onClick={() => setConfirmClear(null)}
+                                style={{ padding: "4px 12px", borderRadius: 16, border: "1px solid #D4AF3744", background: "transparent", color: "#D4AF37", fontFamily: bodyFont, fontSize: 11, cursor: "pointer", whiteSpace: "nowrap" }}
+                              >
+                                {t.cancel}
+                              </button>
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => setConfirmClear(inv.slug)}
+                              style={{
+                                padding: "6px 16px",
+                                borderRadius: 20,
+                                border: "1px solid #ef444444",
+                                background: "transparent",
+                                color: "#ef4444",
+                                fontFamily: bodyFont,
+                                fontSize: 11,
+                                fontWeight: 700,
+                                letterSpacing: isAr ? 0 : "0.08em",
+                                textTransform: isAr ? "none" : "uppercase",
+                                cursor: "pointer",
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 6,
+                                transition: "all 0.2s",
+                              }}
+                              onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "#ef444411"; }}
+                              onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "transparent"; }}
+                            >
+                              ✕ {t.clearResponses}
+                            </button>
+                          )
+                        )}
                       </div>
                     )}
                     {detailLoading ? (

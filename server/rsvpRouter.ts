@@ -76,6 +76,29 @@ export const rsvpRouter = router({
    * grouped with their RSVP summaries. Used by the RSVP dashboard.
    * The global app owner sees ALL invitations (for admin purposes).
    */
+  /**
+   * Protected — deletes all RSVP responses for a given slug.
+   * Only the invitation's creator (or the app owner) can do this.
+   */
+  clearResponses: protectedProcedure
+    .input(z.object({ slug: z.string().min(1).max(16) }))
+    .mutation(async ({ input, ctx }) => {
+      const { getDb } = await import("./db");
+      const { rsvpResponses, invitations } = await import("../drizzle/schema");
+      const { eq } = await import("drizzle-orm");
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+
+      const inv = await db.select().from(invitations).where(eq(invitations.slug, input.slug)).limit(1);
+      if (inv.length === 0) throw new Error("Not found");
+
+      const isOwner = inv[0].ownerOpenId === ctx.user.openId || ctx.user.openId === ENV.ownerOpenId;
+      if (!isOwner) throw new Error("Forbidden");
+
+      await db.delete(rsvpResponses).where(eq(rsvpResponses.invitationSlug, input.slug));
+      return { success: true };
+    }),
+
   getAllSlugs: protectedProcedure.query(async ({ ctx }) => {
     const { getDb } = await import("./db");
     const { rsvpResponses, invitations } = await import("../drizzle/schema");
