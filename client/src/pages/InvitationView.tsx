@@ -579,9 +579,11 @@ function InvitationPage({ data, slug, lang, onToggleLang, onBackToEnvelope, isMu
               <div className="w-24 h-px bg-gradient-to-r from-transparent via-gold to-transparent" />
             </div>
 
-            <p className="invite-label text-gold opacity-60 animate-fade-in-up" style={{ fontFamily: bodyFont, whiteSpace: "pre-line" }}>
-              {(isRtl ? (data.arHostingLine || t.togetherWith) : (data.hostingLine || t.togetherWith))}
-            </p>
+            {data.sections?.showHostingLine !== false && (
+              <p className="invite-label text-gold opacity-60 animate-fade-in-up" style={{ fontFamily: bodyFont, whiteSpace: "pre-line" }}>
+                {(isRtl ? (data.arHostingLine || t.togetherWith) : (data.hostingLine || t.togetherWith))}
+              </p>
+            )}
 
             <div className="my-2 animate-fade-in-up">
               <h1 className="font-script gold-shimmer leading-tight" style={{ fontSize: "clamp(3rem, 14vw, 5rem)" }}>
@@ -599,9 +601,11 @@ function InvitationPage({ data, slug, lang, onToggleLang, onBackToEnvelope, isMu
               <span className="text-gold text-xl">✦</span>
             </div>
 
-            <p className="invite-detail opacity-60 mt-1 animate-fade-in-up" style={{ fontFamily: bodyFont }}>
-              {(isRtl ? (data.arSubHeadline || t.requestPleasure) : (data.subHeadline || t.requestPleasure))}
-            </p>
+            {data.sections?.showSubHeadline !== false && (
+              <p className="invite-detail opacity-60 mt-1 animate-fade-in-up" style={{ fontFamily: bodyFont }}>
+                {(isRtl ? (data.arSubHeadline || t.requestPleasure) : (data.subHeadline || t.requestPleasure))}
+              </p>
+            )}
           </div>
         )}
 

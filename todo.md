@@ -274,3 +274,15 @@
 - [x] Add Hosting Line AR input to Arabic names section in Builder form
 - [x] Wire hostingLine into Builder PreviewContent (replace hardcoded text)
 - [x] Wire hostingLine into InvitationView (replace hardcoded text)
+
+## Feature: Names Section Field Reorder + Per-Field Toggles
+- [x] Add showHostingLine and showSubHeadline boolean flags to InvitationData.sections
+- [x] Update defaultData.sections with showHostingLine: true, showSubHeadline: true
+- [x] Add showHostingLine and showSubHeadline to server Zod schema
+- [x] Reorder Builder form fields: Hosting Line → Groom → Bride → Welcome Message (EN + AR)
+- [x] Add inline toggle (show/hide) next to Hosting Line label in Builder form
+- [x] Add inline toggle (show/hide) next to Welcome Message label in Builder form
+- [x] Wire showHostingLine toggle into Builder PreviewContent (conditionally render hosting line)
+- [x] Wire showSubHeadline toggle into Builder PreviewContent (conditionally render welcome message)
+- [x] Wire showHostingLine toggle into InvitationView (conditionally render hosting line)
+- [x] Wire showSubHeadline toggle into InvitationView (conditionally render welcome message)

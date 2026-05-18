@@ -176,6 +176,8 @@ const defaultData: InvitationData = {
     message: true,
     map: true,
     countdown: true,
+    showHostingLine: true,
+    showSubHeadline: true,
   },
 };
 
@@ -1053,6 +1055,24 @@ export default function Builder() {
         >
           {formLang === "en" ? (
             <>
+              {/* Hosting Line with toggle */}
+              <div className="mb-3">
+                <div className="flex items-center justify-between mb-1">
+                  <label className="font-sans text-xs opacity-50">Hosting line (above names)</label>
+                  <Toggle on={data.sections.showHostingLine !== false} onToggle={() => toggleSection("showHostingLine")} />
+                </div>
+                {data.sections.showHostingLine !== false && (
+                  <textarea
+                    className="wedding-input"
+                    rows={2}
+                    placeholder="Together with their families"
+                    value={data.hostingLine ?? ""}
+                    onChange={(e) => set("hostingLine", e.target.value)}
+                    style={{ resize: "vertical" }}
+                  />
+                )}
+              </div>
+              {/* Groom */}
               <div className="grid grid-cols-2 gap-3 mb-3">
                 <div>
                   <label className="font-sans text-xs opacity-50 block mb-1">Groom's First Name</label>
@@ -1063,6 +1083,7 @@ export default function Builder() {
                   <input className="wedding-input" placeholder="Optional" value={data.groomLastName} onChange={(e) => set("groomLastName", e.target.value)} />
                 </div>
               </div>
+              {/* Bride */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="font-sans text-xs opacity-50 block mb-1">Bride's First Name</label>
@@ -1073,31 +1094,45 @@ export default function Builder() {
                   <input className="wedding-input" placeholder="Optional" value={data.brideLastName} onChange={(e) => set("brideLastName", e.target.value)} />
                 </div>
               </div>
+              {/* Welcome Message with toggle */}
               <div className="mt-3">
-                <label className="font-sans text-xs opacity-50 block mb-1">Hosting line (above names)</label>
-                <textarea
-                  className="wedding-input"
-                  rows={2}
-                  placeholder="Together with their families"
-                  value={data.hostingLine ?? ""}
-                  onChange={(e) => set("hostingLine", e.target.value)}
-                  style={{ resize: "vertical" }}
-                />
-              </div>
-              <div className="mt-3">
-                <label className="font-sans text-xs opacity-50 block mb-1">Welcome message (under names)</label>
-                <textarea
-                  className="wedding-input"
-                  rows={2}
-                  placeholder="request the pleasure of your company at the celebration of their marriage"
-                  value={data.subHeadline ?? ""}
-                  onChange={(e) => set("subHeadline", e.target.value)}
-                  style={{ resize: "vertical" }}
-                />
+                <div className="flex items-center justify-between mb-1">
+                  <label className="font-sans text-xs opacity-50">Welcome message (under names)</label>
+                  <Toggle on={data.sections.showSubHeadline !== false} onToggle={() => toggleSection("showSubHeadline")} />
+                </div>
+                {data.sections.showSubHeadline !== false && (
+                  <textarea
+                    className="wedding-input"
+                    rows={2}
+                    placeholder="request the pleasure of your company at the celebration of their marriage"
+                    value={data.subHeadline ?? ""}
+                    onChange={(e) => set("subHeadline", e.target.value)}
+                    style={{ resize: "vertical" }}
+                  />
+                )}
               </div>
             </>
           ) : (
             <div dir="rtl" style={{ fontFamily: `'Noto Naskh Arabic', 'Amiri', serif` }}>
+              {/* AR Hosting Line with toggle */}
+              <div className="mb-3">
+                <div className="flex items-center justify-between mb-1">
+                  <Toggle on={data.sections.showHostingLine !== false} onToggle={() => toggleSection("showHostingLine")} />
+                  <label className="font-sans text-xs opacity-50" style={{ fontFamily: `'Noto Naskh Arabic', 'Amiri', serif` }}>سطر الاستضافة (فوق الأسماء)</label>
+                </div>
+                {data.sections.showHostingLine !== false && (
+                  <textarea
+                    className="wedding-input"
+                    dir="rtl"
+                    rows={2}
+                    placeholder="بمشاركة عائلتيهما"
+                    value={data.arHostingLine ?? ""}
+                    onChange={(e) => set("arHostingLine", e.target.value)}
+                    style={{ resize: "vertical", fontFamily: `'Noto Naskh Arabic', 'Amiri', serif` }}
+                  />
+                )}
+              </div>
+              {/* AR Groom */}
               <div className="grid grid-cols-2 gap-3 mb-3">
                 <div>
                   <label className="font-sans text-xs opacity-50 block mb-1" style={{ fontFamily: `'Noto Naskh Arabic', 'Amiri', serif` }}>اسم العريس الأول</label>
@@ -1108,6 +1143,7 @@ export default function Builder() {
                   <input className="wedding-input" dir="rtl" style={{ fontFamily: `'Noto Naskh Arabic', 'Amiri', serif` }} placeholder="اختياري" value={data.arGroomLastName ?? ""} onChange={(e) => set("arGroomLastName", e.target.value)} />
                 </div>
               </div>
+              {/* AR Bride */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="font-sans text-xs opacity-50 block mb-1" style={{ fontFamily: `'Noto Naskh Arabic', 'Amiri', serif` }}>اسم العروس الأول</label>
@@ -1118,29 +1154,23 @@ export default function Builder() {
                   <input className="wedding-input" dir="rtl" style={{ fontFamily: `'Noto Naskh Arabic', 'Amiri', serif` }} placeholder="اختياري" value={data.arBrideLastName ?? ""} onChange={(e) => set("arBrideLastName", e.target.value)} />
                 </div>
               </div>
+              {/* AR Welcome Message with toggle */}
               <div className="mt-3">
-                <label className="font-sans text-xs opacity-50 block mb-1" style={{ fontFamily: `'Noto Naskh Arabic', 'Amiri', serif` }}>سطر الاستضافة (فوق الأسماء)</label>
-                <textarea
-                  className="wedding-input"
-                  dir="rtl"
-                  rows={2}
-                  placeholder="بمشاركة عائلتيهما"
-                  value={data.arHostingLine ?? ""}
-                  onChange={(e) => set("arHostingLine", e.target.value)}
-                  style={{ resize: "vertical", fontFamily: `'Noto Naskh Arabic', 'Amiri', serif` }}
-                />
-              </div>
-              <div className="mt-3">
-                <label className="font-sans text-xs opacity-50 block mb-1" style={{ fontFamily: `'Noto Naskh Arabic', 'Amiri', serif` }}>رسالة الترحيب (تحت الأسماء)</label>
-                <textarea
-                  className="wedding-input"
-                  dir="rtl"
-                  rows={2}
-                  placeholder="يطلبان شرف حضوركم لمشاركتهم فرحة زفافهم"
-                  value={data.arSubHeadline ?? ""}
-                  onChange={(e) => set("arSubHeadline", e.target.value)}
-                  style={{ resize: "vertical", fontFamily: `'Noto Naskh Arabic', 'Amiri', serif` }}
-                />
+                <div className="flex items-center justify-between mb-1">
+                  <Toggle on={data.sections.showSubHeadline !== false} onToggle={() => toggleSection("showSubHeadline")} />
+                  <label className="font-sans text-xs opacity-50" style={{ fontFamily: `'Noto Naskh Arabic', 'Amiri', serif` }}>رسالة الترحيب (تحت الأسماء)</label>
+                </div>
+                {data.sections.showSubHeadline !== false && (
+                  <textarea
+                    className="wedding-input"
+                    dir="rtl"
+                    rows={2}
+                    placeholder="يطلبان شرف حضوركم لمشاركتهم فرحة زفافهم"
+                    value={data.arSubHeadline ?? ""}
+                    onChange={(e) => set("arSubHeadline", e.target.value)}
+                    style={{ resize: "vertical", fontFamily: `'Noto Naskh Arabic', 'Amiri', serif` }}
+                  />
+                )}
               </div>
             </div>
           )}
@@ -1723,9 +1753,11 @@ function PreviewContent({ data, lang = "en", onToggleLang }: { data: InvitationD
       {/* Hero / Names */}
       {data.sections.names && (
         <div className="invitation-section stagger" style={{ paddingTop: 12, paddingBottom: 8 }}>
-          <p className="font-sans text-xs uppercase tracking-widest text-gold opacity-70 animate-fade-in-up" style={{ fontFamily: bodyFont, whiteSpace: "pre-line" }}>
-            {(isRtl ? (data.arHostingLine || t.togetherWith) : (data.hostingLine || t.togetherWith))}
-          </p>
+          {data.sections.showHostingLine !== false && (
+            <p className="font-sans text-xs uppercase tracking-widest text-gold opacity-70 animate-fade-in-up" style={{ fontFamily: bodyFont, whiteSpace: "pre-line" }}>
+              {(isRtl ? (data.arHostingLine || t.togetherWith) : (data.hostingLine || t.togetherWith))}
+            </p>
+          )}
           <div className="my-2 animate-fade-in-up">
             <h1 className="font-script gold-shimmer leading-tight" style={{ fontSize: `calc(clamp(2.5rem, 12vw, 3.5rem) * ${fontScale})` }}>
               {groomName || "Groom"}
@@ -1740,9 +1772,11 @@ function PreviewContent({ data, lang = "en", onToggleLang }: { data: InvitationD
           <div className="divider-ornament" style={{ margin: "6px 0" }}>
             <span className="text-gold text-lg">✦</span>
           </div>
-          <p className="font-serif italic opacity-60 mt-1 animate-fade-in-up" style={{ fontFamily: bodyFont, fontSize: `calc(clamp(1.05rem, 3.5vw, 1.2rem) * ${fontScale})` }}>
-            {(isRtl ? (data.arSubHeadline || t.requestPleasure) : (data.subHeadline || t.requestPleasure))}
-          </p>
+          {data.sections.showSubHeadline !== false && (
+            <p className="font-serif italic opacity-60 mt-1 animate-fade-in-up" style={{ fontFamily: bodyFont, fontSize: `calc(clamp(1.05rem, 3.5vw, 1.2rem) * ${fontScale})` }}>
+              {(isRtl ? (data.arSubHeadline || t.requestPleasure) : (data.subHeadline || t.requestPleasure))}
+            </p>
+          )}
         </div>
       )}
 
