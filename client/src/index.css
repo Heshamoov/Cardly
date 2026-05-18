@@ -591,3 +591,27 @@ html, body {
   line-height: 1.7;
   font-weight: 400;
 }
+
+/* ── Arabic / RTL font overrides ──────────────────────────────────────────── */
+/* When the invitation is in Arabic mode (dir="rtl"), every invite-* class     */
+/* must use a proper connected Arabic font instead of the Latin defaults.      */
+[dir="rtl"] .invite-heading,
+[dir="rtl"] .invite-body,
+[dir="rtl"] .invite-label,
+[dir="rtl"] .invite-detail,
+[dir="rtl"] .font-script,
+[dir="rtl"] .font-fell,
+[dir="rtl"] .font-serif,
+[dir="rtl"] .font-sans {
+  font-family: 'Noto Naskh Arabic', 'Amiri', serif !important;
+  font-style: normal !important;
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+}
+
+/* Section labels in Arabic should NOT be uppercase (Arabic has no case) */
+[dir="rtl"] .invite-label {
+  font-size: calc(clamp(0.85rem, 3vw, 1rem) * var(--font-scale, 1)) !important;
+  font-weight: 600 !important;
+  opacity: 0.7 !important;
+}

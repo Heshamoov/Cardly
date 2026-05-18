@@ -1728,7 +1728,7 @@ function PreviewContent({ data, lang = "en", onToggleLang }: { data: InvitationD
           <p className="font-sans uppercase tracking-widest text-gold opacity-60 mb-2" style={{ fontFamily: bodyFont, fontSize: `calc(clamp(1.1rem, 4vw, 1.3rem) * ${fontScale})` }}>
             {t.dateLabel}
           </p>
-          <p className="font-serif text-cream" style={{ fontSize: `calc(clamp(1.1rem, 4vw, 1.3rem) * ${fontScale})` }}>
+          <p className="font-serif text-cream" style={{ fontFamily: bodyFont, fontSize: `calc(clamp(1.1rem, 4vw, 1.3rem) * ${fontScale})` }}>
             {formattedDate || "Sunday, 24 May 2026"}
           </p>
         </div>
@@ -1740,7 +1740,7 @@ function PreviewContent({ data, lang = "en", onToggleLang }: { data: InvitationD
           <p className="font-sans uppercase tracking-widest text-gold opacity-60 mb-2" style={{ fontFamily: bodyFont, fontSize: `calc(clamp(1.1rem, 4vw, 1.3rem) * ${fontScale})` }}>
             {t.dateLabel}
           </p>
-          <p className="font-serif text-cream" style={{ fontSize: `calc(clamp(1.1rem, 4vw, 1.3rem) * ${fontScale})` }}>
+          <p className="font-serif text-cream" style={{ fontFamily: bodyFont, fontSize: `calc(clamp(1.1rem, 4vw, 1.3rem) * ${fontScale})` }}>
             {formattedTime || "9:00 PM"}
           </p>
         </div>
