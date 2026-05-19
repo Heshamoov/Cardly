@@ -1424,6 +1424,11 @@ function PreviewWithEnvelope({
   const toggleLang = () => setLang((l) => l === "en" ? "ar" : "en");
   const sceneRef = useRef<HTMLDivElement>(null);
 
+  // Local overrides so font/scale changes re-render the preview immediately
+  const [localScriptFont, setLocalScriptFont] = useState<string | undefined>(data.scriptFont);
+  const [localFontScale, setLocalFontScale] = useState<number>(data.fontScale ?? 1);
+  const previewData: InvitationData = { ...data, scriptFont: localScriptFont, fontScale: localFontScale };
+
   // Music state — mirrors InvitationView exactly
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [showVolumeHint, setShowVolumeHint] = useState(false);
@@ -1522,13 +1527,13 @@ function PreviewWithEnvelope({
           {/* ── Left: font size A−/A+ ── */}
           <div style={{ display: "flex", alignItems: "center", gap: 4, flexShrink: 0 }}>
             <button
-              onClick={() => onFontScaleChange(Math.max(0.8, Math.round((data.fontScale - 0.05) * 100) / 100))}
+              onClick={() => { const v = Math.max(0.8, Math.round((localFontScale - 0.05) * 100) / 100); setLocalFontScale(v); onFontScaleChange(v); }}
               title="Decrease font size"
               style={btnTool}
             >A−</button>
-            <span style={{ fontSize: 9, color: "rgba(201,168,76,0.5)", minWidth: 26, textAlign: "center", fontFamily: "'Lato',sans-serif" }}>{Math.round(data.fontScale * 100)}%</span>
+            <span style={{ fontSize: 9, color: "rgba(201,168,76,0.5)", minWidth: 26, textAlign: "center", fontFamily: "'Lato',sans-serif" }}>{Math.round(localFontScale * 100)}%</span>
             <button
-              onClick={() => onFontScaleChange(Math.min(1.4, Math.round((data.fontScale + 0.05) * 100) / 100))}
+              onClick={() => { const v = Math.min(1.4, Math.round((localFontScale + 0.05) * 100) / 100); setLocalFontScale(v); onFontScaleChange(v); }}
               title="Increase font size"
               style={btnTool}
             >A+</button>
@@ -1537,8 +1542,8 @@ function PreviewWithEnvelope({
           {/* ── Centre: font picker ── */}
           <div style={{ flex: 1, minWidth: 0 }}>
             <select
-              value={data.scriptFont ?? (lang === "ar" ? "Amiri" : "Cormorant Garamond")}
-              onChange={(e) => onScriptFontChange(e.target.value)}
+              value={localScriptFont ?? (lang === "ar" ? "Amiri" : "Cormorant Garamond")}
+              onChange={(e) => { setLocalScriptFont(e.target.value); onScriptFontChange(e.target.value); }}
               style={{
                 width: "100%",
                 background: "rgba(201,168,76,0.08)",
@@ -1547,7 +1552,7 @@ function PreviewWithEnvelope({
                 color: "rgba(201,168,76,0.95)",
                 fontSize: 11,
                 padding: "4px 10px",
-                fontFamily: `'${data.scriptFont ?? (lang === "ar" ? "Amiri" : "Cormorant Garamond")}', serif`,
+                fontFamily: `'${localScriptFont ?? (lang === "ar" ? "Amiri" : "Cormorant Garamond")}', serif`,
                 cursor: "pointer",
                 outline: "none",
                 appearance: "none",
@@ -1651,8 +1656,8 @@ function PreviewWithEnvelope({
 
       {/* Invitation content after envelope opens */}
       {showInvitation && (
-        <div className="mobile-container" style={{ "--font-scale": data.fontScale, paddingTop: 56 } as React.CSSProperties}>
-          <PreviewContent data={data} lang={lang} onToggleLang={toggleLang} />
+        <div className="mobile-container" style={{ "--font-scale": localFontScale, paddingTop: 56 } as React.CSSProperties}>
+          <PreviewContent data={previewData} lang={lang} onToggleLang={toggleLang} />
         </div>
       )}
 
