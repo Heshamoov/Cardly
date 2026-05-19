@@ -101,7 +101,8 @@ function downloadCsv(responses: Array<{ guestName: string; phone?: string | null
   const csvContent = [headers, ...rows]
     .map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(","))
     .join("\n");
-  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+  // Prepend UTF-8 BOM (\uFEFF) so Excel on Windows/mobile renders Arabic correctly
+  const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=utf-8;" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
@@ -622,61 +623,63 @@ export default function RsvpDashboard() {
                         {t.noResponses}
                       </p>
                     ) : (
-                      <table style={{ width: "100%", borderCollapse: "collapse", direction: dir }}>
-                        <thead>
-                          <tr style={{ borderBottom: "1px solid #D4AF3722" }}>
-                            {[t.guestName, t.phone, t.partySize, t.message, t.date].map((h) => (
-                              <th
-                                key={h}
-                                style={{
-                                  padding: "10px 16px",
-                                  textAlign: isAr ? "right" : "left",
-                                  fontFamily: bodyFont,
-                                  fontSize: 10,
-                                  color: "#D4AF37",
-                                  opacity: 0.6,
-                                  textTransform: isAr ? "none" : "uppercase",
-                                  letterSpacing: isAr ? "0" : "0.1em",
-                                  fontWeight: 600,
-                                }}
-                              >
-                                {h}
-                              </th>
-                            ))}
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {detail?.responses.map((r) => (
-                            <tr key={r.id} style={{ borderBottom: "1px solid #D4AF3711" }}>
-                              <td style={{ padding: "12px 16px", fontFamily: bodyFont, fontSize: 14, color: "#E5C07B" }}>
-                                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                                  <span style={{ fontSize: 14 }}>{r.attending ? "✅" : "❌"}</span>
+                      <div style={{ direction: dir }}>
+                        {detail?.responses.map((r, idx) => (
+                          <div
+                            key={r.id}
+                            style={{
+                              borderBottom: idx < (detail?.responses.length ?? 0) - 1 ? "1px solid #D4AF3711" : "none",
+                              padding: "14px 16px",
+                            }}
+                          >
+                            {/* Row 1: name + attendance badge + date */}
+                            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 6 }}>
+                              <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
+                                <span style={{ fontSize: 16, flexShrink: 0 }}>{r.attending ? "✅" : "❌"}</span>
+                                <span style={{ fontFamily: bodyFont, fontSize: 15, color: "#E5C07B", fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                                   {r.guestName}
-                                </div>
-                              </td>
-                              <td style={{ padding: "12px 16px", fontFamily: bodyFont, fontSize: 13, color: "#E5C07B", opacity: 0.7, whiteSpace: "nowrap" }}>
+                                </span>
+                              </div>
+                              <span style={{ fontFamily: bodyFont, fontSize: 11, color: "#E5C07B", opacity: 0.4, flexShrink: 0 }}>
+                                {new Date(r.createdAt).toLocaleDateString(isAr ? "ar-AE" : "en-GB")}
+                              </span>
+                            </div>
+
+                            {/* Row 2: phone + party size */}
+                            <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: (r as any).message ? 6 : 0 }}>
+                              <span style={{ fontFamily: "'Lato', monospace", fontSize: 13, color: "#D4AF37", opacity: 0.8 }}>
                                 {(r as any).phone ? (
-                                  <a
-                                    href={`tel:${(r as any).phone}`}
-                                    style={{ color: "#D4AF37", textDecoration: "none", fontFamily: "'Lato', monospace" }}
-                                  >
+                                  <a href={`tel:${(r as any).phone}`} style={{ color: "#D4AF37", textDecoration: "none" }}>
                                     {(r as any).phone}
                                   </a>
                                 ) : "—"}
-                              </td>
-                              <td style={{ padding: "12px 16px", fontFamily: scriptFont, fontSize: 20, color: "#D4AF37", textAlign: "center" }}>
-                                {r.partySize}
-                              </td>
-                              <td style={{ padding: "12px 16px", fontFamily: bodyFont, fontSize: 13, color: "#E5C07B", opacity: 0.6, maxWidth: 200 }}>
-                                {r.message || "—"}
-                              </td>
-                              <td style={{ padding: "12px 16px", fontFamily: bodyFont, fontSize: 12, color: "#E5C07B", opacity: 0.4, whiteSpace: "nowrap" }}>
-                                {new Date(r.createdAt).toLocaleDateString(isAr ? "ar-AE" : "en-GB")}
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
+                              </span>
+                              <span style={{ fontFamily: bodyFont, fontSize: 12, color: "#E5C07B", opacity: 0.55 }}>
+                                {isAr ? `${r.partySize} ${r.partySize === 1 ? "شخص" : "أشخاص"}` : `${r.partySize} ${r.partySize === 1 ? "guest" : "guests"}`}
+                              </span>
+                            </div>
+
+                            {/* Row 3: message (only if present) */}
+                            {(r as any).message && (
+                              <div style={{
+                                marginTop: 4,
+                                padding: "6px 10px",
+                                background: "rgba(212,175,55,0.06)",
+                                borderRadius: 8,
+                                borderLeft: isAr ? "none" : "2px solid rgba(212,175,55,0.25)",
+                                borderRight: isAr ? "2px solid rgba(212,175,55,0.25)" : "none",
+                                fontFamily: bodyFont,
+                                fontSize: 13,
+                                color: "#E5C07B",
+                                opacity: 0.7,
+                                lineHeight: 1.5,
+                              }}>
+                                {(r as any).message}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
                     )}
                   </div>
                 )}
