@@ -331,9 +331,9 @@
 - [x] Remove TYPOGRAPHY section card from Builder form
 
 ## Feature: Falling Flowers & Stars Animation
-- [ ] Add showParticles boolean to InvitationData interface and defaultData.sections
-- [ ] Add showParticles to server Zod schema in invitationsRouter.ts
-- [ ] Add FALLING FLOWERS & STARS section card to Builder form with show/hide toggle
-- [ ] Build FallingParticles canvas component (flowers + stars falling gently)
-- [ ] Wire FallingParticles into InvitationView (render when showParticles is true)
-- [ ] Wire FallingParticles into Builder PreviewContent (render when showParticles is true)
+- [x] Add showParticles boolean to InvitationData interface and defaultData.sections
+- [x] Add showParticles to server Zod schema in invitationsRouter.ts
+- [x] Add FALLING FLOWERS & STARS section card to Builder form with show/hide toggle
+- [x] Build FallingParticles canvas component (flowers + stars falling gently)
+- [x] Wire FallingParticles into InvitationView (render when showParticles is true)
+- [x] Wire FallingParticles into Builder PreviewContent (render when showParticles is true)

@@ -379,13 +379,23 @@ export default function InvitationView() {
           style={{ opacity: isExpanding ? 1 : 0, background: envStyle.theme.bg }}
         />
 
-        {/* Tap hint */}
+        {/* Tap hint — animated gold pill button */}
         {animStage === "idle" && (
           <div className="fs-tap-hint">
-            <p style={{ fontFamily: "'Lato', sans-serif", fontSize: 12, letterSpacing: "0.2em", color: `${envStyle.theme.accent}BB`, textTransform: "uppercase" }}>
-              {lang === "ar" ? "اضغط للفتح" : "Tap to open"}
-            </p>
-            <span style={{ color: `${envStyle.theme.accent}88`, fontSize: 18, animation: "bounce 1s infinite" }}>↑</span>
+            <div className="fs-tap-btn" style={{ borderColor: envStyle.theme.accent, color: envStyle.theme.accent }}>
+              <span className="fs-tap-ripple" style={{ background: `${envStyle.theme.accent}22` }} />
+              <span className="fs-tap-ripple fs-tap-ripple-2" style={{ background: `${envStyle.theme.accent}15` }} />
+              <span style={{ fontSize: 22, lineHeight: 1 }}>👆</span>
+              <span style={{
+                fontFamily: "'Lato', sans-serif",
+                fontSize: 13,
+                fontWeight: 700,
+                letterSpacing: "0.18em",
+                textTransform: "uppercase",
+              }}>
+                {lang === "ar" ? "اضغط لفتح الدعوة" : "Tap to Open"}
+              </span>
+            </div>
           </div>
         )}
       </div>
