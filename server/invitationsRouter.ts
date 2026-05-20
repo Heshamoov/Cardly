@@ -111,6 +111,7 @@ export const invitationsRouter = router({
           rsvpDeadline: z.string().optional(),
           scriptFont: z.string().optional(),
           bodyFontChoice: z.string().optional(),
+          showParticles: z.boolean().optional(),
         }),
       })
     )

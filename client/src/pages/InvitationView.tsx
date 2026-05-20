@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
+import FallingParticles from "@/components/FallingParticles";
 import { useRoute } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { translations, ARABIC_FONT, type Lang } from "@/lib/i18n";
@@ -110,6 +111,7 @@ interface InvitationData {
   rsvpDeadline?: string;
   scriptFont?: string;
   bodyFontChoice?: string;
+  showParticles?: boolean;
 }
 
 type AnimStage = "idle" | "opening" | "expand" | "done";
@@ -498,6 +500,7 @@ function InvitationPage({ data, slug, lang, onToggleLang, onBackToEnvelope, isMu
       dir={isRtl ? "rtl" : "ltr"}
       style={{
         background: theme.bg,
+        position: "relative",
         "--font-scale": fontScale,
         "--gold": theme.accent,
         "--gold-light": theme.accentLight,
@@ -511,6 +514,9 @@ function InvitationPage({ data, slug, lang, onToggleLang, onBackToEnvelope, isMu
         fontFamily: bodyFont,
       } as React.CSSProperties}
     >
+      {/* Falling particles overlay */}
+      {(data as any).sections?.particles !== false && <FallingParticles />}
+
       {/* Language Toggle + Envelope Button */}
       <LangToggle lang={lang} onToggle={onToggleLang} onBackToEnvelope={onBackToEnvelope} theme={theme} />
 

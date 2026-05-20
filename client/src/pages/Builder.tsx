@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { translations, ARABIC_FONT, type Lang } from "@/lib/i18n";
+import FallingParticles from "@/components/FallingParticles";
 
 interface InvitationData {
   title: string;
@@ -36,6 +37,7 @@ interface InvitationData {
   rsvpDeadline?: string; // ISO date string YYYY-MM-DD
   scriptFont?: string; // font for names & hosting line
   bodyFontChoice?: string; // font for welcome message & body text
+  showParticles?: boolean; // falling flowers & stars animation
 }
 
 const ENVELOPE_STYLES = [
@@ -185,6 +187,7 @@ const defaultData: InvitationData = {
     countdown: true,
     showHostingLine: true,
     showSubHeadline: true,
+    particles: true,
   },
 };
 
@@ -1355,6 +1358,22 @@ export default function Builder() {
           </p>
         </SectionCard>
 
+        {/* ── Section: Falling Flowers & Stars ── */}
+        <SectionCard
+          label={formLang === "ar" ? "زهور ونجوم متساقطة" : "FALLING FLOWERS & STARS"}
+          sectionKey="particles"
+          sections={data.sections}
+          onToggle={toggleSection}
+          hiddenText={formLang === "ar" ? "القسم مخفي — اضغط للتفعيل" : undefined}
+          labelFont={formLang === "ar" ? ARABIC_FONT : undefined}
+        >
+          <p className="font-sans text-xs opacity-50" style={formLang === "ar" ? { fontFamily: ARABIC_FONT } : {}}>
+            {formLang === "ar"
+              ? "زهور ونجوم صغيرة تتساقط بلطف أثناء قراءة الدعوة."
+              : "Tiny flowers 🌸 and stars ✨ gently fall as guests read the invitation."}
+          </p>
+        </SectionCard>
+
         {/* ── Section: Music ── */}
         <MusicSection data={data} set={set} formLang={formLang} uploadMusicMutation={uploadMusicMutation} />
 
@@ -1814,6 +1833,7 @@ function PreviewContent({ data, lang = "en", onToggleLang }: { data: InvitationD
       dir={isRtl ? "rtl" : "ltr"}
       style={{
         background: theme.bg,
+        position: "relative",
         "--font-scale": fontScale,
         "--gold": theme.accent,
         "--gold-light": theme.accentLight,
@@ -1827,6 +1847,9 @@ function PreviewContent({ data, lang = "en", onToggleLang }: { data: InvitationD
         fontFamily: bodyFont,
       } as React.CSSProperties}
     >
+      {/* Falling particles overlay */}
+      {data.sections.particles !== false && <FallingParticles />}
+
       {/* Hero / Names */}
       {data.sections.names && (
         <div className="invitation-section stagger" style={{ paddingTop: 12, paddingBottom: 8 }}>
