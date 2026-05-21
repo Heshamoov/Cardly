@@ -1669,11 +1669,12 @@ function PreviewWithEnvelope({
                 <span className="fs-tap-ripple fs-tap-ripple-2" style={{ background: `${envStyle.theme.accent}15` }} />
                 <span style={{ fontSize: 22, lineHeight: 1 }}>👆</span>
                 <span style={{
-                  fontFamily: "'Lato', sans-serif",
-                  fontSize: 13,
+                  fontFamily: lang === "ar" ? "'Amiri', serif" : "'Lato', sans-serif",
+                  fontSize: lang === "ar" ? 16 : 13,
                   fontWeight: 700,
-                  letterSpacing: "0.18em",
-                  textTransform: "uppercase",
+                  letterSpacing: lang === "ar" ? "0.02em" : "0.18em",
+                  textTransform: lang === "ar" ? "none" : "uppercase",
+                  lineHeight: 1.2,
                 }}>
                   {lang === "ar" ? "اضغط لفتح الدعوة" : "Tap to Open"}
                 </span>
