@@ -99,6 +99,70 @@ export const rsvpRouter = router({
       return { success: true };
     }),
 
+  /**
+   * Protected — toggles the showOnWall flag for a single RSVP response.
+   * Only the invitation owner (or app owner) can moderate messages.
+   */
+  toggleShowOnWall: protectedProcedure
+    .input(z.object({
+      responseId: z.number().int(),
+      showOnWall: z.boolean(),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      const { getDb } = await import("./db");
+      const { rsvpResponses, invitations } = await import("../drizzle/schema");
+      const { eq } = await import("drizzle-orm");
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+
+      // Fetch the response to check ownership via the invitation
+      const resp = await db.select().from(rsvpResponses).where(eq(rsvpResponses.id, input.responseId)).limit(1);
+      if (resp.length === 0) throw new Error("Not found");
+
+      const inv = await db.select().from(invitations).where(eq(invitations.slug, resp[0].invitationSlug)).limit(1);
+      if (inv.length === 0) throw new Error("Not found");
+
+      const isOwner = inv[0].ownerOpenId === ctx.user.openId || ctx.user.openId === ENV.ownerOpenId;
+      if (!isOwner) throw new Error("Forbidden");
+
+      await db.update(rsvpResponses).set({ showOnWall: input.showOnWall }).where(eq(rsvpResponses.id, input.responseId));
+      return { success: true };
+    }),
+
+  /**
+   * Public — returns only the approved (showOnWall=true) responses for a given slug.
+   * Used by the Wedding Wishes Wall display page.
+   */
+  getWallMessages: publicProcedure
+    .input(z.object({ slug: z.string().min(1).max(16) }))
+    .query(async ({ input }) => {
+      const { getDb } = await import("./db");
+      const { rsvpResponses } = await import("../drizzle/schema");
+      const { eq, and } = await import("drizzle-orm");
+      const db = await getDb();
+      if (!db) return { messages: [] };
+
+      const rows = await db
+        .select()
+        .from(rsvpResponses)
+        .where(and(
+          eq(rsvpResponses.invitationSlug, input.slug),
+          eq(rsvpResponses.showOnWall, true)
+        ))
+        .orderBy(rsvpResponses.createdAt);
+
+      return {
+        messages: rows.map((r) => ({
+          id: r.id,
+          guestName: r.guestName,
+          message: r.message ?? "",
+          attending: r.attending,
+          partySize: r.partySize,
+          createdAt: r.createdAt,
+        })),
+      };
+    }),
+
   getAllSlugs: protectedProcedure.query(async ({ ctx }) => {
     const { getDb } = await import("./db");
     const { rsvpResponses, invitations } = await import("../drizzle/schema");

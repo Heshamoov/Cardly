@@ -52,6 +52,8 @@ export const rsvpResponses = mysqlTable("rsvp_responses", {
   message: text("message"),
   /** Guest's mobile number for follow-up calls (optional) */
   phone: varchar("phone", { length: 32 }),
+  /** Whether this response is approved to show on the Wedding Wishes Wall */
+  showOnWall: boolean("showOnWall").notNull().default(false),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 

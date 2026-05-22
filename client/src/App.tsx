@@ -8,6 +8,7 @@ import Home from "@/pages/Home";
 import Builder from "@/pages/Builder";
 import InvitationView from "@/pages/InvitationView";
 import RsvpDashboard from "@/pages/RsvpDashboard";
+import WishesWall from "@/pages/WishesWall";
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
@@ -16,6 +17,7 @@ function Router() {
       <Route path={"/"} component={Builder} />
       <Route path={"/invite/:slug"} component={InvitationView} />
       <Route path={"/rsvp-dashboard"} component={RsvpDashboard} />
+      <Route path={"/wall/:slug"} component={WishesWall} />
       <Route path={"/home"} component={Home} />
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}

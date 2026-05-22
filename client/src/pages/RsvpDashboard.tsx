@@ -44,6 +44,9 @@ const DASH_TRANSLATIONS = {
     clearConfirm: "Delete ALL responses for this invitation? This cannot be undone.",
     copyLink: "Copy Link",
     linkCopied: "Copied!",
+    showOnWall: "Show on Wall",
+    hiddenFromWall: "Hidden",
+    openWall: "Open Wishes Wall",
   },
   ar: {
     title: "استجابات الضيوف",
@@ -83,6 +86,9 @@ const DASH_TRANSLATIONS = {
     clearConfirm: "حذف جميع ردود هذه الدعوة؟ لا يمكن التراجع عن هذا الإجراء.",
     copyLink: "نسخ الرابط",
     linkCopied: "تم النسخ!",
+    showOnWall: "عرض على الشاشة",
+    hiddenFromWall: "مخفي",
+    openWall: "فتح جدار الأمنيات",
   },
 };
 
@@ -121,6 +127,8 @@ export default function RsvpDashboard() {
   const [confirmClear, setConfirmClear] = useState<string | null>(null);
   const [clearingSlug, setClearingSlug] = useState<string | null>(null);
   const [copiedSlug, setCopiedSlug] = useState<string | null>(null);
+  const [wallSlug, setWallSlug] = useState<string | null>(null);
+  const [copiedWallSlug, setCopiedWallSlug] = useState<string | null>(null);
 
   const handleCopyLink = (slug: string, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -157,6 +165,21 @@ export default function RsvpDashboard() {
     { slug: selectedSlug! },
     { enabled: !!selectedSlug }
   );
+
+  const toggleWallMutation = trpc.rsvp.toggleShowOnWall.useMutation({
+    onSuccess: () => {
+      utils.rsvp.getBySlug.invalidate({ slug: selectedSlug! });
+    },
+  });
+
+  const handleCopyWallLink = (slug: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const url = `${window.location.origin}/wall/${slug}`;
+    navigator.clipboard.writeText(url).then(() => {
+      setCopiedWallSlug(slug);
+      setTimeout(() => setCopiedWallSlug(null), 2000);
+    });
+  };
 
   const clearMutation = trpc.rsvp.clearResponses.useMutation({
     onSuccess: () => {
@@ -536,9 +559,36 @@ export default function RsvpDashboard() {
                       overflow: "hidden",
                     }}
                   >
-                    {/* CSV download bar + Clear Responses */}
+                    {/* CSV download bar + Clear Responses + Wall link */}
                     {!detailLoading && detail && (
                       <div style={{ padding: "10px 16px", borderBottom: "1px solid #D4AF3722", display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", flexDirection: isAr ? "row-reverse" : "row", gap: 8 }}>
+                        {/* Open Wishes Wall */}
+                        <a
+                          href={`/wall/${inv.slug}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                          style={{
+                            padding: "6px 16px",
+                            borderRadius: 20,
+                            border: "1px solid rgba(212,175,55,0.6)",
+                            background: "rgba(212,175,55,0.12)",
+                            color: "#D4AF37",
+                            fontFamily: bodyFont,
+                            fontSize: 11,
+                            fontWeight: 700,
+                            letterSpacing: isAr ? 0 : "0.08em",
+                            textTransform: isAr ? "none" : "uppercase",
+                            cursor: "pointer",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 6,
+                            textDecoration: "none",
+                            transition: "all 0.2s",
+                          }}
+                        >
+                          ✨ {t.openWall}
+                        </a>
                         {/* Download CSV */}
                         {detail.responses.length > 0 && (
                           <button
@@ -677,6 +727,34 @@ export default function RsvpDashboard() {
                                 {(r as any).message}
                               </div>
                             )}
+
+                            {/* Row 4: Show on Wall toggle */}
+                            <div style={{ marginTop: 8, display: "flex", alignItems: "center", gap: 8, flexDirection: isAr ? "row-reverse" : "row" }}>
+                              <button
+                                onClick={() => toggleWallMutation.mutate({ responseId: r.id, showOnWall: !(r as any).showOnWall })}
+                                disabled={toggleWallMutation.isPending}
+                                style={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: 6,
+                                  padding: "4px 12px",
+                                  borderRadius: 20,
+                                  border: `1px solid ${(r as any).showOnWall ? "rgba(212,175,55,0.8)" : "rgba(212,175,55,0.25)"}`,
+                                  background: (r as any).showOnWall ? "rgba(212,175,55,0.18)" : "transparent",
+                                  color: (r as any).showOnWall ? "#D4AF37" : "rgba(212,175,55,0.4)",
+                                  fontFamily: bodyFont,
+                                  fontSize: 11,
+                                  fontWeight: (r as any).showOnWall ? 700 : 400,
+                                  cursor: "pointer",
+                                  transition: "all 0.2s",
+                                  letterSpacing: isAr ? 0 : "0.06em",
+                                  textTransform: isAr ? "none" : "uppercase",
+                                }}
+                              >
+                                <span style={{ fontSize: 13 }}>{(r as any).showOnWall ? "✨" : "🌑"}</span>
+                                {(r as any).showOnWall ? t.showOnWall : t.hiddenFromWall}
+                              </button>
+                            </div>
                           </div>
                         ))}
                       </div>
