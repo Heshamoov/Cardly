@@ -47,6 +47,9 @@ const DASH_TRANSLATIONS = {
     showOnWall: "Show on Wall",
     hiddenFromWall: "Hidden",
     openWall: "Open Wishes Wall",
+    exportPptx: "Export as PowerPoint",
+    exporting: "Exporting…",
+    exportError: "No approved messages to export.",
   },
   ar: {
     title: "استجابات الضيوف",
@@ -89,6 +92,9 @@ const DASH_TRANSLATIONS = {
     showOnWall: "عرض على الشاشة",
     hiddenFromWall: "مخفي",
     openWall: "فتح جدار الأمنيات",
+    exportPptx: "تصدير كـ PowerPoint",
+    exporting: "جارِ التصدير…",
+    exportError: "لا توجد رسائل معتمدة للتصدير.",
   },
 };
 
@@ -129,6 +135,37 @@ export default function RsvpDashboard() {
   const [copiedSlug, setCopiedSlug] = useState<string | null>(null);
   const [wallSlug, setWallSlug] = useState<string | null>(null);
   const [copiedWallSlug, setCopiedWallSlug] = useState<string | null>(null);
+  const [exportingSlug, setExportingSlug] = useState<string | null>(null);
+  const [exportErrSlug, setExportErrSlug] = useState<string | null>(null);
+
+  const handleExportPptx = async (slug: string, title: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (exportingSlug) return;
+    setExportingSlug(slug);
+    setExportErrSlug(null);
+    try {
+      const res = await fetch(`/api/wall-export/${slug}`);
+      if (!res.ok) {
+        setExportErrSlug(slug);
+        setTimeout(() => setExportErrSlug(null), 3500);
+        return;
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      const cd = res.headers.get("content-disposition") ?? "";
+      const match = cd.match(/filename="(.+?)"/);
+      a.download = match ? match[1] : `${title.replace(/[^a-z0-9]/gi, "_")}_Wishes_Wall.pptx`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      setExportErrSlug(slug);
+      setTimeout(() => setExportErrSlug(null), 3500);
+    } finally {
+      setExportingSlug(null);
+    }
+  };
 
   const handleCopyLink = (slug: string, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -589,6 +626,43 @@ export default function RsvpDashboard() {
                         >
                           ✨ {t.openWall}
                         </a>
+                        {/* Export as PowerPoint */}
+                        <button
+                          onClick={(e) => handleExportPptx(inv.slug, inv.title, e)}
+                          disabled={exportingSlug === inv.slug}
+                          style={{
+                            padding: "6px 16px",
+                            borderRadius: 20,
+                            border: "1px solid rgba(212,175,55,0.5)",
+                            background: exportErrSlug === inv.slug ? "rgba(239,68,68,0.12)" : "transparent",
+                            color: exportErrSlug === inv.slug ? "#ef4444" : "#D4AF37",
+                            fontFamily: bodyFont,
+                            fontSize: 11,
+                            fontWeight: 700,
+                            letterSpacing: isAr ? 0 : "0.08em",
+                            textTransform: isAr ? "none" : "uppercase",
+                            cursor: exportingSlug === inv.slug ? "not-allowed" : "pointer",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 6,
+                            opacity: exportingSlug === inv.slug ? 0.7 : 1,
+                            transition: "all 0.2s",
+                          }}
+                          onMouseEnter={(e) => { if (exportingSlug !== inv.slug) (e.currentTarget as HTMLButtonElement).style.background = "#D4AF3722"; }}
+                          onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "transparent"; }}
+                        >
+                          {exportingSlug === inv.slug ? (
+                            <>
+                              <span style={{ display: "inline-block", width: 10, height: 10, border: "2px solid rgba(212,175,55,0.35)", borderTopColor: "#D4AF37", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
+                              {t.exporting}
+                            </>
+                          ) : exportErrSlug === inv.slug ? (
+                            <>⚠️ {t.exportError}</>
+                          ) : (
+                            <>⬇️ {t.exportPptx}</>
+                          )}
+                        </button>
+
                         {/* Download CSV */}
                         {detail.responses.length > 0 && (
                           <button
