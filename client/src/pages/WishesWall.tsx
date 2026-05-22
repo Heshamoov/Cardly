@@ -28,6 +28,36 @@ export default function WishesWall() {
   const [animating, setAnimating] = useState(false);
   const [direction, setDirection] = useState<"in" | "out">("in");
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [exporting, setExporting] = useState(false);
+  const [exportError, setExportError] = useState<string | null>(null);
+
+  const handleExport = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (exporting || !slug) return;
+    setExporting(true);
+    setExportError(null);
+    try {
+      const res = await fetch(`/api/wall-export/${slug}`);
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error || "Export failed");
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      const cd = res.headers.get("content-disposition") ?? "";
+      const match = cd.match(/filename="(.+?)"/);
+      a.download = match ? match[1] : "Wishes_Wall.pptx";
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err: any) {
+      setExportError(err.message ?? "Export failed");
+      setTimeout(() => setExportError(null), 4000);
+    } finally {
+      setExporting(false);
+    }
+  };
 
   // Auto-rotate
   useEffect(() => {
@@ -193,6 +223,65 @@ export default function WishesWall() {
             }}
           />
         ))}
+      </div>
+
+      {/* Export button */}
+      <div
+        style={{
+          position: "absolute",
+          top: 20,
+          left: 20,
+          zIndex: 10,
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button
+          onClick={handleExport}
+          disabled={exporting}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 7,
+            padding: "8px 18px",
+            borderRadius: 24,
+            border: "1px solid rgba(212,175,55,0.55)",
+            background: exporting ? "rgba(212,175,55,0.18)" : "rgba(10,15,30,0.75)",
+            color: "#D4AF37",
+            fontFamily: "'Lato', sans-serif",
+            fontSize: 12,
+            fontWeight: 700,
+            letterSpacing: "0.1em",
+            textTransform: "uppercase",
+            cursor: exporting ? "not-allowed" : "pointer",
+            backdropFilter: "blur(8px)",
+            transition: "all 0.2s",
+            opacity: exporting ? 0.7 : 1,
+          }}
+        >
+          {exporting ? (
+            <>
+              <span style={{ display: "inline-block", width: 14, height: 14, border: "2px solid rgba(212,175,55,0.4)", borderTopColor: "#D4AF37", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
+              Exporting…
+            </>
+          ) : (
+            <>⬇️ Export as PowerPoint</>
+          )}
+        </button>
+        {exportError && (
+          <div style={{
+            marginTop: 8,
+            padding: "6px 14px",
+            borderRadius: 8,
+            background: "rgba(239,68,68,0.15)",
+            border: "1px solid rgba(239,68,68,0.4)",
+            color: "#ef4444",
+            fontFamily: "'Lato', sans-serif",
+            fontSize: 12,
+            maxWidth: 260,
+          }}>
+            {exportError}
+          </div>
+        )}
       </div>
 
       {/* Tap hint */}
