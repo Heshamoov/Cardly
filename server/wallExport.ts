@@ -257,29 +257,20 @@ async function buildPptx(
     // Add slide using the master layout — inherits background + ornaments + placeholders
     const slide = pptx.addSlide({ masterName: MASTER_NAME });
 
-    // Fill the "message" placeholder — PowerPoint centres it vertically in the 4-inch zone
+    // Fill the "message" placeholder.
+    // Only set fontSize (scales with length) and rtlMode — all other styling
+    // (align, valign, color, font, italic) is inherited from the master placeholder
+    // so that manual edits to the master in PowerPoint propagate to all slides.
     slide.addText(msg.message || "(No message)", {
       placeholder: "message",
-      align: "center",
-      valign: "middle",
-      color: CREAM,
       fontSize: msgFontSize,
-      fontFace: msgFont,
-      italic: true,
       rtlMode: isArabic,
-      wrap: true,
     });
 
-    // Fill the "guestName" placeholder
+    // Fill the "guestName" placeholder — inherit all styling from master
     const nameLabel = msg.guestName + (msg.attending && msg.partySize > 1 ? ` & ${msg.partySize - 1} more` : "");
     slide.addText(nameLabel, {
       placeholder: "guestName",
-      align: "center",
-      valign: "middle",
-      color: GOLD,
-      fontSize: 22,
-      fontFace: nameFont,
-      bold: true,
       rtlMode: isArabic,
     });
   });
