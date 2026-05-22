@@ -142,6 +142,9 @@ async function getWallData(slug: string) {
 
 // ── PPTX builder ─────────────────────────────────────────────────────────────
 
+// Master slide name constant
+const MASTER_NAME = "WeddingWishes";
+
 async function buildPptx(
   messages: { guestName: string; message: string; attending: boolean; partySize: number }[],
   coupleTitle: string,
@@ -149,6 +152,70 @@ async function buildPptx(
 ): Promise<any> {
   const pptx = new PptxGenJS();
   pptx.layout = "LAYOUT_WIDE"; // 10×5.625 inches = 16:9
+
+  // ── Define Slide Master ──────────────────────────────────────────────────────
+  // The master carries:
+  //   - Dark background
+  //   - Top & bottom gold ornament lines
+  //   - A "message" body placeholder spanning the full usable area (y=0.45 to y=4.5)
+  //     → PowerPoint centres text inside this placeholder via its own layout engine
+  //   - A "name" body placeholder pinned at the bottom
+  pptx.defineSlideMaster({
+    title: MASTER_NAME,
+    background: { color: BG_DARK },
+    objects: [
+      // Top ornament line
+      { line: { x: 0.6, y: 0.35, w: SLIDE_W - 1.2, h: 0, line: { color: GOLD_DIM, width: 0.5 } } },
+      // Bottom ornament line
+      { line: { x: 0.6, y: SLIDE_H - 0.18, w: SLIDE_W - 1.2, h: 0, line: { color: GOLD_DIM, width: 0.5 } } },
+      // Divider ornament above name
+      { text: { text: "✦", options: { x: 0, y: 4.27, w: SLIDE_W, h: 0.3, align: "center", color: GOLD, fontSize: 11 } } },
+      // Opening quote (decorative, top-left)
+      { text: { text: "\u201C", options: { x: 0.1, y: 0.42, w: 0.6, h: 0.6, color: GOLD_DIM, fontSize: 40, fontFace: "Georgia", valign: "top", align: "left" } } },
+      // Closing quote (decorative, bottom-right of message area)
+      { text: { text: "\u201D", options: { x: SLIDE_W - 0.7, y: 3.8, w: 0.6, h: 0.6, color: GOLD_DIM, fontSize: 40, fontFace: "Georgia", valign: "bottom", align: "right" } } },
+      // ── Message placeholder: spans full usable area, centred by PowerPoint ──
+      {
+        placeholder: {
+          options: {
+            name: "message",
+            type: "body",
+            x: 0.5, y: 0.45,
+            w: SLIDE_W - 1.0,
+            h: 4.05,           // from y=0.45 to y=4.5 — full usable zone
+            align: "center",
+            valign: "middle",  // PowerPoint centres text in this placeholder
+            color: CREAM,
+            fontSize: 32,
+            fontFace: "Georgia",
+            italic: true,
+            wrap: true,
+          },
+          text: "",
+        },
+      },
+      // ── Name placeholder: pinned at bottom ──
+      {
+        placeholder: {
+          options: {
+            name: "guestName",
+            type: "body",
+            x: 0.5, y: 4.6,
+            w: SLIDE_W - 1.0,
+            h: 0.7,
+            align: "center",
+            valign: "middle",
+            color: GOLD,
+            fontSize: 22,
+            fontFace: "Calibri",
+            bold: true,
+            wrap: true,
+          },
+          text: "",
+        },
+      },
+    ],
+  });
 
   // ── Title slide ─────────────────────────────────────────────────────────────
   const titleSlide = pptx.addSlide();
@@ -177,98 +244,44 @@ async function buildPptx(
   }
 
   // ── One message slide per guest ──────────────────────────────────────────────
+  // Each slide uses the MASTER_NAME layout so it inherits the dark background,
+  // ornament lines, and placeholder definitions. We only fill in the content.
+  // PowerPoint's own layout engine handles vertical centering via the placeholder.
   messages.forEach((msg) => {
-    const slide = pptx.addSlide();
-    slide.background = { color: BG_DARK };
-
     const isArabic = /[\u0600-\u06FF]/.test(msg.message) || /[\u0600-\u06FF]/.test(msg.guestName);
-    const rtl = isArabic;
     const msgFont = isArabic ? "Arial" : "Georgia";
     const nameFont = isArabic ? "Arial" : "Calibri";
-
-    // Scale font size based on message length
     const msgLen = (msg.message || "").length;
     const msgFontSize = msgLen > 300 ? 22 : msgLen > 180 ? 26 : msgLen > 80 ? 30 : 36;
 
-    // ── Precise manual vertical centering ──
-    // valign:middle in pptxgenjs is unreliable for Arabic and short text.
-    // Instead: estimate the rendered text block height, then compute exact Y to centre it.
-    //
-    // Slide is 10 x 5.625 inches (16:9 wide).
-    // Fixed zones: top ornament at y=0.35, name+divider at bottom 1.1 inches.
-    // Usable zone for message: y=0.45 to y=4.5  => 4.05 inches tall.
-    //
-    // Text height estimate:
-    //   - chars per line at 9-inch width (accounting for Arabic being wider per char)
-    //   - line height = fontSize * 1.5 / 72 inches
-    const USABLE_TOP = 0.45;
-    const USABLE_BOTTOM = 4.5;
-    const USABLE_H = USABLE_BOTTOM - USABLE_TOP; // 4.05 inches
-    const NAME_Y = 4.65;
+    // Add slide using the master layout — inherits background + ornaments + placeholders
+    const slide = pptx.addSlide({ masterName: MASTER_NAME });
 
-    const charsPerLine = isArabic
-      ? (msgFontSize >= 36 ? 22 : msgFontSize >= 30 ? 28 : msgFontSize >= 26 ? 32 : 38)
-      : (msgFontSize >= 36 ? 38 : msgFontSize >= 30 ? 46 : msgFontSize >= 26 ? 52 : 60);
-    const numLines = Math.max(1, Math.ceil(msgLen / charsPerLine));
-    const lineH = (msgFontSize * 1.5) / 72; // inches per line
-    const textBlockH = Math.min(numLines * lineH + 0.1, USABLE_H - 0.2);
-
-    // Centre the text block in the usable zone
-    const msgY = USABLE_TOP + (USABLE_H - textBlockH) / 2;
-
-    // Top ornament line
-    slide.addShape(pptx.ShapeType.line, { x: 0.6, y: 0.35, w: SLIDE_W - 1.2, h: 0, line: { color: GOLD_DIM, width: 0.5 } });
-
-    // Opening quote — top-left, aligned with text block top
-    slide.addText("\u201C", {
-      x: 0.1, y: msgY - 0.1, w: 0.6, h: 0.6,
-      color: GOLD_DIM, fontSize: 40, fontFace: "Georgia", valign: "top", align: "left",
-    });
-
-    // Closing quote — bottom-right, aligned with text block bottom
-    slide.addText("\u201D", {
-      x: SLIDE_W - 0.7, y: msgY + textBlockH - 0.5, w: 0.6, h: 0.6,
-      color: GOLD_DIM, fontSize: 40, fontFace: "Georgia", valign: "bottom", align: "right",
-    });
-
-    // ── Message text — exact height, valign:top so PowerPoint places it exactly where we say ──
+    // Fill the "message" placeholder — PowerPoint centres it vertically in the 4-inch zone
     slide.addText(msg.message || "(No message)", {
-      x: 0.5,
-      y: msgY,
-      w: SLIDE_W - 1.0,
-      h: textBlockH,
+      placeholder: "message",
       align: "center",
-      valign: "top",   // top-align within the precisely-positioned box
+      valign: "middle",
       color: CREAM,
       fontSize: msgFontSize,
       fontFace: msgFont,
       italic: true,
-      rtlMode: rtl,
+      rtlMode: isArabic,
       wrap: true,
     });
 
-    // ── Divider ornament ──
-    slide.addShape(pptx.ShapeType.line, { x: 3.5, y: NAME_Y - 0.22, w: 3, h: 0, line: { color: GOLD_DIM, width: 0.5 } });
-    slide.addText("✦", { x: 0, y: NAME_Y - 0.38, w: SLIDE_W, h: 0.3, align: "center", color: GOLD, fontSize: 11 });
-
-    // ── Guest name — fixed at bottom, centred ──
+    // Fill the "guestName" placeholder
     const nameLabel = msg.guestName + (msg.attending && msg.partySize > 1 ? ` & ${msg.partySize - 1} more` : "");
     slide.addText(nameLabel, {
-      x: 0.5,
-      y: NAME_Y,
-      w: SLIDE_W - 1.0,
-      h: 0.65,
+      placeholder: "guestName",
       align: "center",
-      valign: "top",
+      valign: "middle",
       color: GOLD,
       fontSize: 22,
       fontFace: nameFont,
       bold: true,
-      rtlMode: rtl,
+      rtlMode: isArabic,
     });
-
-    // Bottom ornament line
-    slide.addShape(pptx.ShapeType.line, { x: 0.6, y: SLIDE_H - 0.18, w: SLIDE_W - 1.2, h: 0, line: { color: GOLD_DIM, width: 0.5 } });
   });
 
   // ── Closing slide ────────────────────────────────────────────────────────────
