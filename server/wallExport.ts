@@ -5,9 +5,10 @@
  *
  * Features:
  * - Dark gold 16:9 widescreen theme
- * - Auto-advance set to 6 seconds per slide (hands-free TV playback)
+ * - Auto-advance 6 seconds per slide via ZIP post-processing (p:transition XML injection)
  * - Couple photo on title slide (fetched from invitation data)
  * - One message slide per guest, Arabic RTL auto-detected
+ * - Large centred text with proper vertical centering
  * - Closing "Thank You" slide
  *
  * This is a raw Express route (not tRPC) because we need to stream binary data.
@@ -15,6 +16,7 @@
  */
 import type { Express, Request, Response } from "express";
 import _PptxGenJS from "pptxgenjs";
+import AdmZip from "adm-zip";
 import https from "https";
 import http from "http";
 
@@ -29,8 +31,9 @@ const GOLD = "D4AF37";
 const GOLD_DIM = "8B6914";
 const CREAM = "F5E6B3";
 const SLIDE_W = 10; // inches (widescreen 16:9)
+const SLIDE_H = 5.625; // inches
 
-// Auto-advance: 6 seconds per slide (in milliseconds for pptxgenjs)
+// Auto-advance: 6 seconds per slide (milliseconds)
 const AUTO_ADVANCE_MS = 6000;
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -57,6 +60,35 @@ async function fetchImageAsBase64(url: string): Promise<string | null> {
       resolve(null);
     }
   });
+}
+
+/**
+ * Post-process the generated PPTX buffer:
+ * - Inject <p:transition advTm="{ms}" advClick="0"> into every slide XML
+ *   so PowerPoint auto-advances without clicking.
+ */
+function injectAutoAdvance(pptxBuffer: Buffer, advanceMs: number): Buffer {
+  const zip = new AdmZip(pptxBuffer);
+  const entries = zip.getEntries();
+
+  // Transition XML to inject — placed just before </p:sld>
+  // advClick="0" disables click-to-advance; advTm is in milliseconds
+  const transitionXml = `<p:transition advClick="0" advTm="${advanceMs}"><p:fade/></p:transition>`;
+
+  for (const entry of entries) {
+    // Only process slide XML files (ppt/slides/slide*.xml), not layouts/masters
+    if (/^ppt\/slides\/slide\d+\.xml$/.test(entry.entryName)) {
+      let xml = zip.readAsText(entry);
+      // Only inject if not already present
+      if (!xml.includes("<p:transition")) {
+        // Insert before the closing </p:sld> tag
+        xml = xml.replace("</p:sld>", `${transitionXml}</p:sld>`);
+        zip.updateFile(entry.entryName, Buffer.from(xml, "utf8"));
+      }
+    }
+  }
+
+  return zip.toBuffer();
 }
 
 async function getWallData(slug: string) {
@@ -88,7 +120,6 @@ async function getWallData(slug: string) {
       const bride = data.brideFirstName || "";
       const groom = data.groomFirstName || "";
       if (bride || groom) title = `${bride} & ${groom}`;
-      // couplePhoto is stored as a URL string in the invitation data
       if (data.couplePhoto && typeof data.couplePhoto === "string") {
         photoUrl = data.couplePhoto;
       }
@@ -122,9 +153,6 @@ async function buildPptx(
   // ── Title slide ─────────────────────────────────────────────────────────────
   const titleSlide = pptx.addSlide();
   titleSlide.background = { color: BG_DARK };
-  // Auto-advance after 6 seconds
-  (titleSlide as any).slideNumber = undefined;
-  (titleSlide as any).transition = { type: "fade", durations: AUTO_ADVANCE_MS };
 
   if (photoBase64) {
     // Photo on the left half, text on the right
@@ -133,144 +161,100 @@ async function buildPptx(
       x: 0.4, y: 0.6, w: 3.8, h: 4.4,
       rounding: true,
     });
-
-    // Right side decorative lines
-    titleSlide.addShape(pptx.ShapeType.line, {
-      x: 5.0, y: 1.6, w: 4.5, h: 0,
-      line: { color: GOLD_DIM, width: 0.75 },
-    });
-    titleSlide.addShape(pptx.ShapeType.line, {
-      x: 5.0, y: 3.9, w: 4.5, h: 0,
-      line: { color: GOLD_DIM, width: 0.75 },
-    });
-    titleSlide.addText("✦", {
-      x: 5.0, y: 0.8, w: 4.5, h: 0.5,
-      align: "center", color: GOLD_DIM, fontSize: 14,
-    });
-    titleSlide.addText("Wedding Wishes", {
-      x: 4.8, y: 1.7, w: 4.8, h: 1,
-      align: "center", color: GOLD, fontSize: 36,
-      fontFace: "Georgia", italic: true,
-    });
-    titleSlide.addText(coupleTitle, {
-      x: 4.8, y: 2.75, w: 4.8, h: 0.7,
-      align: "center", color: CREAM, fontSize: 20,
-      fontFace: "Calibri",
-    });
-    titleSlide.addText("✦", {
-      x: 5.0, y: 4.0, w: 4.5, h: 0.5,
-      align: "center", color: GOLD_DIM, fontSize: 14,
-    });
+    titleSlide.addShape(pptx.ShapeType.line, { x: 5.0, y: 1.6, w: 4.5, h: 0, line: { color: GOLD_DIM, width: 0.75 } });
+    titleSlide.addShape(pptx.ShapeType.line, { x: 5.0, y: 3.9, w: 4.5, h: 0, line: { color: GOLD_DIM, width: 0.75 } });
+    titleSlide.addText("✦", { x: 5.0, y: 0.8, w: 4.5, h: 0.5, align: "center", color: GOLD_DIM, fontSize: 14 });
+    titleSlide.addText("Wedding Wishes", { x: 4.8, y: 1.7, w: 4.8, h: 1, align: "center", color: GOLD, fontSize: 36, fontFace: "Georgia", italic: true });
+    titleSlide.addText(coupleTitle, { x: 4.8, y: 2.75, w: 4.8, h: 0.7, align: "center", color: CREAM, fontSize: 20, fontFace: "Calibri" });
+    titleSlide.addText("✦", { x: 5.0, y: 4.0, w: 4.5, h: 0.5, align: "center", color: GOLD_DIM, fontSize: 14 });
   } else {
-    // Centred layout (no photo)
-    titleSlide.addShape(pptx.ShapeType.line, {
-      x: 1.5, y: 1.6, w: 7, h: 0,
-      line: { color: GOLD_DIM, width: 0.75 },
-    });
-    titleSlide.addShape(pptx.ShapeType.line, {
-      x: 1.5, y: 3.9, w: 7, h: 0,
-      line: { color: GOLD_DIM, width: 0.75 },
-    });
-    titleSlide.addText("✦", {
-      x: 0, y: 0.8, w: SLIDE_W, h: 0.5,
-      align: "center", color: GOLD_DIM, fontSize: 14,
-    });
-    titleSlide.addText("Wedding Wishes", {
-      x: 0.5, y: 1.7, w: 9, h: 1,
-      align: "center", color: GOLD, fontSize: 44,
-      fontFace: "Georgia", italic: true,
-    });
-    titleSlide.addText(coupleTitle, {
-      x: 0.5, y: 2.75, w: 9, h: 0.7,
-      align: "center", color: CREAM, fontSize: 22,
-      fontFace: "Calibri",
-    });
-    titleSlide.addText("✦", {
-      x: 0, y: 4.0, w: SLIDE_W, h: 0.5,
-      align: "center", color: GOLD_DIM, fontSize: 14,
-    });
+    titleSlide.addShape(pptx.ShapeType.line, { x: 1.5, y: 1.6, w: 7, h: 0, line: { color: GOLD_DIM, width: 0.75 } });
+    titleSlide.addShape(pptx.ShapeType.line, { x: 1.5, y: 3.9, w: 7, h: 0, line: { color: GOLD_DIM, width: 0.75 } });
+    titleSlide.addText("✦", { x: 0, y: 0.8, w: SLIDE_W, h: 0.5, align: "center", color: GOLD_DIM, fontSize: 14 });
+    titleSlide.addText("Wedding Wishes", { x: 0.5, y: 1.7, w: 9, h: 1, align: "center", color: GOLD, fontSize: 44, fontFace: "Georgia", italic: true });
+    titleSlide.addText(coupleTitle, { x: 0.5, y: 2.75, w: 9, h: 0.7, align: "center", color: CREAM, fontSize: 22, fontFace: "Calibri" });
+    titleSlide.addText("✦", { x: 0, y: 4.0, w: SLIDE_W, h: 0.5, align: "center", color: GOLD_DIM, fontSize: 14 });
   }
 
   // ── One message slide per guest ──────────────────────────────────────────────
   messages.forEach((msg) => {
     const slide = pptx.addSlide();
     slide.background = { color: BG_DARK };
-    (slide as any).transition = { type: "fade", durations: AUTO_ADVANCE_MS };
 
     const isArabic = /[\u0600-\u06FF]/.test(msg.message) || /[\u0600-\u06FF]/.test(msg.guestName);
     const rtl = isArabic;
     const msgFont = isArabic ? "Arial" : "Georgia";
     const nameFont = isArabic ? "Arial" : "Calibri";
 
+    // Scale font size based on message length — always large and readable
+    const msgLen = (msg.message || "").length;
+    const msgFontSize = msgLen > 300 ? 22 : msgLen > 180 ? 26 : msgLen > 80 ? 30 : 36;
+
     // Top ornament line
-    slide.addShape(pptx.ShapeType.line, {
-      x: 1.2, y: 0.55, w: 7.6, h: 0,
-      line: { color: GOLD_DIM, width: 0.5 },
-    });
+    slide.addShape(pptx.ShapeType.line, { x: 0.6, y: 0.35, w: SLIDE_W - 1.2, h: 0, line: { color: GOLD_DIM, width: 0.5 } });
 
-    // Opening quote mark
+    // Large opening quote — top-left
     slide.addText("\u201C", {
-      x: 0.3, y: 0.55, w: 1.2, h: 1.0,
-      color: GOLD_DIM, fontSize: 72, fontFace: "Georgia", valign: "top",
+      x: 0.2, y: 0.3, w: 0.9, h: 0.9,
+      color: GOLD_DIM, fontSize: 60, fontFace: "Georgia", valign: "top", align: "left",
     });
 
-    // Message text — large, centred, italic
-    const msgFontSize = msg.message.length > 200 ? 20 : msg.message.length > 100 ? 24 : 28;
+    // ── Message text — full-width, vertically centred in the middle zone ──
+    // Zone: y=0.5 to y=4.3 (height=3.8) — gives plenty of room
     slide.addText(msg.message || "(No message)", {
-      x: 0.8, y: 0.9, w: 8.4, h: 3.0,
-      align: "center", valign: "middle",
-      color: CREAM, fontSize: msgFontSize,
-      fontFace: msgFont, italic: true,
-      rtlMode: rtl, wrap: true,
+      x: 0.5,
+      y: 0.5,
+      w: SLIDE_W - 1.0,   // 9 inches wide
+      h: 3.8,              // tall zone so valign:"middle" truly centres
+      align: "center",
+      valign: "middle",
+      color: CREAM,
+      fontSize: msgFontSize,
+      fontFace: msgFont,
+      italic: true,
+      rtlMode: rtl,
+      wrap: true,
     });
 
-    // Closing quote mark
+    // Large closing quote — bottom-right
     slide.addText("\u201D", {
-      x: 8.5, y: 2.5, w: 1.2, h: 1.0,
-      color: GOLD_DIM, fontSize: 72, fontFace: "Georgia", valign: "bottom",
+      x: SLIDE_W - 1.1, y: 3.5, w: 0.9, h: 0.9,
+      color: GOLD_DIM, fontSize: 60, fontFace: "Georgia", valign: "bottom", align: "right",
     });
 
-    // Divider + ornament
-    slide.addShape(pptx.ShapeType.line, {
-      x: 3.5, y: 4.05, w: 3, h: 0,
-      line: { color: GOLD_DIM, width: 0.5 },
-    });
-    slide.addText("✦", {
-      x: 0, y: 3.85, w: SLIDE_W, h: 0.4,
-      align: "center", color: GOLD, fontSize: 12,
-    });
+    // ── Divider ──
+    slide.addShape(pptx.ShapeType.line, { x: 3.5, y: 4.45, w: 3, h: 0, line: { color: GOLD_DIM, width: 0.5 } });
+    slide.addText("✦", { x: 0, y: 4.25, w: SLIDE_W, h: 0.4, align: "center", color: GOLD, fontSize: 12 });
 
-    // Guest name
+    // ── Guest name — centred at bottom ──
     const nameLabel = msg.guestName + (msg.attending && msg.partySize > 1 ? ` & ${msg.partySize - 1} more` : "");
     slide.addText(nameLabel, {
-      x: 0.5, y: 4.3, w: 9, h: 0.6,
-      align: "center", color: GOLD, fontSize: 18,
-      fontFace: nameFont, bold: true, rtlMode: rtl,
+      x: 0.5,
+      y: 4.7,
+      w: SLIDE_W - 1.0,
+      h: 0.65,
+      align: "center",
+      valign: "middle",
+      color: GOLD,
+      fontSize: 22,
+      fontFace: nameFont,
+      bold: true,
+      rtlMode: rtl,
     });
 
     // Bottom ornament line
-    slide.addShape(pptx.ShapeType.line, {
-      x: 1.2, y: 5.1, w: 7.6, h: 0,
-      line: { color: GOLD_DIM, width: 0.5 },
-    });
+    slide.addShape(pptx.ShapeType.line, { x: 0.6, y: SLIDE_H - 0.18, w: SLIDE_W - 1.2, h: 0, line: { color: GOLD_DIM, width: 0.5 } });
   });
 
   // ── Closing slide ────────────────────────────────────────────────────────────
   const endSlide = pptx.addSlide();
   endSlide.background = { color: BG_DARK };
-  (endSlide as any).transition = { type: "fade", durations: AUTO_ADVANCE_MS };
-  endSlide.addShape(pptx.ShapeType.line, {
-    x: 1.5, y: 2.0, w: 7, h: 0,
-    line: { color: GOLD_DIM, width: 0.75 },
-  });
-  endSlide.addShape(pptx.ShapeType.line, {
-    x: 1.5, y: 3.5, w: 7, h: 0,
-    line: { color: GOLD_DIM, width: 0.75 },
-  });
+  endSlide.addShape(pptx.ShapeType.line, { x: 1.5, y: 2.0, w: 7, h: 0, line: { color: GOLD_DIM, width: 0.75 } });
+  endSlide.addShape(pptx.ShapeType.line, { x: 1.5, y: 3.5, w: 7, h: 0, line: { color: GOLD_DIM, width: 0.75 } });
   endSlide.addText("✦  Thank You  ✦", {
-    x: 0.5, y: 2.1, w: 9, h: 1.3,
+    x: 0.5, y: 0, w: 9, h: SLIDE_H,
     align: "center", valign: "middle",
-    color: GOLD, fontSize: 36,
+    color: GOLD, fontSize: 40,
     fontFace: "Georgia", italic: true,
   });
 
@@ -298,7 +282,6 @@ export function registerWallExport(app: Express) {
       // Fetch couple photo as base64 if available (so it embeds in the PPTX)
       let photoBase64: string | null = null;
       if (photoUrl) {
-        // Resolve relative /manus-storage/ paths to absolute using the request host
         const resolvedUrl = photoUrl.startsWith("/")
           ? `http://localhost:${(req.socket as any).localPort || 3000}${photoUrl}`
           : photoUrl;
@@ -307,13 +290,16 @@ export function registerWallExport(app: Express) {
 
       const pptx = await buildPptx(messages, title, photoBase64);
 
-      const buffer = (await pptx.write({ outputType: "nodebuffer" })) as Buffer;
+      // Write to buffer, then inject auto-advance timing via ZIP post-processing
+      const rawBuffer = (await pptx.write({ outputType: "nodebuffer" })) as Buffer;
+      const finalBuffer = injectAutoAdvance(rawBuffer, AUTO_ADVANCE_MS);
+
       const filename = `${title.replace(/[^a-z0-9]/gi, "_")}_Wishes_Wall.pptx`;
 
       res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.presentationml.presentation");
       res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
-      res.setHeader("Content-Length", buffer.length);
-      res.send(buffer);
+      res.setHeader("Content-Length", finalBuffer.length);
+      res.send(finalBuffer);
     } catch (err) {
       console.error("[wall-export] Error:", err);
       res.status(500).json({ error: "Failed to generate presentation." });

@@ -115,6 +115,12 @@ importers:
       '@trpc/server':
         specifier: ^11.6.0
         version: 11.6.0(typescript@5.9.3)
+      '@types/adm-zip':
+        specifier: ^0.5.8
+        version: 0.5.8
+      adm-zip:
+        specifier: ^0.5.17
+        version: 0.5.17
       axios:
         specifier: ^1.12.0
         version: 1.12.2
@@ -2147,6 +2153,9 @@ packages:
     peerDependencies:
       typescript: '>=5.7.2'
 
+  '@types/adm-zip@0.5.8':
+    resolution: {integrity: sha512-RVVH7QvZYbN+ihqZ4kX/dMiowf6o+Jk1fNwiSdx0NahBJLU787zkULhGhJM8mf/obmLGmgdMM0bXsQTmyfbR7Q==}
+
   '@types/babel__core@7.20.5':
     resolution: {integrity: sha512-qoQprZvz5wQFJwMDqeseRXWv3rqMvhgpbXFfVyWhbx9X47POIA6i/+dXefEmZKoAgOaTdaIgNSMqMIU61yRyzA==}
 
@@ -2384,6 +2393,10 @@ packages:
 
   add@2.0.6:
     resolution: {integrity: sha512-j5QzrmsokwWWp6kUcJQySpbG+xfOBqqKnup3OIk1pz+kB/80SLorZ9V8zHFLO92Lcd+hbvq8bT+zOGoPkmBV0Q==}
+
+  adm-zip@0.5.17:
+    resolution: {integrity: sha512-+Ut8d9LLqwEvHHJl1+PIHqoyDxFgVN847JTVM3Izi3xHDWPE4UtzzXysMZQs64DMcrJfBeS/uoEP4AD3HQHnQQ==}
+    engines: {node: '>=12.0'}
 
   aria-hidden@1.2.6:
     resolution: {integrity: sha512-ik3ZgC9dY/lYVVM++OISsaYDeg1tb0VtP5uL3ouh1koGOaUMDPpbFIei4JkFimWUFPn90sbMNMXQAIVOlnYKJA==}
@@ -6503,6 +6516,10 @@ snapshots:
     dependencies:
       typescript: 5.9.3
 
+  '@types/adm-zip@0.5.8':
+    dependencies:
+      '@types/node': 24.7.0
+
   '@types/babel__core@7.20.5':
     dependencies:
       '@babel/parser': 7.28.4
@@ -6798,6 +6815,8 @@ snapshots:
   acorn@8.15.0: {}
 
   add@2.0.6: {}
+
+  adm-zip@0.5.17: {}
 
   aria-hidden@1.2.6:
     dependencies:
