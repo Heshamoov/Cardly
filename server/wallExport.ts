@@ -14,9 +14,13 @@
  * It is PUBLIC — no auth required — matching the WishesWall display page.
  */
 import type { Express, Request, Response } from "express";
-import PptxGenJS from "pptxgenjs";
+import _PptxGenJS from "pptxgenjs";
 import https from "https";
 import http from "http";
+
+// pptxgenjs ships a CJS bundle; tsx ESM interop puts the constructor on .default
+const PptxGenJS: typeof _PptxGenJS =
+  (typeof _PptxGenJS === "function" ? _PptxGenJS : (_PptxGenJS as any).default) as typeof _PptxGenJS;
 
 // ── Colour palette ────────────────────────────────────────────────────────────
 const BG_DARK = "0A0F1E";
