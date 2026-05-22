@@ -115,7 +115,7 @@ async function buildPptx(
   messages: { guestName: string; message: string; attending: boolean; partySize: number }[],
   coupleTitle: string,
   photoBase64: string | null
-): Promise<PptxGenJS> {
+): Promise<any> {
   const pptx = new PptxGenJS();
   pptx.layout = "LAYOUT_WIDE"; // 10×5.625 inches = 16:9
 
