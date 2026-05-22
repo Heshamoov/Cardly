@@ -3,16 +3,17 @@
  * Generates and streams a PPTX file containing all approved (showOnWall=true)
  * guest messages for the given invitation slug.
  *
- * Features:
- * - Dark gold 16:9 widescreen theme
- * - Auto-advance 6 seconds per slide via ZIP post-processing (p:transition XML injection)
- * - Couple photo on title slide (fetched from invitation data)
- * - One message slide per guest, Arabic RTL auto-detected
- * - Large centred text with proper vertical centering
- * - Closing "Thank You" slide
+ * Design: NO slide master / NO placeholders.
+ * Every shape is placed with explicit absolute coordinates so the layout is
+ * pixel-perfect and identical on every slide — no PowerPoint inheritance needed.
  *
- * This is a raw Express route (not tRPC) because we need to stream binary data.
- * It is PUBLIC — no auth required — matching the WishesWall display page.
+ * Slide layout (10 × 5.625 inches, 16:9 widescreen):
+ *   y=0.00 – 0.35  top ornament line
+ *   y=0.42 – 0.90  opening quote mark (decorative)
+ *   y=1.10 – 3.90  MESSAGE TEXT BOX  ← true vertical centre of slide
+ *   y=4.10 – 4.40  ✦ divider
+ *   y=4.40 – 5.10  guest name
+ *   y=5.27 – 5.625 bottom ornament line
  */
 import type { Express, Request, Response } from "express";
 import _PptxGenJS from "pptxgenjs";
@@ -26,12 +27,32 @@ const PptxGenJS: any =
   typeof _PptxGenJS === "function" ? _PptxGenJS : (_PptxGenJS as any).default;
 
 // ── Colour palette ────────────────────────────────────────────────────────────
-const BG_DARK = "0A0F1E";
-const GOLD = "D4AF37";
+const BG_DARK  = "0A0F1E";
+const GOLD     = "D4AF37";
 const GOLD_DIM = "8B6914";
-const CREAM = "F5E6B3";
-const SLIDE_W = 10; // inches (widescreen 16:9)
-const SLIDE_H = 5.625; // inches
+const CREAM    = "F5E6B3";
+const SLIDE_W  = 10;      // inches (widescreen 16:9)
+const SLIDE_H  = 5.625;   // inches
+
+// ── Layout constants (all in inches) ─────────────────────────────────────────
+// Message text box: centred in the slide.
+// Slide centre = 5.625 / 2 = 2.8125"
+// We give the message box 2.8" height, so:
+//   y = 2.8125 - (2.8 / 2) = 1.4125  → round to 1.4
+//   h = 2.8
+const MSG_Y = 1.4;
+const MSG_H = 2.8;
+const MSG_X = 0.6;
+const MSG_W = SLIDE_W - 1.2;
+
+// Guest name row
+const NAME_Y = 4.35;
+const NAME_H = 0.75;
+const NAME_X = 0.5;
+const NAME_W = SLIDE_W - 1.0;
+
+// Divider ✦ above name
+const DIV_Y = 4.1;
 
 // Auto-advance: 6 seconds per slide (milliseconds)
 const AUTO_ADVANCE_MS = 6000;
@@ -64,30 +85,23 @@ async function fetchImageAsBase64(url: string): Promise<string | null> {
 
 /**
  * Post-process the generated PPTX buffer:
- * - Inject <p:transition advTm="{ms}" advClick="0"> into every slide XML
- *   so PowerPoint auto-advances without clicking.
+ * Inject <p:transition advTm="{ms}" advClick="0"> into every slide XML
+ * so PowerPoint auto-advances without clicking.
  */
 function injectAutoAdvance(pptxBuffer: Buffer, advanceMs: number): Buffer {
   const zip = new AdmZip(pptxBuffer);
   const entries = zip.getEntries();
-
-  // Transition XML to inject — placed just before </p:sld>
-  // advClick="0" disables click-to-advance; advTm is in milliseconds
   const transitionXml = `<p:transition advClick="0" advTm="${advanceMs}"><p:fade/></p:transition>`;
 
   for (const entry of entries) {
-    // Only process slide XML files (ppt/slides/slide*.xml), not layouts/masters
     if (/^ppt\/slides\/slide\d+\.xml$/.test(entry.entryName)) {
       let xml = zip.readAsText(entry);
-      // Only inject if not already present
       if (!xml.includes("<p:transition")) {
-        // Insert before the closing </p:sld> tag
         xml = xml.replace("</p:sld>", `${transitionXml}</p:sld>`);
         zip.updateFile(entry.entryName, Buffer.from(xml, "utf8"));
       }
     }
   }
-
   return zip.toBuffer();
 }
 
@@ -140,94 +154,48 @@ async function getWallData(slug: string) {
   };
 }
 
+// ── Add a single background + ornaments to a slide ───────────────────────────
+function addSlideBackground(pptx: any, slide: any) {
+  slide.background = { color: BG_DARK };
+  // Top ornament line
+  slide.addShape(pptx.ShapeType.line, {
+    x: 0.6, y: 0.32, w: SLIDE_W - 1.2, h: 0,
+    line: { color: GOLD_DIM, width: 0.5 },
+  });
+  // Bottom ornament line
+  slide.addShape(pptx.ShapeType.line, {
+    x: 0.6, y: SLIDE_H - 0.15, w: SLIDE_W - 1.2, h: 0,
+    line: { color: GOLD_DIM, width: 0.5 },
+  });
+  // Opening quote (top-left, decorative)
+  slide.addText("\u201C", {
+    x: 0.1, y: 0.38, w: 0.7, h: 0.7,
+    color: GOLD_DIM, fontSize: 44, fontFace: "Georgia",
+    valign: "top", align: "left",
+  });
+  // Closing quote (bottom-right of message area, decorative)
+  slide.addText("\u201D", {
+    x: SLIDE_W - 0.8, y: MSG_Y + MSG_H - 0.6, w: 0.7, h: 0.7,
+    color: GOLD_DIM, fontSize: 44, fontFace: "Georgia",
+    valign: "bottom", align: "right",
+  });
+}
+
 // ── PPTX builder ─────────────────────────────────────────────────────────────
-
-// Master slide name constant
-const MASTER_NAME = "WeddingWishes";
-
 async function buildPptx(
   messages: { guestName: string; message: string; attending: boolean; partySize: number }[],
   coupleTitle: string,
   photoBase64: string | null
 ): Promise<any> {
   const pptx = new PptxGenJS();
-  pptx.layout = "LAYOUT_WIDE"; // 10×5.625 inches = 16:9
-
-  // ── Define Slide Master ──────────────────────────────────────────────────────
-  // The master carries:
-  //   - Dark background
-  //   - Top & bottom gold ornament lines
-  //   - A "message" body placeholder spanning the full usable area (y=0.45 to y=4.5)
-  //     → PowerPoint centres text inside this placeholder via its own layout engine
-  //   - A "name" body placeholder pinned at the bottom
-  pptx.defineSlideMaster({
-    title: MASTER_NAME,
-    background: { color: BG_DARK },
-    objects: [
-      // Top ornament line
-      { line: { x: 0.6, y: 0.35, w: SLIDE_W - 1.2, h: 0, line: { color: GOLD_DIM, width: 0.5 } } },
-      // Bottom ornament line
-      { line: { x: 0.6, y: SLIDE_H - 0.18, w: SLIDE_W - 1.2, h: 0, line: { color: GOLD_DIM, width: 0.5 } } },
-      // Divider ornament above name
-      { text: { text: "✦", options: { x: 0, y: 4.27, w: SLIDE_W, h: 0.3, align: "center", color: GOLD, fontSize: 11 } } },
-      // Opening quote (decorative, top-left)
-      { text: { text: "\u201C", options: { x: 0.1, y: 0.42, w: 0.6, h: 0.6, color: GOLD_DIM, fontSize: 40, fontFace: "Georgia", valign: "top", align: "left" } } },
-      // Closing quote (decorative, bottom-right of message area)
-      { text: { text: "\u201D", options: { x: SLIDE_W - 0.7, y: 3.8, w: 0.6, h: 0.6, color: GOLD_DIM, fontSize: 40, fontFace: "Georgia", valign: "bottom", align: "right" } } },
-      // ── Message placeholder: spans full usable area, centred by PowerPoint ──
-      {
-        placeholder: {
-          options: {
-            name: "message",
-            type: "body",
-            x: 0.5, y: 0.45,
-            w: SLIDE_W - 1.0,
-            h: 4.05,           // from y=0.45 to y=4.5 — full usable zone
-            align: "center",
-            valign: "middle",  // PowerPoint centres text in this placeholder
-            color: CREAM,
-            fontSize: 32,
-            fontFace: "Georgia",
-            italic: true,
-            wrap: true,
-          },
-          text: "",
-        },
-      },
-      // ── Name placeholder: pinned at bottom ──
-      {
-        placeholder: {
-          options: {
-            name: "guestName",
-            type: "body",
-            x: 0.5, y: 4.6,
-            w: SLIDE_W - 1.0,
-            h: 0.7,
-            align: "center",
-            valign: "middle",
-            color: GOLD,
-            fontSize: 22,
-            fontFace: "Calibri",
-            bold: true,
-            wrap: true,
-          },
-          text: "",
-        },
-      },
-    ],
-  });
+  pptx.layout = "LAYOUT_WIDE"; // 10 × 5.625 inches = 16:9
 
   // ── Title slide ─────────────────────────────────────────────────────────────
   const titleSlide = pptx.addSlide();
   titleSlide.background = { color: BG_DARK };
 
   if (photoBase64) {
-    // Photo on the left half, text on the right
-    titleSlide.addImage({
-      data: photoBase64,
-      x: 0.4, y: 0.6, w: 3.8, h: 4.4,
-      rounding: true,
-    });
+    titleSlide.addImage({ data: photoBase64, x: 0.4, y: 0.6, w: 3.8, h: 4.4, rounding: true });
     titleSlide.addShape(pptx.ShapeType.line, { x: 5.0, y: 1.6, w: 4.5, h: 0, line: { color: GOLD_DIM, width: 0.75 } });
     titleSlide.addShape(pptx.ShapeType.line, { x: 5.0, y: 3.9, w: 4.5, h: 0, line: { color: GOLD_DIM, width: 0.75 } });
     titleSlide.addText("✦", { x: 5.0, y: 0.8, w: 4.5, h: 0.5, align: "center", color: GOLD_DIM, fontSize: 14 });
@@ -244,33 +212,55 @@ async function buildPptx(
   }
 
   // ── One message slide per guest ──────────────────────────────────────────────
-  // Each slide uses the MASTER_NAME layout so it inherits the dark background,
-  // ornament lines, and placeholder definitions. We only fill in the content.
-  // PowerPoint's own layout engine handles vertical centering via the placeholder.
+  // Pure absolute positioning — no master, no placeholders, no inheritance.
+  // MSG_Y and MSG_H are calculated so the text box is exactly centred vertically.
   messages.forEach((msg) => {
     const isArabic = /[\u0600-\u06FF]/.test(msg.message) || /[\u0600-\u06FF]/.test(msg.guestName);
     const msgFont = isArabic ? "Arial" : "Georgia";
     const nameFont = isArabic ? "Arial" : "Calibri";
     const msgLen = (msg.message || "").length;
-    const msgFontSize = msgLen > 300 ? 22 : msgLen > 180 ? 26 : msgLen > 80 ? 30 : 36;
+    const msgFontSize = msgLen > 300 ? 20 : msgLen > 180 ? 24 : msgLen > 80 ? 28 : 34;
 
-    // Add slide using the master layout — inherits background + ornaments + placeholders
-    const slide = pptx.addSlide({ masterName: MASTER_NAME });
+    const slide = pptx.addSlide();
+    addSlideBackground(pptx, slide);
 
-    // Fill the "message" placeholder.
-    // Only set fontSize (scales with length) and rtlMode — all other styling
-    // (align, valign, color, font, italic) is inherited from the master placeholder
-    // so that manual edits to the master in PowerPoint propagate to all slides.
+    // ── Message text — absolutely centred ──
+    // Text box spans y=MSG_Y to y=MSG_Y+MSG_H (1.4" to 4.2")
+    // Slide centre = 2.8125"; text box centre = 1.4 + 2.8/2 = 2.8" ✓
     slide.addText(msg.message || "(No message)", {
-      placeholder: "message",
+      x: MSG_X,
+      y: MSG_Y,
+      w: MSG_W,
+      h: MSG_H,
+      align: "center",
+      valign: "middle",
+      color: CREAM,
       fontSize: msgFontSize,
+      fontFace: msgFont,
+      italic: true,
       rtlMode: isArabic,
+      wrap: true,
     });
 
-    // Fill the "guestName" placeholder — inherit all styling from master
+    // ── Divider ✦ ──
+    slide.addText("✦", {
+      x: 0, y: DIV_Y, w: SLIDE_W, h: 0.3,
+      align: "center", color: GOLD, fontSize: 11,
+    });
+
+    // ── Guest name ──
     const nameLabel = msg.guestName + (msg.attending && msg.partySize > 1 ? ` & ${msg.partySize - 1} more` : "");
     slide.addText(nameLabel, {
-      placeholder: "guestName",
+      x: NAME_X,
+      y: NAME_Y,
+      w: NAME_W,
+      h: NAME_H,
+      align: "center",
+      valign: "middle",
+      color: GOLD,
+      fontSize: 22,
+      fontFace: nameFont,
+      bold: true,
       rtlMode: isArabic,
     });
   });
@@ -291,7 +281,6 @@ async function buildPptx(
 }
 
 // ── Express route ─────────────────────────────────────────────────────────────
-
 export function registerWallExport(app: Express) {
   app.get("/api/wall-export/:slug", async (req: Request, res: Response) => {
     const slug = (req.params.slug ?? "").replace(/[^a-z0-9_-]/gi, "").slice(0, 16);
@@ -308,7 +297,6 @@ export function registerWallExport(app: Express) {
         return;
       }
 
-      // Fetch couple photo as base64 if available (so it embeds in the PPTX)
       let photoBase64: string | null = null;
       if (photoUrl) {
         const resolvedUrl = photoUrl.startsWith("/")
@@ -319,12 +307,10 @@ export function registerWallExport(app: Express) {
 
       const pptx = await buildPptx(messages, title, photoBase64);
 
-      // Write to buffer, then inject auto-advance timing via ZIP post-processing
       const rawBuffer = (await pptx.write({ outputType: "nodebuffer" })) as Buffer;
       const finalBuffer = injectAutoAdvance(rawBuffer, AUTO_ADVANCE_MS);
 
       const filename = `${title.replace(/[^a-z0-9]/gi, "_")}_Wishes_Wall.pptx`;
-
       res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.presentationml.presentation");
       res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
       res.setHeader("Content-Length", finalBuffer.length);
