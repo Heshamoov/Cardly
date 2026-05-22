@@ -186,28 +186,42 @@ async function buildPptx(
     const msgFont = isArabic ? "Arial" : "Georgia";
     const nameFont = isArabic ? "Arial" : "Calibri";
 
-    // Scale font size based on message length — always large and readable
+    // Scale font size based on message length
     const msgLen = (msg.message || "").length;
     const msgFontSize = msgLen > 300 ? 22 : msgLen > 180 ? 26 : msgLen > 80 ? 30 : 36;
+
+    // Estimate number of lines to calculate true vertical centre
+    // Approximate chars per line at each font size on a 9-inch wide box
+    const charsPerLine = msgFontSize >= 36 ? 38 : msgFontSize >= 30 ? 46 : msgFontSize >= 26 ? 52 : 60;
+    const estimatedLines = Math.max(1, Math.ceil(msgLen / charsPerLine));
+    // Line height in inches ≈ fontSize * 1.4 / 72
+    const lineHeightIn = (msgFontSize * 1.4) / 72;
+    const textBlockH = Math.min(estimatedLines * lineHeightIn + 0.2, 3.2);
+
+    // Usable vertical space: top ornament at y=0.35, name area starts at y=4.3
+    // Centre the text block in that space
+    const usableTop = 0.55;
+    const usableBottom = 4.25;
+    const usableH = usableBottom - usableTop;
+    const msgY = usableTop + (usableH - textBlockH) / 2;
 
     // Top ornament line
     slide.addShape(pptx.ShapeType.line, { x: 0.6, y: 0.35, w: SLIDE_W - 1.2, h: 0, line: { color: GOLD_DIM, width: 0.5 } });
 
     // Large opening quote — top-left
     slide.addText("\u201C", {
-      x: 0.2, y: 0.3, w: 0.9, h: 0.9,
-      color: GOLD_DIM, fontSize: 60, fontFace: "Georgia", valign: "top", align: "left",
+      x: 0.15, y: msgY - 0.05, w: 0.7, h: 0.7,
+      color: GOLD_DIM, fontSize: 48, fontFace: "Georgia", valign: "top", align: "left",
     });
 
-    // ── Message text — full-width, vertically centred in the middle zone ──
-    // Zone: y=0.5 to y=4.3 (height=3.8) — gives plenty of room
+    // ── Message text — precisely centred ──
     slide.addText(msg.message || "(No message)", {
       x: 0.5,
-      y: 0.5,
-      w: SLIDE_W - 1.0,   // 9 inches wide
-      h: 3.8,              // tall zone so valign:"middle" truly centres
+      y: msgY,
+      w: SLIDE_W - 1.0,
+      h: textBlockH,
       align: "center",
-      valign: "middle",
+      valign: "top",        // top within the box since we calculated the y ourselves
       color: CREAM,
       fontSize: msgFontSize,
       fontFace: msgFont,
@@ -216,21 +230,21 @@ async function buildPptx(
       wrap: true,
     });
 
-    // Large closing quote — bottom-right
+    // Large closing quote — after text block
     slide.addText("\u201D", {
-      x: SLIDE_W - 1.1, y: 3.5, w: 0.9, h: 0.9,
-      color: GOLD_DIM, fontSize: 60, fontFace: "Georgia", valign: "bottom", align: "right",
+      x: SLIDE_W - 0.85, y: msgY + textBlockH - 0.65, w: 0.7, h: 0.7,
+      color: GOLD_DIM, fontSize: 48, fontFace: "Georgia", valign: "bottom", align: "right",
     });
 
     // ── Divider ──
     slide.addShape(pptx.ShapeType.line, { x: 3.5, y: 4.45, w: 3, h: 0, line: { color: GOLD_DIM, width: 0.5 } });
-    slide.addText("✦", { x: 0, y: 4.25, w: SLIDE_W, h: 0.4, align: "center", color: GOLD, fontSize: 12 });
+    slide.addText("✦", { x: 0, y: 4.28, w: SLIDE_W, h: 0.35, align: "center", color: GOLD, fontSize: 11 });
 
     // ── Guest name — centred at bottom ──
     const nameLabel = msg.guestName + (msg.attending && msg.partySize > 1 ? ` & ${msg.partySize - 1} more` : "");
     slide.addText(nameLabel, {
       x: 0.5,
-      y: 4.7,
+      y: 4.65,
       w: SLIDE_W - 1.0,
       h: 0.65,
       align: "center",

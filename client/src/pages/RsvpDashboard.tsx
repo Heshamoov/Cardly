@@ -802,32 +802,56 @@ export default function RsvpDashboard() {
                               </div>
                             )}
 
-                            {/* Row 4: Show on Wall toggle */}
+                            {/* Row 4: Show on Wall checkbox */}
                             <div style={{ marginTop: 8, display: "flex", alignItems: "center", gap: 8, flexDirection: isAr ? "row-reverse" : "row" }}>
-                              <button
-                                onClick={() => toggleWallMutation.mutate({ responseId: r.id, showOnWall: !(r as any).showOnWall })}
-                                disabled={toggleWallMutation.isPending}
+                              <label
                                 style={{
                                   display: "flex",
                                   alignItems: "center",
-                                  gap: 6,
-                                  padding: "4px 12px",
-                                  borderRadius: 20,
-                                  border: `1px solid ${(r as any).showOnWall ? "rgba(212,175,55,0.8)" : "rgba(212,175,55,0.25)"}`,
-                                  background: (r as any).showOnWall ? "rgba(212,175,55,0.18)" : "transparent",
-                                  color: (r as any).showOnWall ? "#D4AF37" : "rgba(212,175,55,0.4)",
-                                  fontFamily: bodyFont,
-                                  fontSize: 11,
-                                  fontWeight: (r as any).showOnWall ? 700 : 400,
-                                  cursor: "pointer",
-                                  transition: "all 0.2s",
-                                  letterSpacing: isAr ? 0 : "0.06em",
-                                  textTransform: isAr ? "none" : "uppercase",
+                                  gap: 8,
+                                  cursor: toggleWallMutation.isPending ? "not-allowed" : "pointer",
+                                  opacity: toggleWallMutation.isPending ? 0.6 : 1,
+                                  userSelect: "none",
+                                  flexDirection: isAr ? "row-reverse" : "row",
                                 }}
                               >
-                                <span style={{ fontSize: 13 }}>{(r as any).showOnWall ? "✨" : "🌑"}</span>
-                                {(r as any).showOnWall ? t.showOnWall : t.hiddenFromWall}
-                              </button>
+                                {/* Custom styled checkbox */}
+                                <span
+                                  onClick={() => !toggleWallMutation.isPending && toggleWallMutation.mutate({ responseId: r.id, showOnWall: !(r as any).showOnWall })}
+                                  style={{
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    width: 18,
+                                    height: 18,
+                                    borderRadius: 4,
+                                    border: `2px solid ${(r as any).showOnWall ? "#D4AF37" : "rgba(212,175,55,0.35)"}`,
+                                    background: (r as any).showOnWall ? "#D4AF37" : "transparent",
+                                    transition: "all 0.18s",
+                                    flexShrink: 0,
+                                  }}
+                                >
+                                  {(r as any).showOnWall && (
+                                    <svg width="11" height="9" viewBox="0 0 11 9" fill="none">
+                                      <path d="M1 4L4 7.5L10 1" stroke="#0A0F1E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                    </svg>
+                                  )}
+                                </span>
+                                <span
+                                  onClick={() => !toggleWallMutation.isPending && toggleWallMutation.mutate({ responseId: r.id, showOnWall: !(r as any).showOnWall })}
+                                  style={{
+                                    fontFamily: bodyFont,
+                                    fontSize: 12,
+                                    fontWeight: (r as any).showOnWall ? 700 : 400,
+                                    color: (r as any).showOnWall ? "#D4AF37" : "rgba(212,175,55,0.45)",
+                                    letterSpacing: isAr ? 0 : "0.05em",
+                                    textTransform: isAr ? "none" : "uppercase",
+                                    transition: "color 0.18s",
+                                  }}
+                                >
+                                  {(r as any).showOnWall ? t.showOnWall : t.hiddenFromWall}
+                                </span>
+                              </label>
                             </div>
                           </div>
                         ))}
