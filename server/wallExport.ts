@@ -190,40 +190,55 @@ async function buildPptx(
     const msgLen = (msg.message || "").length;
     const msgFontSize = msgLen > 300 ? 22 : msgLen > 180 ? 26 : msgLen > 80 ? 30 : 36;
 
-    // ── Layout constants ──
-    // Reserve bottom 1.1 inches for ornament + name; top 0.4 inches for top ornament
-    // Message text box fills the remaining space with valign:middle for true centering
-    const TOP_MARGIN = 0.4;       // top ornament line y
-    const BOTTOM_RESERVE = 1.15;  // space for divider + name + bottom line
-    const MSG_Y = TOP_MARGIN + 0.05;
-    const MSG_H = SLIDE_H - TOP_MARGIN - BOTTOM_RESERVE - 0.05;
-    const NAME_Y = SLIDE_H - BOTTOM_RESERVE + 0.1;
+    // ── Precise manual vertical centering ──
+    // valign:middle in pptxgenjs is unreliable for Arabic and short text.
+    // Instead: estimate the rendered text block height, then compute exact Y to centre it.
+    //
+    // Slide is 10 x 5.625 inches (16:9 wide).
+    // Fixed zones: top ornament at y=0.35, name+divider at bottom 1.1 inches.
+    // Usable zone for message: y=0.45 to y=4.5  => 4.05 inches tall.
+    //
+    // Text height estimate:
+    //   - chars per line at 9-inch width (accounting for Arabic being wider per char)
+    //   - line height = fontSize * 1.5 / 72 inches
+    const USABLE_TOP = 0.45;
+    const USABLE_BOTTOM = 4.5;
+    const USABLE_H = USABLE_BOTTOM - USABLE_TOP; // 4.05 inches
+    const NAME_Y = 4.65;
+
+    const charsPerLine = isArabic
+      ? (msgFontSize >= 36 ? 22 : msgFontSize >= 30 ? 28 : msgFontSize >= 26 ? 32 : 38)
+      : (msgFontSize >= 36 ? 38 : msgFontSize >= 30 ? 46 : msgFontSize >= 26 ? 52 : 60);
+    const numLines = Math.max(1, Math.ceil(msgLen / charsPerLine));
+    const lineH = (msgFontSize * 1.5) / 72; // inches per line
+    const textBlockH = Math.min(numLines * lineH + 0.1, USABLE_H - 0.2);
+
+    // Centre the text block in the usable zone
+    const msgY = USABLE_TOP + (USABLE_H - textBlockH) / 2;
 
     // Top ornament line
-    slide.addShape(pptx.ShapeType.line, { x: 0.6, y: TOP_MARGIN, w: SLIDE_W - 1.2, h: 0, line: { color: GOLD_DIM, width: 0.5 } });
+    slide.addShape(pptx.ShapeType.line, { x: 0.6, y: 0.35, w: SLIDE_W - 1.2, h: 0, line: { color: GOLD_DIM, width: 0.5 } });
 
-    // Opening quote — top-left corner, small so it doesn’t crowd the text
+    // Opening quote — top-left, aligned with text block top
     slide.addText("\u201C", {
-      x: 0.15, y: MSG_Y, w: 0.65, h: 0.65,
+      x: 0.1, y: msgY - 0.1, w: 0.6, h: 0.6,
       color: GOLD_DIM, fontSize: 40, fontFace: "Georgia", valign: "top", align: "left",
     });
 
-    // Closing quote — bottom-right corner
+    // Closing quote — bottom-right, aligned with text block bottom
     slide.addText("\u201D", {
-      x: SLIDE_W - 0.8, y: MSG_Y + MSG_H - 0.65, w: 0.65, h: 0.65,
+      x: SLIDE_W - 0.7, y: msgY + textBlockH - 0.5, w: 0.6, h: 0.6,
       color: GOLD_DIM, fontSize: 40, fontFace: "Georgia", valign: "bottom", align: "right",
     });
 
-    // ── Message text — full available height, valign:middle = true vertical centre ──
-    // The text box spans from just below the top line to just above the name area.
-    // PowerPoint will vertically centre the text within this box (anchor="ctr" in XML).
+    // ── Message text — exact height, valign:top so PowerPoint places it exactly where we say ──
     slide.addText(msg.message || "(No message)", {
       x: 0.5,
-      y: MSG_Y,
-      w: SLIDE_W - 1.0,   // 9 inches wide
-      h: MSG_H,            // fills the available space
+      y: msgY,
+      w: SLIDE_W - 1.0,
+      h: textBlockH,
       align: "center",
-      valign: "middle",    // anchor="ctr" in OOXML — true vertical centre
+      valign: "top",   // top-align within the precisely-positioned box
       color: CREAM,
       fontSize: msgFontSize,
       fontFace: msgFont,
@@ -233,8 +248,8 @@ async function buildPptx(
     });
 
     // ── Divider ornament ──
-    slide.addShape(pptx.ShapeType.line, { x: 3.5, y: NAME_Y - 0.18, w: 3, h: 0, line: { color: GOLD_DIM, width: 0.5 } });
-    slide.addText("✦", { x: 0, y: NAME_Y - 0.35, w: SLIDE_W, h: 0.32, align: "center", color: GOLD, fontSize: 11 });
+    slide.addShape(pptx.ShapeType.line, { x: 3.5, y: NAME_Y - 0.22, w: 3, h: 0, line: { color: GOLD_DIM, width: 0.5 } });
+    slide.addText("✦", { x: 0, y: NAME_Y - 0.38, w: SLIDE_W, h: 0.3, align: "center", color: GOLD, fontSize: 11 });
 
     // ── Guest name — fixed at bottom, centred ──
     const nameLabel = msg.guestName + (msg.attending && msg.partySize > 1 ? ` & ${msg.partySize - 1} more` : "");
@@ -244,7 +259,7 @@ async function buildPptx(
       w: SLIDE_W - 1.0,
       h: 0.65,
       align: "center",
-      valign: "middle",
+      valign: "top",
       color: GOLD,
       fontSize: 22,
       fontFace: nameFont,
