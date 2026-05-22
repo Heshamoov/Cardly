@@ -19,8 +19,9 @@ import https from "https";
 import http from "http";
 
 // pptxgenjs ships a CJS bundle; tsx ESM interop puts the constructor on .default
-const PptxGenJS: typeof _PptxGenJS =
-  (typeof _PptxGenJS === "function" ? _PptxGenJS : (_PptxGenJS as any).default) as typeof _PptxGenJS;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const PptxGenJS: any =
+  typeof _PptxGenJS === "function" ? _PptxGenJS : (_PptxGenJS as any).default;
 
 // ── Colour palette ────────────────────────────────────────────────────────────
 const BG_DARK = "0A0F1E";
