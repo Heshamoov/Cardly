@@ -6,6 +6,7 @@ import FallingParticles from "@/components/FallingParticles";
 
 interface InvitationData {
   title: string;
+  eventType: string; // "wedding", "engagement", "dinner", "birthday", "corporate", or custom
   brideFirstName: string;
   brideLastName: string;
   groomFirstName: string;
@@ -147,6 +148,7 @@ const ENVELOPE_STYLES = [
 
 const defaultData: InvitationData = {
   title: "",
+  eventType: "wedding",
   brideFirstName: "",
   brideLastName: "",
   groomFirstName: "",
@@ -1072,6 +1074,44 @@ export default function Builder() {
               {formLang === "ar" ? "فشل الرفع — يرجى المحاولة مرة أخرى" : "Upload failed — please try again"}
             </p>
           )}
+        </div>
+
+        {/* ── Event Type Selector ── */}
+        <div className="section-card mb-6 animate-fade-in-up">
+          <p className="font-sans text-xs uppercase tracking-widest text-gold opacity-80 mb-4" style={formLang === "ar" ? { fontFamily: ARABIC_FONT, textTransform: "none" } : {}}>
+            {formLang === "ar" ? "نوع الحدث" : "EVENT TYPE"}
+          </p>
+          <div className="grid grid-cols-2 gap-2 mb-4">
+            {["wedding", "engagement", "dinner", "birthday", "corporate"].map((type) => (
+              <button
+                key={type}
+                type="button"
+                onClick={() => set("eventType", type)}
+                className="px-3 py-2 rounded-lg font-sans text-xs uppercase tracking-widest transition-all duration-200 border-2"
+                style={{
+                  borderColor: data.eventType === type ? "var(--gold)" : "rgba(201,168,76,0.3)",
+                  backgroundColor: data.eventType === type ? "rgba(201,168,76,0.2)" : "transparent",
+                  color: data.eventType === type ? "var(--gold)" : "rgba(201,168,76,0.6)",
+                }}
+              >
+                {formLang === "ar"
+                  ? { wedding: "زفاف", engagement: "خطوبة", dinner: "عشاء", birthday: "عيد ميلاد", corporate: "شركة" }[type]
+                  : type.charAt(0).toUpperCase() + type.slice(1)}
+              </button>
+            ))}
+          </div>
+          <div>
+            <label className="font-sans text-xs opacity-50 block mb-2" style={formLang === "ar" ? { fontFamily: ARABIC_FONT } : {}}>
+              {formLang === "ar" ? "أو أدخل نوع حدث مخصص" : "Or enter a custom event type"}
+            </label>
+            <input
+              className="wedding-input"
+              placeholder={formLang === "ar" ? "مثال: حفلة تخرج" : "e.g. Graduation Party"}
+              value={!["wedding", "engagement", "dinner", "birthday", "corporate"].includes(data.eventType) ? data.eventType : ""}
+              onChange={(e) => set("eventType", e.target.value || "wedding")}
+              style={formLang === "ar" ? { fontFamily: ARABIC_FONT, direction: "rtl" } : {}}
+            />
+          </div>
         </div>
 
         {/* ── Envelope Style Picker ── */}
