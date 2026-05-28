@@ -140,29 +140,45 @@ export default function RsvpDashboard() {
 
   const handleExportPptx = async (slug: string, title: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (exportingSlug) return;
+    console.log('[Export] Button clicked, slug:', slug, 'exportingSlug:', exportingSlug);
+    if (exportingSlug) {
+      console.log('[Export] Already exporting, returning');
+      return;
+    }
     setExportingSlug(slug);
     setExportErrSlug(null);
     try {
+      console.log('[Export] Fetching /api/wall-export/' + slug);
       const res = await fetch(`/api/wall-export/${slug}`);
+      console.log('[Export] Fetch complete. Status:', res.status, 'ok:', res.ok);
       if (!res.ok) {
+        console.log('[Export] Response not OK, setting error');
         setExportErrSlug(slug);
         setTimeout(() => setExportErrSlug(null), 3500);
         return;
       }
+      console.log('[Export] Converting response to blob...');
       const blob = await res.blob();
+      console.log('[Export] Blob created. Size:', blob.size, 'Type:', blob.type);
       const url = URL.createObjectURL(blob);
+      console.log('[Export] Object URL created:', url);
       const a = document.createElement("a");
       a.href = url;
       const cd = res.headers.get("content-disposition") ?? "";
       const match = cd.match(/filename="(.+?)"/);
       a.download = match ? match[1] : `${title.replace(/[^a-z0-9]/gi, "_")}_Wishes_Wall.pptx`;
+      console.log('[Export] Download filename:', a.download);
+      console.log('[Export] Clicking...');
       a.click();
+      console.log('[Export] Revoking URL');
       URL.revokeObjectURL(url);
-    } catch {
+      console.log('[Export] Done!');
+    } catch (err) {
+      console.error('[Export] Caught error:', err);
       setExportErrSlug(slug);
       setTimeout(() => setExportErrSlug(null), 3500);
     } finally {
+      console.log('[Export] Finally - clearing exportingSlug');
       setExportingSlug(null);
     }
   };

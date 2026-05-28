@@ -36,6 +36,12 @@ export const invitations = mysqlTable("invitations", {
   views: int("views").notNull().default(0),
   /** The openId of the user who created this invitation (null = legacy/public) */
   ownerOpenId: varchar("ownerOpenId", { length: 64 }),
+  /** Whether this invitation has been paid for */
+  isPaid: boolean("isPaid").notNull().default(false),
+  /** Stripe Payment Intent ID for this invitation */
+  stripePaymentIntentId: varchar("stripePaymentIntentId", { length: 128 }),
+  /** Timestamp when payment was completed */
+  paidAt: timestamp("paidAt"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
@@ -59,3 +65,26 @@ export const rsvpResponses = mysqlTable("rsvp_responses", {
 
 export type RsvpResponse = typeof rsvpResponses.$inferSelect;
 export type InsertRsvpResponse = typeof rsvpResponses.$inferInsert;
+
+export const payments = mysqlTable("payments", {
+  id: int("id").autoincrement().primaryKey(),
+  /** Reference to invitations table */
+  invitationId: int("invitationId").notNull(),
+  /** Stripe Payment Intent ID */
+  stripePaymentIntentId: varchar("stripePaymentIntentId", { length: 128 }).notNull().unique(),
+  /** Amount in smallest currency unit (e.g., fils for AED) */
+  amount: int("amount").notNull(),
+  /** Currency code (e.g., 'AED', 'USD', 'EUR') */
+  currency: varchar("currency", { length: 3 }).notNull(),
+  /** Payment status: pending, succeeded, failed */
+  status: mysqlEnum("status", ["pending", "succeeded", "failed"]).notNull().default("pending"),
+  /** Stripe Customer ID */
+  stripeCustomerId: varchar("stripeCustomerId", { length: 128 }),
+  /** User's email at time of payment */
+  email: varchar("email", { length: 320 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  succeededAt: timestamp("succeededAt"),
+});
+
+export type Payment = typeof payments.$inferSelect;
+export type InsertPayment = typeof payments.$inferInsert;

@@ -709,6 +709,7 @@ export default function Builder() {
   const [data, setData] = useState<InvitationData>(loadDraft);
   const [previewing, setPreviewing] = useState(false);
   const [publishedSlug, setPublishedSlug] = useState<string | null>(null);
+  const [isPaid, setIsPaid] = useState(false);
   const [copied, setCopied] = useState(false);
   const [formLang, setFormLang] = useState<Lang>("en");
   const [, navigate] = useLocation();
@@ -772,7 +773,31 @@ export default function Builder() {
       alert("Please fill in at least the names and date before publishing.");
       return;
     }
+    if (!isPaid) {
+      handlePayment();
+      return;
+    }
     createMutation.mutate({ title: data.title || "Untitled", data });
+  };
+
+  const handlePayment = async () => {
+    try {
+      const tempSlug = `temp-${Date.now()}`;
+      const checkoutSession = await trpc.payments.createCheckoutSession.mutate({
+        invitationId: 0,
+        invitationSlug: tempSlug,
+        currency: "AED",
+        locale: formLang === "ar" ? "ar-AE" : "en-US",
+      });
+
+      if (checkoutSession.checkoutUrl) {
+        window.open(checkoutSession.checkoutUrl, "_blank");
+        setIsPaid(true);
+      }
+    } catch (error) {
+      console.error("Payment error:", error);
+      alert("Failed to initiate payment. Please try again.");
+    }
   };
 
   const shareUrl = publishedSlug
@@ -1394,7 +1419,9 @@ export default function Builder() {
           >
             {createMutation.isPending
               ? (formLang === "ar" ? "جارٍ النشر…" : "Publishing…")
-              : (formLang === "ar" ? "تخطي المعاينة والنشر" : "Skip Preview & Publish")}
+              : isPaid
+              ? (formLang === "ar" ? "تخطي المعاينة والنشر" : "Skip Preview & Publish")
+              : (formLang === "ar" ? "الدفع والنشر - 500 درهم" : "Pay to Publish - AED 500")}
           </button>
         </div>
       </div>

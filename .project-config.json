@@ -7,17 +7,18 @@
   ],
   "dev_command": "pnpm run dev",
   "env_vars": {
-    "DATABASE_URL": "mysql://2bhwhUTWxWaU7ZU.root:UF5PI8pv8o4tHLgd1fX4@gateway06.us-east-1.prod.aws.tidbcloud.com:4000/cwkwQE2ZytYK5D22sZcWLW?ssl={\"rejectUnauthorized\":true}"
+    "DATABASE_URL": "mysql://2bhwhUTWxWaU7ZU.root:UF5PI8pv8o4tHLgd1fX4@gateway06.us-east-1.prod.aws.tidbcloud.com:4000/cwkwQE2ZytYK5D22sZcWLW?ssl={\"rejectUnauthorized\":true}",
+    "DRIZZLE_DATABASE_URL": "mysql://2bhwhUTWxWaU7ZU.root:UF5PI8pv8o4tHLgd1fX4@gateway06.us-east-1.prod.aws.tidbcloud.com:4000/cwkwQE2ZytYK5D22sZcWLW?ssl={\"rejectUnauthorized\":true}"
   },
   "experiments": [
     "no_db_push"
   ],
   "git_remote": {
     "repo_url": "s3://vida-prod-gitrepo/webdev-git/310419663029094267/cwkwQE2ZytYK5D22sZcWLW",
-    "access_key_id": "ASIAZV3A2ECZKGYZYIBB",
-    "secret_access_key": "F1Lh9/IjJ95BEh/GupjcNTZM31R69ipgcxG3Parq",
-    "session_token": "IQoJb3JpZ2luX2VjELT//////////wEaCXVzLWVhc3QtMSJIMEYCIQCNDrnEFalYBUsh/6lsdJZ6B63t0avRCLG+3oe4m3KpGwIhAOOOZY/FCXHL+WflMuACy9vtBvoAEKZRjasxg5jf9OIMKvYDCHwQBBoMNjY1Mzg2MDk4ODY2IgwwQjrGM84wiZ6POQkq0wNTfs27sW/P9DsnsDt3ZpiH/XsT4gDD+2nC6bE2zxGghJ/ax6yuWlncAQkw+GTbsahhObC8NdGm/JsdSfqxX1iCaplUxH3GkdMugRbPKl1TDlTWoHwtwBDUM4pPlaZIP7XLPjssagM3lh9wrG4HupNAy9acnMbplnopxMYyH+fR0BQSQPv3u44xNeOiqdcExVdqm0TwL8QFV/Mi6bmB0G97zjePv5qMcS85wf0H7SLXPqOm4FrlFGHcomguM46CVOwoN64s8kDlf91fl6eI8jMceNeCSFxjkZDxKzwftqe9PaBrVMdlQDd2rNENLTK/3JCRYDEIvBLkbQPL5tAIdSV4y0uo96n1RsRzgNPrr7+LxCSPkvvHy0Sb70C0u5fc+N663Fxvzafv4qvDk/l8w6fXwHBFQG8JmW4KFdnbIG2R63CuEaoJ/wwRUJEoXfEAdopbOs4XyyGfdgmE59FQQFpvNSvhYu5eqMUTnVaNu5n1V1lpaV6tH7jnSbA3VmdVIwTZqGHD8s2YcqRmAr5JiGawOaZiwBPvBsjidNQ6HnZElPUo4gw0QZK4zjJkvuNufVYdlJ1W1LDROKT9VX7e3fBLXR/GA6Vo5Fd5IbGxYWjQMhlHojDh453QBjqcATbD4D79ugL+p61q7nR2K2I579rDFP3G6tYc5eEceSisPo6oXYYqFNOedcubcxYhd6onp2jmj8ZqBpvpgtdIfkjuVRuG7TcWWjV0hTlylGx5vEHlEM62IG25lhIBuzMd5ik8611mPY/KswJYEHTrYRNsNjuLBZQy++uVKMwGa+fWQxW2lOaVFdYE/KGJCDyXufAcoAN2Wwmi+i+ZBA==",
-    "expiration": "2026-05-16T07:20:01.000Z"
+    "access_key_id": "ASIAZV3A2ECZLIVG5XXI",
+    "secret_access_key": "qvtKO80lZJX41jZA6smm7chZMcfZkelFIrq9q6Ua",
+    "session_token": "IQoJb3JpZ2luX2VjENT//////////wEaCXVzLWVhc3QtMSJGMEQCIFEeLoSuf14kt0dpFp8/H3aUs9vNYLNUH8FPVX6F2WOgAiABQvOEdtMMpmuUmA3u6CyWgqWX9yrNWRYp67ayWatrHir/Awic//////////8BEAQaDDY2NTM4NjA5ODg2NiIMmi4zlPhkgPlJbb/BKtMD0xANAbwI5yAnxEFTtHLHraZWiFx3xo2BQJvb9tOsslXF2KXc1rqZJVPlfkTAP6e8ZTsyah0/0hNECkQI/3Lzghf9A8K9TimP2OntOPH1tSLUgmeqxzeszpIXr4NsQMSCjCANJgx9W+yTpAOwMcP1DBh9+E4bkOjucx7MHXsZqY35A1d5noa0r9gzJ5TJasgzXidsYLhC9CODL7JYiZz22rnB/2D0bZrAnSafrB/xWmScOZUV1R+ICKiuwGyIndDnaQt372nu9PdJiolgfy5qlpQadVs5TY3/2PNMk3kZp5o3v/KH1vKpjjMAGZLLnRMpkDgVWbRB8Yw+gJRiDHuGqFoP4VBgs8lsQvSajtIqZY5r3bmMuGj1HMOo9uh2yDNGlVOfFZsvNRwdUB6q1kHhNLmDbp92r9iaNF6bXeGqCNHQ1wSSe4CORaqeMD3bH7TuLzR9zIlmmvJoYtJOcLGQu3A9hUu9lda2JDZrXUC6irheJl3nj7cM7P7+UPduLpleyv8XYJPsBtB9S3eR3KrK8lQLWcM4WhIwarBYY9u3yBwBP/03kGJ1ARKDgWEBUdDkBpXZ45kKiCSAygwZd5605CB1jRW2q7TSyELnWC1GFLCstCcw04Ld0AY6ngEMccJabkX1RLtn80U0h5hij2DY45owBlWlWsbyIq72Ftx2W5e+/GDrU0bQEjb1/+LNJyKxP+/HprKtKnLOcLNEVG2PMR+mIT7SJUWMGhqEV2N+kc6h1K3LMsx/Y/o6rtPsXII64UYUZvf0a2XX62WVTx+7d/KSsuI6MIhstb8vapSZ1X0tvLqy1baIErstP32bVlOlFBLSS2imvZR6Ww==",
+    "expiration": "2026-05-28T07:09:07.000Z"
   },
   "name": "wedding-invite-builder",
   "path": "/home/ubuntu/wedding-invite-builder",
@@ -29,14 +30,17 @@
     "OAUTH_SERVER_URL": "https://api.manus.im",
     "OWNER_NAME": "hesham alatrash",
     "OWNER_OPEN_ID": "jMW9QPknopPRiRnw6M3ifT",
+    "STRIPE_SECRET_KEY": "sk_test_51TbbgHDJogCK23JwfX17UNUdo23VqyI5UcBXQ7lHulWoRmAKHv3LZZoo9wHZZOlpZ2TWC962rlKhH8REfC0emF7g00N8IkYyPC",
+    "STRIPE_WEBHOOK_SECRET": "whsec_hyUpbINMf3kawt3GdZ2hqOWRrSXciXXW",
     "VITE_ANALYTICS_ENDPOINT": "https://manus-analytics.com",
     "VITE_ANALYTICS_WEBSITE_ID": "368e4fed-c65f-478c-a968-d9439dbb036a",
     "VITE_APP_ID": "cwkwQE2ZytYK5D22sZcWLW",
-    "VITE_APP_LOGO": "",
+    "VITE_APP_LOGO": "https://files.manuscdn.com/user_upload_by_module/web_dev_logo/310419663029094267/BBAoaWnSFFXNwtjS.png",
     "VITE_APP_TITLE": "LoveNote — Digital Wedding Invitation Builder",
     "VITE_FRONTEND_FORGE_API_KEY": "hyfeBXbfjyFwRdhzXH2fXB",
     "VITE_FRONTEND_FORGE_API_URL": "https://forge.manus.ai",
-    "VITE_OAUTH_PORTAL_URL": "https://manus.im"
+    "VITE_OAUTH_PORTAL_URL": "https://manus.im",
+    "VITE_STRIPE_PUBLISHABLE_KEY": "pk_test_51TbbgHDJogCK23JwF1VLkUPVsUhPHHYHBo3YO8r6yVBGbYc3IVzgyZRoQ2gSJINrrAvlUuUIhIsAoAXuVRc73cTU00SaBda7T7"
   },
   "template_id": "web-db-user",
   "test_command": "pnpm test"

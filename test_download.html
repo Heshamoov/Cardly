@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<body>
+<button onclick="testDownload()">Test Download</button>
+<script>
+async function testDownload() {
+  try {
+    console.log('Fetching...');
+    const res = await fetch('/api/wall-export/84a1x893');
+    console.log('Response status:', res.status);
+    console.log('Response ok:', res.ok);
+    const blob = await res.blob();
+    console.log('Blob size:', blob.size);
+    console.log('Blob type:', blob.type);
+    const url = URL.createObjectURL(blob);
+    console.log('Object URL:', url);
+    const a = document.createElement('a');
+    a.href = url;
+    const cd = res.headers.get('content-disposition') ?? '';
+    console.log('Content-Disposition:', cd);
+    const match = cd.match(/filename="(.+?)"/);
+    a.download = match ? match[1] : 'test.pptx';
+    console.log('Download filename:', a.download);
+    console.log('Clicking...');
+    a.click();
+    console.log('Clicked');
+    URL.revokeObjectURL(url);
+  } catch (err) {
+    console.error('Error:', err);
+  }
+}
+</script>
+</body>
+</html>

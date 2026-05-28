@@ -2,6 +2,7 @@ import { COOKIE_NAME } from "@shared/const";
 // v2 — full invitations router with get, create, resolveMapUrl
 import { invitationsRouter } from "./invitationsRouter";
 import { rsvpRouter } from "./rsvpRouter";
+import { paymentRouter } from "./paymentRouter";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, router } from "./_core/trpc";
@@ -23,6 +24,7 @@ export const appRouter = router({
 
   invitations: invitationsRouter,
   rsvp: rsvpRouter,
+  payments: paymentRouter,
   debug: router({
     dbCheck: publicProcedure.query(async () => {
       const { getDb } = await import("./db");
