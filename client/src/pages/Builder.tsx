@@ -715,6 +715,7 @@ function loadDraft(): InvitationData {
 export default function Builder() {
   const [data, setData] = useState<InvitationData>(loadDraft);
   const [previewing, setPreviewing] = useState(false);
+  const [livePreviewOpen, setLivePreviewOpen] = useState(false);
   const [publishedSlug, setPublishedSlug] = useState<string | null>(null);
   const [isPaid, setIsPaid] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -1481,7 +1482,7 @@ export default function Builder() {
         <MusicSection data={data} set={set} formLang={formLang} uploadMusicMutation={uploadMusicMutation} />
 
         {/* ── Actions ── */}
-        <div className="flex flex-col gap-3 mt-6 pb-8">
+        <div className="flex flex-col gap-3 mt-6 pb-24">
           <button
             className="btn-gold w-full"
             onClick={() => setPreviewing(true)}
@@ -1503,6 +1504,123 @@ export default function Builder() {
           </button>
         </div>
       </div>
+
+      {/* Floating Live Preview Button */}
+      <button
+        onClick={() => setLivePreviewOpen(true)}
+        aria-label={formLang === "ar" ? "معاينة مباشرة" : "Live Preview"}
+        style={{
+          position: "fixed",
+          bottom: 24,
+          right: 24,
+          zIndex: 90,
+          padding: "14px 22px",
+          borderRadius: 999,
+          border: "1px solid rgba(201,168,76,0.7)",
+          background: "linear-gradient(135deg, #c9a84c, #8a6f2f)",
+          color: "#1a1424",
+          fontFamily: formLang === "ar" ? ARABIC_FONT : "'Lato', sans-serif",
+          fontSize: 13,
+          fontWeight: 800,
+          letterSpacing: "0.08em",
+          textTransform: formLang === "ar" ? "none" : "uppercase",
+          boxShadow: "0 8px 28px rgba(201,168,76,0.45), 0 2px 6px rgba(0,0,0,0.5)",
+          cursor: "pointer",
+          display: "flex",
+          alignItems: "center",
+          gap: 8,
+          transition: "transform 180ms cubic-bezier(0.23, 1, 0.32, 1)",
+        }}
+        onMouseEnter={(e) => { e.currentTarget.style.transform = "scale(1.04)"; }}
+        onMouseLeave={(e) => { e.currentTarget.style.transform = "scale(1)"; }}
+        onMouseDown={(e) => { e.currentTarget.style.transform = "scale(0.97)"; }}
+        onMouseUp={(e) => { e.currentTarget.style.transform = "scale(1.04)"; }}
+      >
+        <span style={{ fontSize: 16 }}>👁</span>
+        {formLang === "ar" ? "معاينة مباشرة" : "Live Preview"}
+      </button>
+
+      {/* Live Preview Side Panel */}
+      {livePreviewOpen && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 100,
+            background: "rgba(0,0,0,0.85)",
+            display: "flex",
+            justifyContent: "flex-end",
+            animation: "fadeIn 200ms cubic-bezier(0.23, 1, 0.32, 1)",
+          }}
+          onClick={() => setLivePreviewOpen(false)}
+        >
+          <div
+            style={{
+              width: "min(440px, 100vw)",
+              height: "100vh",
+              background: "#1a1424",
+              borderLeft: "1px solid rgba(201,168,76,0.3)",
+              boxShadow: "-12px 0 40px rgba(0,0,0,0.6)",
+              animation: "slideInRight 280ms cubic-bezier(0.23, 1, 0.32, 1)",
+              display: "flex",
+              flexDirection: "column",
+              overflow: "hidden",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div
+              style={{
+                padding: "14px 18px",
+                borderBottom: "1px solid rgba(201,168,76,0.2)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                flexShrink: 0,
+                background: "rgba(0,0,0,0.4)",
+              }}
+            >
+              <div>
+                <p style={{ fontFamily: "'Lato', sans-serif", fontSize: 10, color: "rgba(201,168,76,0.6)", letterSpacing: "0.15em", margin: 0, textTransform: "uppercase" }}>
+                  {formLang === "ar" ? "معاينة مباشرة" : "Live Preview"}
+                </p>
+                <p style={{ fontFamily: formLang === "ar" ? ARABIC_FONT : "'Lato', sans-serif", fontSize: 12, color: "rgba(255,255,255,0.5)", margin: "2px 0 0" }}>
+                  {formLang === "ar" ? "تحديث فوري" : "Updates instantly as you type"}
+                </p>
+              </div>
+              <button
+                onClick={() => setLivePreviewOpen(false)}
+                style={{
+                  width: 32,
+                  height: 32,
+                  borderRadius: 16,
+                  border: "1px solid rgba(201,168,76,0.4)",
+                  background: "transparent",
+                  color: "rgba(201,168,76,0.9)",
+                  fontSize: 16,
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Live Preview Content */}
+            <div style={{ flex: 1, minHeight: 0, overflow: "auto", position: "relative", background: "#1a1424" }}>
+              <LivePreviewContent data={data} lang={formLang} />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Inject animations */}
+      <style>{`
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideInRight { from { transform: translateX(100%); } to { transform: translateX(0); } }
+      `}</style>
     </div>
   );
 }
@@ -2275,4 +2393,27 @@ function getTimeLeft(targetDate: string) {
     minutes: Math.floor((diff / (1000 * 60)) % 60),
     seconds: Math.floor((diff / 1000) % 60),
   };
+}
+
+
+// ── Live Preview Content (used by floating preview side panel) ──────────────
+function LivePreviewContent({ data, lang }: { data: InvitationData; lang: Lang }) {
+  const envStyle = ENVELOPE_STYLES.find((s) => s.id === (data.envelopeStyle ?? "ivory-gold")) ?? ENVELOPE_STYLES[0];
+  const fontScale = data.fontScale ?? 1;
+  return (
+    <div
+      style={{
+        width: "100%",
+        minHeight: "100%",
+        background: envStyle.theme.bg,
+        color: envStyle.theme.text,
+        ["--font-scale" as string]: fontScale,
+      } as React.CSSProperties}
+      dir={lang === "ar" ? "rtl" : "ltr"}
+    >
+      <div className="mobile-container" style={{ paddingTop: 32, paddingBottom: 64 }}>
+        <PreviewContent data={data} lang={lang} />
+      </div>
+    </div>
+  );
 }
