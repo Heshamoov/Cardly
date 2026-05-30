@@ -671,6 +671,44 @@ function InvitationPage({ data, slug, lang, onToggleLang, onBackToEnvelope, isMu
           </div>
         )}
 
+        {/* Event Program */}
+        {data.sections?.program === true && (() => {
+          const programText = isRtl
+            ? ((data as any).arEventProgram || (data as any).eventProgram || "")
+            : ((data as any).eventProgram || "");
+          if (!programText.trim()) return null;
+          const lines = programText.split("\n").map((l: string) => l.trim()).filter((l: string) => l.length > 0);
+          return (
+            <div className="invitation-section py-4 px-6">
+              <div className="divider-ornament mb-3">
+                <span className="text-gold">✷</span>
+              </div>
+              <p className="invite-label text-gold opacity-60 mb-4" style={{ fontFamily: bodyFont, fontSize: `calc(clamp(0.95rem, 3vw, 1.05rem) * var(--font-scale, 1))`, letterSpacing: "0.18em" }}>
+                {isRtl ? "برنامج الحدث" : "PROGRAM"}
+              </p>
+              <div className="flex flex-col gap-2 max-w-md mx-auto" dir={isRtl ? "rtl" : "ltr"}>
+                {lines.map((line: string, i: number) => {
+                  const sepIdx = line.indexOf(":");
+                  const time = sepIdx > -1 ? line.slice(sepIdx + 1).trim() : "";
+                  const event = sepIdx > -1 ? line.slice(0, sepIdx).trim() : line;
+                  return (
+                    <div key={i} className="flex items-baseline gap-3" style={{ borderBottom: `1px dashed ${theme.accent}33`, paddingBottom: 6 }}>
+                      <span className="invite-detail flex-1" style={{ fontFamily: bodyFont, fontSize: `calc(0.95rem * var(--font-scale, 1))`, opacity: 0.85, textAlign: isRtl ? "right" : "left" }}>
+                        {event}
+                      </span>
+                      {time && (
+                        <span className="text-gold" style={{ fontFamily: bodyFont, fontSize: `calc(0.9rem * var(--font-scale, 1))`, fontWeight: 600, letterSpacing: "0.05em", whiteSpace: "nowrap" }}>
+                          {time}
+                        </span>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })()}
+
         {/* Countdown */}
         {data.sections?.countdown !== false && data.date && (
           <div className="invitation-section py-3">

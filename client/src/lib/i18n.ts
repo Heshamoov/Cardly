@@ -72,6 +72,9 @@ export const translations = {
     partySizeError: "Party size must be between 1 and 50.",
     somethingWrong: "Something went wrong. Please try again.",
     // Music section
+    sectionProgram: "EVENT PROGRAM",
+    programHint: "Optional — timeline of what happens at your event",
+    programPlaceholder: "Guest arrival: 8:00 PM\nDinner: 10:00 PM\nToasts & Speeches: 11:00 PM\nDancing: 12:00 AM\nEnd of event: 2:00 AM",
     sectionMusic: "BACKGROUND MUSIC",
     musicHint: "Music plays automatically when guests open the envelope",
     musicNone: "No music selected",
@@ -151,6 +154,9 @@ export const translations = {
     partySizeError: "يجب أن يكون عدد الحضور بين 1 و 50.",
     somethingWrong: "حدث خطأ ما. يرجى المحاولة مرة أخرى.",
     // Music section
+    sectionProgram: "برنامج الحدث",
+    programHint: "اختياري — المسار الزمني لما سيحدث في حدثك",
+    programPlaceholder: "وصول الضيوف: 8:00 مساء\nالعشاء: 10:00 مساء\nالخطابات: 11:00 مساء\nالرقص: 12:00 منتصف الليل\nنهاية الحدث: 2:00 صباحاً",
     sectionMusic: "موسيقى الخلفية",
     musicHint: "تعزف الموسيقى تلقائياً عند فتح الظرف",
     musicNone: "لم يتم اختيار موسيقى",

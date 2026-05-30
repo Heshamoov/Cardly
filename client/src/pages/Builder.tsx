@@ -39,6 +39,8 @@ interface InvitationData {
   scriptFont?: string; // font for names & hosting line
   bodyFontChoice?: string; // font for welcome message & body text
   showParticles?: boolean; // falling flowers & stars animation
+  eventProgram?: string; // Optional event timeline
+  arEventProgram?: string; // Arabic event timeline
 }
 
 const ENVELOPE_STYLES = [
@@ -178,6 +180,8 @@ const defaultData: InvitationData = {
   rsvpDeadline: "",
   scriptFont: "Cormorant Garamond",
   bodyFontChoice: "Lato",
+  eventProgram: "",
+  arEventProgram: "",
   sections: {
     names: true,
     date: true,
@@ -190,6 +194,7 @@ const defaultData: InvitationData = {
     showHostingLine: true,
     showSubHeadline: true,
     particles: true,
+    program: false,
   },
 };
 
@@ -1367,6 +1372,39 @@ export default function Builder() {
               />
               <textarea className="wedding-input" dir="rtl" style={{ fontFamily: `'Noto Naskh Arabic', 'Amiri', serif` }} rows={3} placeholder="مثال: يسعدنا دعوتكم لمشاركتنا فرحة زفافنا…" value={data.arMessage ?? ""} onChange={(e) => set("arMessage", e.target.value)} />
             </div>
+          )}
+        </SectionCard>
+
+        {/* ── Section: Event Program ── */}
+        <SectionCard
+          label={ft.sectionProgram}
+          sectionKey="program"
+          sections={data.sections}
+          onToggle={toggleSection}
+          hiddenText={formLang === "ar" ? "القسم مخفي — اضغط للتفعيل" : undefined}
+          labelFont={formLang === "ar" ? ARABIC_FONT : undefined}
+        >
+          <p className="font-sans text-xs opacity-50 mb-2" style={formLang === "ar" ? { fontFamily: ARABIC_FONT } : {}}>
+            {ft.programHint}
+          </p>
+          {formLang === "en" ? (
+            <textarea
+              className="wedding-input"
+              rows={6}
+              placeholder={ft.programPlaceholder}
+              value={data.eventProgram ?? ""}
+              onChange={(e) => set("eventProgram", e.target.value)}
+            />
+          ) : (
+            <textarea
+              className="wedding-input"
+              dir="rtl"
+              style={{ fontFamily: `'Noto Naskh Arabic', 'Amiri', serif` }}
+              rows={6}
+              placeholder={ft.programPlaceholder}
+              value={data.arEventProgram ?? ""}
+              onChange={(e) => set("arEventProgram", e.target.value)}
+            />
           )}
         </SectionCard>
 
