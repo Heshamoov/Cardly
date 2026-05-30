@@ -881,8 +881,8 @@ export default function Builder() {
 
   // ── Builder mode ──────────────────────────────────────────────────────────
   return (
-    <div className="builder-page">
-      <div className="mobile-container px-4 pt-8" dir={formLang === "ar" ? "rtl" : "ltr"}>
+    <div className="builder-page builder-split">
+      <div className="builder-form-pane mobile-container px-4 pt-8" dir={formLang === "ar" ? "rtl" : "ltr"}>
         {/* Header */}
         <div className="text-center mb-8 animate-fade-in-up">
           <p className="font-sans text-xs uppercase tracking-widest text-gold mb-1 opacity-70" style={formLang === "ar" ? { fontFamily: ARABIC_FONT } : {}}>
@@ -1505,36 +1505,26 @@ export default function Builder() {
         </div>
       </div>
 
-      {/* Floating Live Preview Button */}
+      {/* Desktop Sticky Live Preview Pane (right side) */}
+      <aside className="builder-preview-pane" aria-label="Live Preview">
+        <div className="builder-preview-header">
+          <span style={{ fontFamily: "'Lato', sans-serif", fontSize: 10, color: "rgba(201,168,76,0.7)", letterSpacing: "0.18em", textTransform: "uppercase", fontWeight: 700 }}>
+            👁 {formLang === "ar" ? "معاينة مباشرة" : "Live Preview"}
+          </span>
+          <span style={{ fontFamily: formLang === "ar" ? ARABIC_FONT : "'Lato', sans-serif", fontSize: 11, color: "rgba(255,255,255,0.4)", marginInlineStart: 12 }}>
+            {formLang === "ar" ? "تحديث فوري" : "Updates instantly"}
+          </span>
+        </div>
+        <div className="builder-preview-body">
+          <LivePreviewContent data={data} lang={formLang} />
+        </div>
+      </aside>
+
+      {/* Mobile Floating Live Preview Button (shown only on small screens) */}
       <button
+        className="builder-preview-mobile-btn"
         onClick={() => setLivePreviewOpen(true)}
         aria-label={formLang === "ar" ? "معاينة مباشرة" : "Live Preview"}
-        style={{
-          position: "fixed",
-          bottom: 24,
-          right: 24,
-          zIndex: 90,
-          padding: "14px 22px",
-          borderRadius: 999,
-          border: "1px solid rgba(201,168,76,0.7)",
-          background: "linear-gradient(135deg, #c9a84c, #8a6f2f)",
-          color: "#1a1424",
-          fontFamily: formLang === "ar" ? ARABIC_FONT : "'Lato', sans-serif",
-          fontSize: 13,
-          fontWeight: 800,
-          letterSpacing: "0.08em",
-          textTransform: formLang === "ar" ? "none" : "uppercase",
-          boxShadow: "0 8px 28px rgba(201,168,76,0.45), 0 2px 6px rgba(0,0,0,0.5)",
-          cursor: "pointer",
-          display: "flex",
-          alignItems: "center",
-          gap: 8,
-          transition: "transform 180ms cubic-bezier(0.23, 1, 0.32, 1)",
-        }}
-        onMouseEnter={(e) => { e.currentTarget.style.transform = "scale(1.04)"; }}
-        onMouseLeave={(e) => { e.currentTarget.style.transform = "scale(1)"; }}
-        onMouseDown={(e) => { e.currentTarget.style.transform = "scale(0.97)"; }}
-        onMouseUp={(e) => { e.currentTarget.style.transform = "scale(1.04)"; }}
       >
         <span style={{ fontSize: 16 }}>👁</span>
         {formLang === "ar" ? "معاينة مباشرة" : "Live Preview"}
