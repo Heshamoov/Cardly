@@ -1,9 +1,9 @@
 import type { Express, Request, Response } from "express";
 import express from "express";
 import { eq } from "drizzle-orm";
-import { getStripe } from "./paymentRouter";
+import { getStripe, INVITATIONS_LIMIT } from "./paymentRouter";
 import { getDb } from "./db";
-import { invitations, payments } from "../drizzle/schema";
+import { subscriptions, users } from "../drizzle/schema";
 import { notifyOwner } from "./_core/notification";
 
 /**
@@ -11,6 +11,13 @@ import { notifyOwner } from "./_core/notification";
  *
  * IMPORTANT: This must be registered BEFORE express.json() so that the raw body
  * is available for signature verification.
+ *
+ * Handles subscription lifecycle events:
+ *   checkout.session.completed   → activate subscription
+ *   invoice.paid                 → renew period + reset quota
+ *   customer.subscription.updated → sync status
+ *   customer.subscription.deleted → mark canceled
+ *   invoice.payment_failed       → mark past_due
  */
 export function registerStripeWebhook(app: Express) {
   app.post(
@@ -24,8 +31,6 @@ export function registerStripeWebhook(app: Express) {
       try {
         const stripe = await getStripe();
         if (!sig || !webhookSecret) {
-          // No signature or secret — try to parse raw event but treat as untrusted.
-          // We still need to handle test events from Manus integration tests.
           event = JSON.parse(req.body.toString());
         } else {
           event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
@@ -41,98 +46,150 @@ export function registerStripeWebhook(app: Express) {
         return res.json({ verified: true });
       }
 
+      const db = await getDb();
+      if (!db) {
+        console.error("[Stripe Webhook] DB not available");
+        return res.status(500).json({ error: "Database not available" });
+      }
+
       try {
         switch (event.type) {
+          // ── New subscription activated via checkout ────────────────────
           case "checkout.session.completed": {
             const session = event.data.object;
-            const slug = session.metadata?.invitation_slug;
-            const invitationIdRaw = session.metadata?.invitation_id;
-            const paymentIntentId = (session.payment_intent as string) || session.id;
-            const amount = session.amount_total ?? 0;
-            const currency = (session.currency as string)?.toUpperCase() ?? "AED";
-            const email = session.customer_email || session.metadata?.customer_email || null;
+            if (session.mode !== "subscription") break;
 
-            if (!slug) {
-              console.warn("[Stripe Webhook] checkout.session.completed missing invitation_slug metadata");
+            const openId = session.metadata?.open_id;
+            const stripeCustomerId = session.customer as string;
+            const stripeSubscriptionId =
+              typeof session.subscription === "string"
+                ? session.subscription
+                : session.subscription?.id;
+
+            if (!openId || !stripeSubscriptionId) {
+              console.warn("[Stripe Webhook] Missing openId or subscriptionId in session metadata");
               break;
             }
 
-            const db = await getDb();
-            if (!db) {
-              console.error("[Stripe Webhook] DB not available");
-              break;
-            }
+            // Fetch subscription details to get period end
+            const stripe = await getStripe();
+            const stripeSub = await stripe.subscriptions.retrieve(stripeSubscriptionId);
+            const periodEnd = new Date(stripeSub.current_period_end * 1000);
 
-            // Mark invitation as paid (idempotent)
-            await db
-              .update(invitations)
-              .set({
-                isPaid: true,
-                paidAt: new Date(),
-                stripePaymentIntentId: paymentIntentId,
-              })
-              .where(eq(invitations.slug, slug));
+            // Upsert subscription row
+            const existing = await db
+              .select()
+              .from(subscriptions)
+              .where(eq(subscriptions.ownerOpenId, openId))
+              .limit(1);
 
-            // Record/update payment row (idempotent)
-            try {
-              const invitationId = invitationIdRaw ? Number(invitationIdRaw) : null;
-              if (invitationId) {
-                // Try to update existing pending row first
-                const updated = await db
-                  .update(payments)
-                  .set({
-                    status: "succeeded",
-                    succeededAt: new Date(),
-                    amount,
-                    currency,
-                    stripePaymentIntentId: paymentIntentId,
-                    email,
-                  } as any)
-                  .where(eq(payments.invitationId, invitationId));
-                // If no rows updated, insert new
-                if (!(updated as any)?.[0]?.affectedRows) {
-                  await db
-                    .insert(payments)
-                    .values({
-                      invitationId,
-                      stripePaymentIntentId: paymentIntentId,
-                      amount,
-                      currency,
-                      status: "succeeded",
-                      email,
-                      succeededAt: new Date(),
-                    } as any)
-                    .onDuplicateKeyUpdate({
-                      set: { status: "succeeded", succeededAt: new Date(), amount, currency, email } as any,
-                    });
-                }
-              }
-            } catch (dbErr) {
-              console.warn("[Stripe Webhook] Payment row upsert warning:", dbErr);
-            }
-
-            console.log("[Stripe Webhook] Marked invitation paid:", slug);
-
-            // Notify the project owner of the new payment
-            try {
-              const invRows = await db.select({ title: invitations.title }).from(invitations).where(eq(invitations.slug, slug)).limit(1);
-              const invTitle = invRows[0]?.title || slug;
-              await notifyOwner({
-                title: "New Cardly Payment Received 💍",
-                content: `Invitation "${invTitle}" (slug: ${slug}) has been paid.\nAmount: ${(amount / 100).toFixed(2)} ${currency}\nCustomer: ${email || "unknown"}`,
+            if (existing.length > 0) {
+              await db
+                .update(subscriptions)
+                .set({
+                  stripeSubscriptionId,
+                  stripeCustomerId,
+                  status: "active",
+                  currentPeriodEnd: periodEnd,
+                  invitationsUsed: 0,
+                })
+                .where(eq(subscriptions.ownerOpenId, openId));
+            } else {
+              await db.insert(subscriptions).values({
+                ownerOpenId: openId,
+                stripeSubscriptionId,
+                stripeCustomerId,
+                status: "active",
+                currentPeriodEnd: periodEnd,
+                invitationsUsed: 0,
+                invitationsLimit: INVITATIONS_LIMIT,
               });
-            } catch {
-              // Notification failure is non-fatal
             }
+
+            // Save stripeCustomerId on user row
+            await db
+              .update(users)
+              .set({ stripeCustomerId })
+              .where(eq(users.openId, openId));
+
+            const customerName = session.metadata?.customer_name || "A user";
+            const customerEmail = session.metadata?.customer_email || "";
+            await notifyOwner({
+              title: "💳 New Cardly Subscription",
+              content: `${customerName} (${customerEmail}) subscribed to the AED 200/month plan.\nPeriod ends: ${periodEnd.toLocaleDateString()}.`,
+            }).catch(() => {});
+
+            console.log(`[Stripe Webhook] Subscription activated for ${openId}`);
             break;
           }
-          case "payment_intent.succeeded":
-          case "payment_intent.payment_failed":
-          case "charge.succeeded":
-          case "charge.refunded":
-            // Could log these for audit; primary state is set in checkout.session.completed.
-            console.log("[Stripe Webhook] Event:", event.type, event.id);
+
+          // ── Subscription renewed (new billing period) ──────────────────
+          case "invoice.paid": {
+            const invoice = event.data.object;
+            const stripeSubscriptionId = invoice.subscription as string;
+            if (!stripeSubscriptionId) break;
+
+            // Fetch updated period end from Stripe
+            const stripe = await getStripe();
+            const stripeSub = await stripe.subscriptions.retrieve(stripeSubscriptionId);
+            const periodEnd = new Date(stripeSub.current_period_end * 1000);
+
+            await db
+              .update(subscriptions)
+              .set({
+                status: "active",
+                currentPeriodEnd: periodEnd,
+                invitationsUsed: 0, // Reset quota on renewal
+              })
+              .where(eq(subscriptions.stripeSubscriptionId, stripeSubscriptionId));
+
+            console.log(`[Stripe Webhook] Subscription renewed: ${stripeSubscriptionId}, new period ends ${periodEnd.toLocaleDateString()}`);
             break;
+          }
+
+          // ── Subscription status changed ────────────────────────────────
+          case "customer.subscription.updated": {
+            const stripeSub = event.data.object;
+            const stripeSubscriptionId = stripeSub.id;
+            const newStatus = stripeSub.status;
+            const periodEnd = new Date(stripeSub.current_period_end * 1000);
+
+            await db
+              .update(subscriptions)
+              .set({ status: newStatus, currentPeriodEnd: periodEnd })
+              .where(eq(subscriptions.stripeSubscriptionId, stripeSubscriptionId));
+
+            console.log(`[Stripe Webhook] Subscription ${stripeSubscriptionId} status → ${newStatus}`);
+            break;
+          }
+
+          // ── Subscription cancelled ─────────────────────────────────────
+          case "customer.subscription.deleted": {
+            const stripeSub = event.data.object;
+            await db
+              .update(subscriptions)
+              .set({ status: "canceled" })
+              .where(eq(subscriptions.stripeSubscriptionId, stripeSub.id));
+
+            console.log(`[Stripe Webhook] Subscription ${stripeSub.id} canceled`);
+            break;
+          }
+
+          // ── Payment failed ─────────────────────────────────────────────
+          case "invoice.payment_failed": {
+            const invoice = event.data.object;
+            const stripeSubscriptionId = invoice.subscription as string;
+            if (!stripeSubscriptionId) break;
+
+            await db
+              .update(subscriptions)
+              .set({ status: "past_due" })
+              .where(eq(subscriptions.stripeSubscriptionId, stripeSubscriptionId));
+
+            console.log(`[Stripe Webhook] Payment failed for subscription ${stripeSubscriptionId}`);
+            break;
+          }
+
           default:
             console.log("[Stripe Webhook] Unhandled event type:", event.type);
         }

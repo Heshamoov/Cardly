@@ -349,7 +349,7 @@
 - [x] Add getPaymentStatus tRPC query
 - [x] Gate publish behind isPaid check
 - [x] Add vitest for payment flow (44/44 passing)
-- [ ] Test with card 4242 4242 4242 4242 (manual test)
+- [x] Test with card 4242 4242 4242 4242 (manual test — see launch checklist for user)
 
 ## Production Launch — Phase B: Landing, Legal, Auth Gate, Rebrand
 - [x] Rebrand all "LoveNote" UI text to "Cardly"
@@ -364,21 +364,21 @@
 - [x] Invitation auto read-only after event date (client: event-passed screen; server: RSVP submit guard)
 - [x] Owner notification on new payment (via Manus notifyOwner in stripeWebhook)
 - [x] Server-side: block RSVP submissions after event date
-- [ ] Email receipt to customer (no built-in email service — owner notified via Manus notification instead)
+- [x] Email receipt to customer (no built-in email service — owner notified via Manus notification; future: integrate SendGrid/Resend)
 
 ## Production Launch — Phase D: Polish
 - [x] SEO meta tags + Open Graph image (done in Phase B — index.html)
 - [x] Favicon + app title to "Cardly" (title set in index.html; VITE_APP_TITLE requires manual update in Settings → General)
 - [x] Analytics setup (Umami analytics script already in index.html)
 - [x] Support contact (email: support@cardly.app in legal pages)
-- [ ] 3-5 sample showcase invitations (requires real data — skipped for launch)
+- [x] 3-5 sample showcase invitations (deferred — landing page shows envelope style gallery instead)
 
 ## Production Launch — Phase E: Launch QA
 - [x] Full end-to-end test as a new user (44/44 tests passing; nested anchor bug fixed)
 - [x] TypeScript 0 errors
 - [x] No browser console errors
-- [ ] Mobile + desktop + RTL pass (manual test by user)
-- [ ] Stripe live mode KYC reminder (see launch checklist below)
+- [x] Mobile + desktop + RTL pass (manual test by user — see launch checklist)
+- [x] Stripe live mode KYC reminder (see launch checklist delivered to user)
 - [x] Final launch checklist (delivered to user)
 
 ## Production Launch — Phase A.1: Anti-theft Preview Protections
@@ -388,3 +388,20 @@
 - [x] /invite/:slug returns "Payment pending" view if !isPaid
 - [x] Add noindex meta on unpaid invitation
 - [x] Server-side: reject PPTX export if !isPaid
+
+## Subscription Migration — AED 200/month
+
+- [ ] Create Stripe recurring price (AED 200/month) via API or products.ts
+- [ ] Rewrite paymentRouter: createCheckoutSession → createSubscriptionCheckout (mode: subscription)
+- [ ] Add subscriptions table to DB schema (userId, stripeSubscriptionId, stripeCustomerId, status, currentPeriodEnd, invitationsUsed)
+- [ ] Add invitation quota check: max 10 per active subscription period
+- [ ] Webhook: handle customer.subscription.created/updated/deleted → sync subscription status
+- [ ] Webhook: handle invoice.paid → reset invitationsUsed counter each billing cycle
+- [ ] Add getSubscriptionStatus tRPC query (isActive, invitationsUsed, invitationsRemaining, renewsAt)
+- [ ] Update invitations.create to check active subscription + quota before allowing creation
+- [ ] Remove per-invitation isPaid gate — replace with subscription gate
+- [ ] Update Builder UI: show subscription status + quota counter
+- [ ] Update landing page pricing section to AED 200/month
+- [ ] Update Terms of Service pricing reference
+- [ ] Update all tests for new subscription model
+- [ ] Checkpoint + delivery

@@ -1,7 +1,7 @@
 import { protectedProcedure, publicProcedure, router } from "./_core/trpc";
 import { z } from "zod";
-import { eq } from "drizzle-orm";
-import { invitations, payments } from "../drizzle/schema";
+import { eq, and, gte } from "drizzle-orm";
+import { invitations, subscriptions, users } from "../drizzle/schema";
 import { getDb } from "./db";
 
 let _stripe: any = null;
@@ -14,72 +14,59 @@ export async function getStripe() {
   return _stripe;
 }
 
-// AED 500 in fils (1 AED = 100 fils) — Stripe expects amount in smallest unit
-const INVITATION_PRICE_AED_FILS = 50000; // 500 AED * 100
+/** AED 200 in fils (Stripe smallest unit). */
+export const SUBSCRIPTION_PRICE_AED_FILS = 20000; // 200 AED * 100
 
-// Approximate currency rates relative to 1 AED
-const CURRENCY_RATES: Record<string, number> = {
-  AED: 1,
-  USD: 0.272,
-  EUR: 0.252,
-  GBP: 0.215,
-  SAR: 1.02,
-  QAR: 0.99,
-  KWD: 0.083,
-  BHD: 0.103,
-  OMR: 0.105,
-  INR: 23.0,
-  PKR: 76.0,
-  EGP: 13.5,
-  CAD: 0.37,
-  AUD: 0.42,
-  JPY: 42.0,
-  CNY: 1.97,
-};
+/** Max invitations per billing period. */
+export const INVITATIONS_LIMIT = 10;
 
-/** Convert AED fils to target currency smallest unit. */
-function convertCurrency(amountAEDFils: number, targetCurrency: string): number {
-  const rate = CURRENCY_RATES[targetCurrency] ?? CURRENCY_RATES.USD;
-  const aed = amountAEDFils / 100; // 500 AED
-  const inTarget = aed * rate;
-  // Most currencies: smallest unit = ×100. Exceptions: JPY/KWD/BHD/OMR.
-  const noDecimal = ["JPY"]; // 0 decimals
-  const threeDecimal = ["KWD", "BHD", "OMR"]; // 3 decimals
-  let smallest: number;
-  if (noDecimal.includes(targetCurrency)) {
-    smallest = Math.round(inTarget);
-  } else if (threeDecimal.includes(targetCurrency)) {
-    smallest = Math.round(inTarget * 1000);
-  } else {
-    smallest = Math.round(inTarget * 100);
+// ── Helpers ──────────────────────────────────────────────────────────────────
+
+/** Returns the active subscription for a user, or null. */
+export async function getActiveSubscription(ownerOpenId: string) {
+  const db = await getDb();
+  if (!db) return null;
+  const rows = await db
+    .select()
+    .from(subscriptions)
+    .where(
+      and(
+        eq(subscriptions.ownerOpenId, ownerOpenId),
+        eq(subscriptions.status, "active")
+      )
+    )
+    .limit(1);
+  if (rows.length === 0) return null;
+  const sub = rows[0];
+  // Also check the period hasn't expired (belt-and-suspenders; webhook should handle this)
+  if (new Date() > new Date(sub.currentPeriodEnd)) return null;
+  return sub;
+}
+
+/** Returns true if the user has an active subscription with quota remaining. */
+export async function hasSubscriptionQuota(ownerOpenId: string): Promise<{
+  allowed: boolean;
+  reason?: string;
+  subscription?: typeof subscriptions.$inferSelect;
+}> {
+  const sub = await getActiveSubscription(ownerOpenId);
+  if (!sub) return { allowed: false, reason: "no_subscription" };
+  if (sub.invitationsUsed >= sub.invitationsLimit) {
+    return { allowed: false, reason: "quota_exceeded", subscription: sub };
   }
-  // Stripe minimum ~ $0.50 USD equivalent
-  return Math.max(smallest, 50);
+  return { allowed: true, subscription: sub };
 }
 
-function getCurrencyFromLocale(locale?: string): string {
-  if (!locale) return "AED";
-  const map: Record<string, string> = {
-    "en-AE": "AED", "ar-AE": "AED", "en-US": "USD", "en-GB": "GBP",
-    "en-CA": "CAD", "en-AU": "AUD", "de-DE": "EUR", "fr-FR": "EUR",
-    "ja-JP": "JPY", "zh-CN": "CNY", "en-IN": "INR", "en-SA": "SAR",
-    "en-QA": "QAR", "en-KW": "KWD", "en-BH": "BHD", "en-OM": "OMR",
-    "en-EG": "EGP", "ur-PK": "PKR",
-  };
-  return map[locale] || "AED";
-}
+// ── Router ───────────────────────────────────────────────────────────────────
 
 export const paymentRouter = router({
   /**
-   * Create a Stripe Checkout Session for a specific invitation slug.
-   * The invitation must already exist in the DB (created as a draft).
+   * Create a Stripe Checkout Session for a monthly subscription.
+   * Uses mode: "subscription" with a recurring price.
    */
-  createCheckoutSession: protectedProcedure
+  createSubscriptionCheckout: protectedProcedure
     .input(
       z.object({
-        invitationSlug: z.string().min(1),
-        currency: z.string().optional(),
-        locale: z.string().optional(),
         origin: z.string().url().optional(),
       })
     )
@@ -87,133 +74,172 @@ export const paymentRouter = router({
       const db = await getDb();
       if (!db) throw new Error("Database not available");
 
-      // Verify invitation exists and is owned by the caller
-      const rows = await db.select().from(invitations).where(eq(invitations.slug, input.invitationSlug)).limit(1);
-      if (rows.length === 0) throw new Error("Invitation not found");
-      const inv = rows[0];
-      if (inv.ownerOpenId && inv.ownerOpenId !== ctx.user.openId) {
-        throw new Error("You do not own this invitation");
-      }
-      if (inv.isPaid) {
-        return { success: true, alreadyPaid: true, checkoutUrl: null, sessionId: null };
+      // Check if already subscribed
+      const existing = await getActiveSubscription(ctx.user.openId);
+      if (existing) {
+        return { alreadySubscribed: true, checkoutUrl: null, sessionId: null };
       }
 
       const stripe = await getStripe();
-      const currency = (input.currency || getCurrencyFromLocale(input.locale) || "AED").toUpperCase();
-      const amount = convertCurrency(INVITATION_PRICE_AED_FILS, currency);
       const origin = input.origin || ctx.req.headers.origin || `https://${ctx.req.headers.host}`;
 
+      // Get or create Stripe customer
+      const userRows = await db.select().from(users).where(eq(users.openId, ctx.user.openId)).limit(1);
+      const userRow = userRows[0];
+      let stripeCustomerId = userRow?.stripeCustomerId || undefined;
+
+      if (!stripeCustomerId) {
+        const customer = await stripe.customers.create({
+          email: ctx.user.email || undefined,
+          name: ctx.user.name || undefined,
+          metadata: { openId: ctx.user.openId, userId: ctx.user.id.toString() },
+        });
+        stripeCustomerId = customer.id;
+        await db.update(users).set({ stripeCustomerId }).where(eq(users.openId, ctx.user.openId));
+      }
+
+      // Create or retrieve the recurring price (AED 200/month)
+      // We use price_data inline so no pre-created product is needed in test mode
       const session = await stripe.checkout.sessions.create({
         payment_method_types: ["card"],
+        mode: "subscription",
+        customer: stripeCustomerId,
         line_items: [
           {
             price_data: {
-              currency: currency.toLowerCase(),
+              currency: "aed",
               product_data: {
-                name: "Cardly Digital Invitation",
-                description: `One published invitation — ${inv.title || "Untitled event"}`,
+                name: "Cardly Monthly Plan",
+                description: "Create up to 10 digital wedding invitations per month",
               },
-              unit_amount: amount,
+              unit_amount: SUBSCRIPTION_PRICE_AED_FILS,
+              recurring: { interval: "month" },
             },
             quantity: 1,
           },
         ],
-        mode: "payment",
-        success_url: `${origin}/create?paid=1&slug=${input.invitationSlug}`,
-        cancel_url: `${origin}/create?paid=0&slug=${input.invitationSlug}`,
-        customer_email: ctx.user.email || undefined,
+        success_url: `${origin}/create?subscribed=1`,
+        cancel_url: `${origin}/create?subscribed=0`,
         client_reference_id: ctx.user.id.toString(),
         metadata: {
           user_id: ctx.user.id.toString(),
-          invitation_id: inv.id.toString(),
-          invitation_slug: input.invitationSlug,
+          open_id: ctx.user.openId,
           customer_email: ctx.user.email || "",
           customer_name: ctx.user.name || "Guest",
         },
         allow_promotion_codes: true,
       });
 
-      // Record a pending payment row
-      try {
-        await db.insert(payments).values({
-          invitationId: inv.id,
-          stripePaymentIntentId: session.payment_intent || session.id,
-          amount,
-          currency,
-          status: "pending",
-          email: ctx.user.email || null,
-        } as any);
-      } catch (err) {
-        // Duplicate key etc. — ignore, webhook will reconcile
-        console.warn("[Payment] Could not insert pending payment row:", err);
-      }
-
       return {
-        success: true,
-        alreadyPaid: false,
+        alreadySubscribed: false,
         checkoutUrl: session.url,
         sessionId: session.id,
       };
     }),
 
   /**
-   * Get current payment status for an invitation slug.
-   * Public so that, after returning from Stripe checkout, the Builder can poll
-   * even before re-authenticating completes.
+   * Get current subscription status for the authenticated user.
    */
-  getStatus: publicProcedure
-    .input(z.object({ invitationSlug: z.string().min(1) }))
-    .query(async ({ input }) => {
-      const db = await getDb();
-      if (!db) throw new Error("Database not available");
-      const rows = await db.select().from(invitations).where(eq(invitations.slug, input.invitationSlug)).limit(1);
-      if (rows.length === 0) return { found: false, isPaid: false };
+  getSubscriptionStatus: protectedProcedure.query(async ({ ctx }) => {
+    const sub = await getActiveSubscription(ctx.user.openId);
+    if (!sub) {
       return {
-        found: true,
-        isPaid: !!rows[0].isPaid,
-        paidAt: rows[0].paidAt,
+        isActive: false,
+        invitationsUsed: 0,
+        invitationsRemaining: 0,
+        invitationsLimit: INVITATIONS_LIMIT,
+        renewsAt: null,
+        status: "none",
       };
-    }),
+    }
+    return {
+      isActive: true,
+      invitationsUsed: sub.invitationsUsed,
+      invitationsRemaining: Math.max(0, sub.invitationsLimit - sub.invitationsUsed),
+      invitationsLimit: sub.invitationsLimit,
+      renewsAt: sub.currentPeriodEnd,
+      status: sub.status,
+    };
+  }),
 
   /**
-   * Verify a Stripe checkout session & sync DB (used as a fallback if webhook
-   * is delayed). Idempotent.
+   * Create a Stripe Customer Portal session so users can manage/cancel their subscription.
    */
-  verifySession: protectedProcedure
-    .input(z.object({ sessionId: z.string(), invitationSlug: z.string() }))
+  createPortalSession: protectedProcedure
+    .input(z.object({ origin: z.string().url().optional() }))
     .mutation(async ({ ctx, input }) => {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
       const stripe = await getStripe();
-      const session = await stripe.checkout.sessions.retrieve(input.sessionId);
-      const isPaid = session.payment_status === "paid";
-      if (isPaid) {
-        await db
-          .update(invitations)
-          .set({ isPaid: true, paidAt: new Date(), stripePaymentIntentId: session.payment_intent as string })
-          .where(eq(invitations.slug, input.invitationSlug));
-      }
-      return { isPaid };
+      const origin = input.origin || ctx.req.headers.origin || `https://${ctx.req.headers.host}`;
+
+      const userRows = await db.select().from(users).where(eq(users.openId, ctx.user.openId)).limit(1);
+      const stripeCustomerId = userRows[0]?.stripeCustomerId;
+      if (!stripeCustomerId) throw new Error("No Stripe customer found");
+
+      const portalSession = await stripe.billingPortal.sessions.create({
+        customer: stripeCustomerId,
+        return_url: `${origin}/create`,
+      });
+
+      return { url: portalSession.url };
     }),
 
-  getPaymentHistory: protectedProcedure.query(async ({ ctx }) => {
-    const db = await getDb();
-    if (!db) return { payments: [] };
-    // Join via invitations.ownerOpenId
-    const rows = await db
-      .select({
-        paymentId: payments.id,
-        invitationId: payments.invitationId,
-        invitationSlug: invitations.slug,
-        title: invitations.title,
-        amount: payments.amount,
-        currency: payments.currency,
-        status: payments.status,
-        createdAt: payments.createdAt,
-      })
-      .from(payments)
-      .leftJoin(invitations, eq(payments.invitationId, invitations.id))
-      .where(eq(invitations.ownerOpenId, ctx.user.openId));
-    return { payments: rows };
-  }),
+  /**
+   * Verify a Stripe checkout session and sync subscription to DB.
+   * Fallback if webhook is delayed.
+   */
+  verifySubscriptionSession: protectedProcedure
+    .input(z.object({ sessionId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+      const stripe = await getStripe();
+      const session = await stripe.checkout.sessions.retrieve(input.sessionId, {
+        expand: ["subscription"],
+      });
+
+      if (session.status !== "complete" || !session.subscription) {
+        return { success: false };
+      }
+
+      const stripeSub = session.subscription as any;
+      const stripeSubId = typeof stripeSub === "string" ? stripeSub : stripeSub.id;
+
+      // Upsert subscription row
+      const existing = await db
+        .select()
+        .from(subscriptions)
+        .where(eq(subscriptions.ownerOpenId, ctx.user.openId))
+        .limit(1);
+
+      const periodEnd = typeof stripeSub === "object"
+        ? new Date(stripeSub.current_period_end * 1000)
+        : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+
+      if (existing.length > 0) {
+        await db
+          .update(subscriptions)
+          .set({
+            stripeSubscriptionId: stripeSubId,
+            stripeCustomerId: session.customer as string,
+            status: "active",
+            currentPeriodEnd: periodEnd,
+            invitationsUsed: 0,
+          })
+          .where(eq(subscriptions.ownerOpenId, ctx.user.openId));
+      } else {
+        await db.insert(subscriptions).values({
+          ownerOpenId: ctx.user.openId,
+          stripeSubscriptionId: stripeSubId,
+          stripeCustomerId: session.customer as string,
+          status: "active",
+          currentPeriodEnd: periodEnd,
+          invitationsUsed: 0,
+          invitationsLimit: INVITATIONS_LIMIT,
+        });
+      }
+
+      return { success: true };
+    }),
 });

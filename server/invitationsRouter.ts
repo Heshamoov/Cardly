@@ -1,8 +1,10 @@
 import { eq } from "drizzle-orm";
 import { z } from "zod";
-import { invitations } from "../drizzle/schema";
+import { invitations, subscriptions } from "../drizzle/schema";
 import { getDb } from "./db";
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
+import { TRPCError } from "@trpc/server";
+import { hasSubscriptionQuota, INVITATIONS_LIMIT } from "./paymentRouter";
 
 function generateSlug(length = 8): string {
   const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
@@ -76,7 +78,7 @@ async function resolveGoogleMapsUrl(input: string): Promise<{ embedUrl: string; 
 }
 
 export const invitationsRouter = router({
-  create: publicProcedure
+  create: protectedProcedure
     .input(
       z.object({
         title: z.string().default("Untitled"),
@@ -119,6 +121,23 @@ export const invitationsRouter = router({
       const db = await getDb();
       if (!db) throw new Error("Database not available");
 
+      // ── Subscription quota check ──────────────────────────────────────────
+      const quotaResult = await hasSubscriptionQuota(ctx.user.openId);
+      if (!quotaResult.allowed) {
+        if (quotaResult.reason === "no_subscription") {
+          throw new TRPCError({
+            code: "PAYMENT_REQUIRED",
+            message: "An active subscription is required to create invitations.",
+          });
+        }
+        if (quotaResult.reason === "quota_exceeded") {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: `You have reached the limit of ${INVITATIONS_LIMIT} invitations for this billing period. Your subscription renews on ${quotaResult.subscription?.currentPeriodEnd?.toLocaleDateString()}.`,
+          });
+        }
+      }
+
       let slug = generateSlug(8);
       // Ensure uniqueness
       let attempts = 0;
@@ -134,14 +153,23 @@ export const invitationsRouter = router({
       }
 
       // Store the creator's openId so they can see their own responses later
-      const ownerOpenId = ctx?.user?.openId ?? null;
+      const ownerOpenId = ctx.user.openId;
 
       await db.insert(invitations).values({
         slug,
         title: input.title || "Untitled",
         data: JSON.stringify(input.data),
         ownerOpenId,
+        isPaid: true, // subscription covers all invitations
       } as any);
+
+      // Increment usage counter on the subscription
+      if (quotaResult.subscription) {
+        await db
+          .update(subscriptions)
+          .set({ invitationsUsed: quotaResult.subscription.invitationsUsed + 1 })
+          .where(eq(subscriptions.ownerOpenId, ctx.user.openId));
+      }
 
       return { slug };
     }),

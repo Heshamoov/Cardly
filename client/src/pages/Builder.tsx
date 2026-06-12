@@ -723,7 +723,7 @@ export default function Builder() {
   const [draftSlug, setDraftSlug] = useState<string | null>(() => {
     try { return localStorage.getItem("cardly_draft_slug") || null; } catch { return null; }
   });
-  const [isPaid, setIsPaid] = useState(false);
+  const [subscriptionChecked, setSubscriptionChecked] = useState(false);
   const [paymentInProgress, setPaymentInProgress] = useState(false);
   const [copied, setCopied] = useState(false);
   const [formLang, setFormLang] = useState<Lang>("en");
@@ -765,39 +765,35 @@ export default function Builder() {
     } catch { /* ignore */ }
   }, [draftSlug]);
 
-  // Read ?paid=1&slug=... query params after returning from Stripe
+  // Read ?subscribed=1 query params after returning from Stripe subscription checkout
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const paid = params.get("paid");
-    const slugFromUrl = params.get("slug");
-    if (paid === "1" && slugFromUrl) {
-      setDraftSlug(slugFromUrl);
+    const subscribed = params.get("subscribed");
+    if (subscribed === "1") {
       setPaymentInProgress(true);
-      // Clean URL
       window.history.replaceState({}, "", window.location.pathname);
-    } else if (paid === "0") {
-      toast.error(formLang === "ar" ? "تم إلغاء الدفع." : "Payment cancelled.");
+    } else if (subscribed === "0") {
+      toast.error(formLang === "ar" ? "تم إلغاء الاشتراك." : "Subscription cancelled.");
       window.history.replaceState({}, "", window.location.pathname);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Poll payment status when there is a draft slug
-  const paymentStatusQuery = trpc.payments.getStatus.useQuery(
-    { invitationSlug: draftSlug || "" },
-    {
-      enabled: !!draftSlug,
-      refetchInterval: paymentInProgress && !isPaid ? 3000 : false,
-      refetchOnWindowFocus: true,
-    }
-  );
+  // Subscription status query
+  const subscriptionQuery = trpc.payments.getSubscriptionStatus.useQuery(undefined, {
+    refetchInterval: paymentInProgress ? 3000 : false,
+    refetchOnWindowFocus: true,
+  });
+  const subscription = subscriptionQuery.data;
+  const isSubscribed = !!subscription?.isActive;
+
   useEffect(() => {
-    if (paymentStatusQuery.data?.isPaid && !isPaid) {
-      setIsPaid(true);
+    if (paymentInProgress && isSubscribed) {
       setPaymentInProgress(false);
-      toast.success(formLang === "ar" ? "تم الدفع بنجاح! يمكنك الآن نشر دعوتك." : "Payment confirmed! You can now publish your invitation.");
+      setSubscriptionChecked(true);
+      toast.success(formLang === "ar" ? "مرحباً بك! اشتراكك نشط الآن." : "Welcome! Your subscription is now active.");
     }
-  }, [paymentStatusQuery.data, isPaid, formLang]);
+  }, [paymentInProgress, isSubscribed, formLang]);
 
   // Auto-save to localStorage on every change
   useEffect(() => {
@@ -851,8 +847,9 @@ export default function Builder() {
       sections: { ...d.sections, [key]: !d.sections[key] },
     }));
 
-  // Mutations: create draft, then create Stripe checkout for that draft
-  const checkoutMutation = trpc.payments.createCheckoutSession.useMutation();
+  // Subscription checkout mutation
+  const subscribeCheckoutMutation = trpc.payments.createSubscriptionCheckout.useMutation();
+  const portalSessionMutation = trpc.payments.createPortalSession.useMutation();
 
   const validateBeforePublish = (): boolean => {
     if (!data.brideFirstName || !data.groomFirstName || !data.date) {
@@ -864,67 +861,40 @@ export default function Builder() {
 
   const handlePublish = async () => {
     if (!validateBeforePublish()) return;
-
-    // Require sign-in
     if (!user) {
       toast.message(formLang === "ar" ? "يرجى تسجيل الدخول للمتابعة" : "Please sign in to continue");
       window.location.href = getLoginUrl("/");
       return;
     }
-
-    if (!isPaid) {
-      await handlePayment();
+    // Must have an active subscription
+    if (!isSubscribed) {
+      await handleSubscribe();
       return;
     }
-    // Already paid → publish (or re-use existing draft slug)
-    if (draftSlug) {
-      setPublishedSlug(draftSlug);
-      try { localStorage.removeItem("cardly_draft_slug"); } catch {}
-    } else {
-      createMutation.mutate({ title: data.title || "Untitled", data });
-    }
+    // Subscription active → create and publish
+    createMutation.mutate({ title: data.title || "Untitled", data });
   };
 
-  const handlePayment = async () => {
-    if (!validateBeforePublish()) return;
-
+  const handleSubscribe = async () => {
     if (!user) {
       window.location.href = getLoginUrl("/");
       return;
     }
-
     try {
-      // Step 1: create the draft invitation if we don't already have one
-      let slug = draftSlug;
-      if (!slug) {
-        const createResult = await createMutation.mutateAsync({ title: data.title || "Untitled", data });
-        slug = createResult.slug;
-        setDraftSlug(slug);
-      }
-
-      // Step 2: create Stripe checkout session for this slug
-      const checkout = await checkoutMutation.mutateAsync({
-        invitationSlug: slug,
-        currency: "AED",
-        locale: formLang === "ar" ? "ar-AE" : "en-US",
-        origin: window.location.origin,
-      });
-
-      if (checkout.alreadyPaid) {
-        setIsPaid(true);
-        toast.success(formLang === "ar" ? "الدعوة مدفوعة بالفعل." : "This invitation is already paid.");
+      const result = await subscribeCheckoutMutation.mutateAsync({ origin: window.location.origin });
+      if (result.alreadySubscribed) {
+        toast.success(formLang === "ar" ? "اشتراكك نشط بالفعل." : "Your subscription is already active.");
+        subscriptionQuery.refetch();
         return;
       }
-
-      if (checkout.checkoutUrl) {
-        toast.message(formLang === "ar" ? "جارٍ التحويل إلى صفحة الدفع…" : "Redirecting to checkout…");
+      if (result.checkoutUrl) {
+        toast.message(formLang === "ar" ? "جارِ التحويل إلى صفحة الاشتراك…" : "Redirecting to subscription checkout…");
         setPaymentInProgress(true);
-        // Use same-tab redirect so we return cleanly to the same builder draft
-        window.location.href = checkout.checkoutUrl;
+        window.location.href = result.checkoutUrl;
       }
     } catch (error: any) {
-      console.error("Payment error:", error);
-      toast.error(error?.message || (formLang === "ar" ? "فشل بدء عملية الدفع." : "Failed to start payment."));
+      console.error("Subscribe error:", error);
+      toast.error(error?.message || (formLang === "ar" ? "فشل بدء الاشتراك." : "Failed to start subscription."));
     }
   };
 
@@ -996,7 +966,7 @@ export default function Builder() {
 
   // ── Preview mode ──────────────────────────────────────────────────────────
   if (previewing) {
-    return <PreviewWithEnvelope data={data} onEdit={() => setPreviewing(false)} onPublish={handlePublish} isPublishing={createMutation.isPending || checkoutMutation.isPending} onFontScaleChange={(scale) => set("fontScale", scale)} onScriptFontChange={(font) => set("scriptFont", font)} initialLang={formLang} isPaid={isPaid} />;
+    return <PreviewWithEnvelope data={data} onEdit={() => setPreviewing(false)} onPublish={handlePublish} isPublishing={createMutation.isPending || subscribeCheckoutMutation.isPending} onFontScaleChange={(scale) => set("fontScale", scale)} onScriptFontChange={(font) => set("scriptFont", font)} initialLang={formLang} isPaid={isSubscribed} />;
   }
 
   // ── Builder mode ──────────────────────────────────────────────────────────
@@ -1077,6 +1047,68 @@ export default function Builder() {
             📊 {ft.viewRsvp}
           </a>
         </div>
+
+        {/* ── Subscription Status Banner ── */}
+        {subscriptionQuery.data && (
+          <div
+            className="section-card mb-4 animate-fade-in-up"
+            style={{ padding: "12px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}
+          >
+            {isSubscribed ? (
+              <>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <span style={{ fontSize: 16 }}>✅</span>
+                  <div>
+                    <p style={{ fontFamily: "'Lato', sans-serif", fontSize: 11, color: "rgba(201,168,76,0.9)", margin: 0, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase" }}>
+                      {formLang === "ar" ? "الاشتراك نشط" : "Active Subscription"}
+                    </p>
+                    <p style={{ fontFamily: "'Lato', sans-serif", fontSize: 11, color: "rgba(255,255,255,0.5)", margin: "2px 0 0" }}>
+                      {formLang === "ar"
+                        ? `${subscription?.invitationsUsed ?? 0} / ${subscription?.invitationsLimit ?? 10} دعوات مستخدمة`
+                        : `${subscription?.invitationsUsed ?? 0} / ${subscription?.invitationsLimit ?? 10} invitations used`}
+                      {subscription?.renewsAt && ` · ${formLang === "ar" ? "يتجدد" : "Renews"} ${new Date(subscription.renewsAt).toLocaleDateString()}`}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={async () => {
+                    try {
+                      const result = await portalSessionMutation.mutateAsync({ origin: window.location.origin });
+                      if (result.url) window.open(result.url, "_blank");
+                    } catch (e: any) {
+                      toast.error(e?.message || "Could not open billing portal");
+                    }
+                  }}
+                  disabled={portalSessionMutation.isPending}
+                  style={{ background: "transparent", border: "1px solid rgba(201,168,76,0.4)", borderRadius: 16, padding: "5px 14px", color: "rgba(201,168,76,0.7)", fontFamily: "'Lato', sans-serif", fontSize: 11, cursor: "pointer", letterSpacing: "0.06em" }}
+                >
+                  {portalSessionMutation.isPending ? "..." : (formLang === "ar" ? "إدارة الاشتراك" : "Manage")}
+                </button>
+              </>
+            ) : (
+              <>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <span style={{ fontSize: 16 }}>🔒</span>
+                  <div>
+                    <p style={{ fontFamily: "'Lato', sans-serif", fontSize: 11, color: "rgba(255,150,100,0.9)", margin: 0, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase" }}>
+                      {formLang === "ar" ? "لا يوجد اشتراك نشط" : "No Active Subscription"}
+                    </p>
+                    <p style={{ fontFamily: "'Lato', sans-serif", fontSize: 11, color: "rgba(255,255,255,0.5)", margin: "2px 0 0" }}>
+                      {formLang === "ar" ? "اشترك بـ 200 درهم/شهر للنشر" : "Subscribe for AED 200/month to publish"}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={handleSubscribe}
+                  disabled={subscribeCheckoutMutation.isPending}
+                  style={{ background: "linear-gradient(135deg, #d4af37, #f5e6b3, #d4af37)", border: "none", borderRadius: 16, padding: "6px 16px", color: "#0a0f1e", fontFamily: "'Lato', sans-serif", fontSize: 11, fontWeight: 700, cursor: "pointer", letterSpacing: "0.06em" }}
+                >
+                  {subscribeCheckoutMutation.isPending ? "..." : (formLang === "ar" ? "اشترك الآن" : "Subscribe Now")}
+                </button>
+              </>
+            )}
+          </div>
+        )}
 
         {/* ── Event Type Selector ── */}
         <div className="section-card mb-6 animate-fade-in-up">
@@ -1616,11 +1648,11 @@ export default function Builder() {
             disabled={createMutation.isPending}
             style={formLang === "ar" ? { fontFamily: ARABIC_FONT } : {}}
           >
-            {createMutation.isPending
-              ? (formLang === "ar" ? "جارٍ النشر…" : "Publishing…")
-              : isPaid
+            {createMutation.isPending || subscribeCheckoutMutation.isPending
+              ? (formLang === "ar" ? "جارس النشر…" : "Publishing…")
+              : isSubscribed
               ? (formLang === "ar" ? "تخطي المعاينة والنشر" : "Skip Preview & Publish")
-              : (formLang === "ar" ? "الدفع والنشر - 500 درهم" : "Pay to Publish - AED 500")}
+              : (formLang === "ar" ? "اشترك وانشر - 200 درهم/شهر" : "Subscribe & Publish - AED 200/mo")}
           </button>
         </div>
       </div>
@@ -1636,7 +1668,7 @@ export default function Builder() {
           </span>
         </div>
         <div className="builder-preview-body">
-          <LivePreviewContent data={data} lang={formLang} isPaid={isPaid} />
+          <LivePreviewContent data={data} lang={formLang} isPaid={isSubscribed} />
         </div>
       </aside>
 
@@ -1720,7 +1752,7 @@ export default function Builder() {
 
             {/* Live Preview Content */}
             <div style={{ flex: 1, minHeight: 0, overflow: "auto", position: "relative", background: "#1a1424" }}>
-              <LivePreviewContent data={data} lang={formLang} isPaid={isPaid} />
+              <LivePreviewContent data={data} lang={formLang} isPaid={isSubscribed} />
             </div>
           </div>
         </div>

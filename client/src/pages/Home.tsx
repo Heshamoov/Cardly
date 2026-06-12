@@ -20,7 +20,7 @@ const FEATURES = [
 
 const FAQ = [
   { q: "How does it work?", a: "Fill in your details, choose your envelope style, preview your invitation, pay once, and get a shareable link to send to all your guests." },
-  { q: "What does AED 500 include?", a: "One published invitation with unlimited guest views, RSVP collection, bilingual support, background music, venue map, and a Wishes Wall — forever." },
+  { q: "What does the AED 200/month plan include?", a: "Create up to 10 digital invitations per month. Each invitation includes unlimited guest views, RSVP collection, bilingual English & Arabic support, background music, venue map, and a Wishes Wall. Your subscription renews monthly." },
   { q: "Can I edit after publishing?", a: "Yes. You can update your invitation details at any time. Changes reflect instantly for all guests." },
   { q: "Do guests need to download an app?", a: "No. Guests open a link in any browser — no app, no account, no friction." },
   { q: "Is payment secure?", a: "Yes. Payments are processed by Stripe, the world's most trusted payment platform. We never store your card details." },
@@ -85,7 +85,7 @@ export default function Home() {
             </button>
           </a>
         </div>
-        <p style={{ marginTop: 16, fontSize: 12, opacity: 0.45 }}>One-time payment · AED 500 · No subscription</p>
+        <p style={{ marginTop: 16, fontSize: 12, opacity: 0.45 }}>AED 200/month · Up to 10 invitations · Cancel anytime</p>
       </section>
 
       {/* ── Envelope Gallery ── */}
@@ -138,7 +138,7 @@ export default function Home() {
           <div style={{ display: "flex", flexDirection: "column", gap: 32, marginTop: 48, textAlign: "left" }}>
             {[
               { n: "01", title: "Build", desc: "Fill in your names, date, venue, and message. Choose your envelope style, music, and language." },
-              { n: "02", title: "Pay once", desc: "One payment of AED 500. Your invitation is published instantly with a unique shareable link." },
+              { n: "02", title: "Subscribe & publish", desc: "Subscribe for AED 200/month. Create up to 10 invitations per billing period. Cancel anytime." },
               { n: "03", title: "Share", desc: "Send the link via WhatsApp, SMS, or email. Guests open it in any browser — no app needed." },
             ].map((step) => (
               <div key={step.n} style={{ display: "flex", gap: 24, alignItems: "flex-start" }}>
@@ -162,20 +162,23 @@ export default function Home() {
             border: "1px solid rgba(212,175,55,0.3)", borderRadius: 16,
             padding: "40px 32px",
           }}>
-            <p style={{ fontSize: 13, letterSpacing: "0.18em", textTransform: "uppercase", opacity: 0.6, marginBottom: 12 }}>One-time payment</p>
-            <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 56, color: "#d4af37", fontWeight: 700, lineHeight: 1 }}>AED 500</p>
-            <p style={{ fontSize: 13, opacity: 0.5, marginTop: 6 }}>≈ USD 136 · EUR 126 · GBP 108</p>
+            <p style={{ fontSize: 13, letterSpacing: "0.18em", textTransform: "uppercase", opacity: 0.6, marginBottom: 12 }}>Monthly Subscription</p>
+            <div style={{ display: "flex", alignItems: "baseline", justifyContent: "center", gap: 6 }}>
+              <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 56, color: "#d4af37", fontWeight: 700, lineHeight: 1, margin: 0 }}>AED 200</p>
+              <p style={{ fontSize: 16, opacity: 0.6, margin: 0 }}>/month</p>
+            </div>
+            <p style={{ fontSize: 13, opacity: 0.5, marginTop: 6 }}>≈ USD 54 · EUR 50 · GBP 43 per month</p>
             <div style={{ margin: "28px 0", borderTop: "1px solid rgba(212,175,55,0.15)", paddingTop: 24 }}>
               {[
-                "One published invitation",
-                "Unlimited guest views",
+                "Up to 10 invitations per month",
+                "Unlimited guest views per invitation",
                 "RSVP collection + CSV export",
                 "Bilingual English & Arabic",
                 "6 envelope styles + animations",
                 "Background music",
                 "Live venue map",
                 "Wishes Wall presentation",
-                "Lifetime access",
+                "Cancel anytime from your account",
               ].map((item) => (
                 <p key={item} style={{ fontSize: 14, opacity: 0.8, marginBottom: 8, textAlign: "left" }}>
                   <span style={{ color: "#d4af37", marginRight: 10 }}>✓</span>{item}
@@ -184,9 +187,10 @@ export default function Home() {
             </div>
             <a href={ctaHref}>
               <button style={{ ...btnGold, width: "100%", fontSize: 16, padding: "14px 0" }}>
-                Get Started →
+                Start Creating →
               </button>
             </a>
+            <p style={{ fontSize: 11, opacity: 0.4, marginTop: 12 }}>No contract · Cancel anytime · Renews monthly</p>
           </div>
         </div>
       </section>
