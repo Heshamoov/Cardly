@@ -230,9 +230,9 @@ export default function Home() {
       }}>
         <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 18, color: "#d4af37" }}>Cardly</span>
         <div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
-          <Link href="/terms"><a style={footerLink}>Terms of Service</a></Link>
-          <Link href="/privacy"><a style={footerLink}>Privacy Policy</a></Link>
-          <Link href="/refund"><a style={footerLink}>Refund Policy</a></Link>
+          <Link href="/terms" style={footerLink}>Terms of Service</Link>
+          <Link href="/privacy" style={footerLink}>Privacy Policy</Link>
+          <Link href="/refund" style={footerLink}>Refund Policy</Link>
           <a href="mailto:support@cardly.app" style={footerLink}>Contact</a>
         </div>
         <p style={{ fontSize: 12, opacity: 0.35 }}>© {new Date().getFullYear()} Cardly. All rights reserved.</p>

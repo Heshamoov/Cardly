@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { TRPCError } from "@trpc/server";
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import { insertRsvp, getRsvpsBySlug, getRsvpSummaryBySlug, incrementInvitationViews } from "./db";
 import { ENV } from "./_core/env";
@@ -19,6 +20,49 @@ export const rsvpRouter = router({
       })
     )
     .mutation(async ({ input }) => {
+      // ── Event-date read-only guard ──────────────────────────────────────────────────────────────────
+      // Fetch the invitation to check event date and payment status
+      try {
+        const { getDb } = await import("./db");
+        const { invitations } = await import("../drizzle/schema");
+        const { eq } = await import("drizzle-orm");
+        const db = await getDb();
+        if (db) {
+          const rows = await db.select().from(invitations).where(eq(invitations.slug, input.slug)).limit(1);
+          if (rows.length > 0) {
+            const inv = rows[0];
+            // Block if not paid
+            if (!inv.isPaid) {
+              throw new TRPCError({ code: "FORBIDDEN", message: "This invitation is not yet active." });
+            }
+            // Block if event date has passed (give 1-day grace period)
+            if (inv.data) {
+              try {
+                const rawData = inv.data as unknown;
+                const dataStr = Buffer.isBuffer(rawData) ? (rawData as Buffer).toString("utf8") : String(rawData);
+                const parsed = typeof rawData === "object" && rawData !== null && !Buffer.isBuffer(rawData)
+                  ? rawData as any
+                  : JSON.parse(dataStr);
+                const eventDateStr = parsed?.date as string | undefined;
+                if (eventDateStr) {
+                  const eventDate = new Date(eventDateStr);
+                  const cutoff = new Date(eventDate.getTime() + 24 * 60 * 60 * 1000); // +1 day grace
+                  if (!isNaN(eventDate.getTime()) && new Date() > cutoff) {
+                    throw new TRPCError({ code: "FORBIDDEN", message: "RSVP submissions are closed — the event has already taken place." });
+                  }
+                }
+              } catch (parseErr: any) {
+                if (parseErr?.code === "FORBIDDEN") throw parseErr;
+                // ignore parse errors
+              }
+            }
+          }
+        }
+      } catch (guardErr: any) {
+        if (guardErr?.code === "FORBIDDEN") throw guardErr;
+        // ignore DB errors — don't block RSVP on infra issues
+      }
+
       await insertRsvp({
         invitationSlug: input.slug,
         guestName: input.guestName,

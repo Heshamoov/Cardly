@@ -4,6 +4,7 @@ import { eq } from "drizzle-orm";
 import { getStripe } from "./paymentRouter";
 import { getDb } from "./db";
 import { invitations, payments } from "../drizzle/schema";
+import { notifyOwner } from "./_core/notification";
 
 /**
  * Register Stripe webhook route at /api/stripe/webhook.
@@ -111,6 +112,18 @@ export function registerStripeWebhook(app: Express) {
             }
 
             console.log("[Stripe Webhook] Marked invitation paid:", slug);
+
+            // Notify the project owner of the new payment
+            try {
+              const invRows = await db.select({ title: invitations.title }).from(invitations).where(eq(invitations.slug, slug)).limit(1);
+              const invTitle = invRows[0]?.title || slug;
+              await notifyOwner({
+                title: "New Cardly Payment Received 💍",
+                content: `Invitation "${invTitle}" (slug: ${slug}) has been paid.\nAmount: ${(amount / 100).toFixed(2)} ${currency}\nCustomer: ${email || "unknown"}`,
+              });
+            } catch {
+              // Notification failure is non-fatal
+            }
             break;
           }
           case "payment_intent.succeeded":

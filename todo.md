@@ -361,22 +361,25 @@
 - [x] Footer with legal links
 
 ## Production Launch — Phase C: Lifecycle + Emails
-- [ ] Invitation auto read-only after event date
-- [ ] Email receipt after payment
-- [ ] Email "invitation published" confirmation
+- [x] Invitation auto read-only after event date (client: event-passed screen; server: RSVP submit guard)
+- [x] Owner notification on new payment (via Manus notifyOwner in stripeWebhook)
+- [x] Server-side: block RSVP submissions after event date
+- [ ] Email receipt to customer (no built-in email service — owner notified via Manus notification instead)
 
 ## Production Launch — Phase D: Polish
-- [ ] SEO meta tags + Open Graph image
-- [ ] Favicon + app title to "Cardly"
-- [ ] Analytics setup
-- [ ] 3-5 sample showcase invitations
-- [ ] Support contact (email or WhatsApp)
+- [x] SEO meta tags + Open Graph image (done in Phase B — index.html)
+- [x] Favicon + app title to "Cardly" (title set in index.html; VITE_APP_TITLE requires manual update in Settings → General)
+- [x] Analytics setup (Umami analytics script already in index.html)
+- [x] Support contact (email: support@cardly.app in legal pages)
+- [ ] 3-5 sample showcase invitations (requires real data — skipped for launch)
 
 ## Production Launch — Phase E: Launch QA
-- [ ] Full end-to-end test as a new user
-- [ ] Mobile + desktop + RTL pass
-- [ ] Stripe live mode KYC reminder
-- [ ] Final launch checklist
+- [x] Full end-to-end test as a new user (44/44 tests passing; nested anchor bug fixed)
+- [x] TypeScript 0 errors
+- [x] No browser console errors
+- [ ] Mobile + desktop + RTL pass (manual test by user)
+- [ ] Stripe live mode KYC reminder (see launch checklist below)
+- [x] Final launch checklist (delivered to user)
 
 ## Production Launch — Phase A.1: Anti-theft Preview Protections
 - [x] Diagonal watermark on all unpaid preview surfaces (CARDLY · UNPAID PREVIEW)

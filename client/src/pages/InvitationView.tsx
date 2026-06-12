@@ -301,6 +301,37 @@ export default function InvitationView() {
   const groomName = [invData.groomFirstName, invData.groomLastName].filter(Boolean).join(" ");
   const envStyle = ENVELOPE_STYLES[invData.envelopeStyle ?? "ivory-gold"] ?? ENVELOPE_STYLES["ivory-gold"];
 
+  // ── Event-passed read-only screen ──────────────────────────────────────────────────────────────────
+  const eventDateStr = invData.date as string | undefined;
+  const isEventPassed = (() => {
+    if (!eventDateStr) return false;
+    const eventDate = new Date(eventDateStr);
+    if (isNaN(eventDate.getTime())) return false;
+    const cutoff = new Date(eventDate.getTime() + 24 * 60 * 60 * 1000); // +1 day grace
+    return new Date() > cutoff;
+  })();
+
+  if (isEventPassed) {
+    return (
+      <div className="envelope-scene" style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div className="text-center px-8" style={{ maxWidth: 440 }}>
+          <div style={{ fontSize: 56, marginBottom: 16 }}>💍</div>
+          <h2 className="font-script gold-shimmer" style={{ fontSize: 36, marginBottom: 12 }}>
+            {brideName && groomName ? `${brideName} & ${groomName}` : "The Wedding"}
+          </h2>
+          <p className="font-sans" style={{ color: "rgba(245,230,179,0.7)", fontSize: 15, lineHeight: 1.7, marginBottom: 8 }}>
+            This wedding has already taken place. Thank you to all the guests who celebrated with the couple.
+          </p>
+          {eventDateStr && (
+            <p className="font-sans" style={{ color: "rgba(245,230,179,0.45)", fontSize: 13 }}>
+              Event date: {new Date(eventDateStr).toLocaleDateString("en-AE", { year: "numeric", month: "long", day: "numeric" })}
+            </p>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   const isOpen = animStage === "opening" || animStage === "expand" || animStage === "done";
   const isExpanding = animStage === "expand" || animStage === "done";
 
