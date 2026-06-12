@@ -3,6 +3,9 @@ import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { translations, ARABIC_FONT, type Lang } from "@/lib/i18n";
 import FallingParticles from "@/components/FallingParticles";
+import { useAuth } from "@/_core/hooks/useAuth";
+import { getLoginUrl } from "@/const";
+import { toast } from "sonner";
 
 interface InvitationData {
   title: string;
@@ -697,7 +700,7 @@ function SectionCard({
   );
 }
 
-const STORAGE_KEY = "lovenote-builder-draft";
+const STORAGE_KEY = "cardly-builder-draft";
 
 function loadDraft(): InvitationData {
   try {
@@ -717,10 +720,84 @@ export default function Builder() {
   const [previewing, setPreviewing] = useState(false);
   const [livePreviewOpen, setLivePreviewOpen] = useState(false);
   const [publishedSlug, setPublishedSlug] = useState<string | null>(null);
+  const [draftSlug, setDraftSlug] = useState<string | null>(() => {
+    try { return localStorage.getItem("cardly_draft_slug") || null; } catch { return null; }
+  });
   const [isPaid, setIsPaid] = useState(false);
+  const [paymentInProgress, setPaymentInProgress] = useState(false);
   const [copied, setCopied] = useState(false);
   const [formLang, setFormLang] = useState<Lang>("en");
   const [, navigate] = useLocation();
+  const { user, loading: authLoading } = useAuth();
+
+  // ── Auth gate: redirect unauthenticated users to sign in ───────────────────────
+  if (authLoading) {
+    return (
+      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#0a0f1e" }}>
+        <div style={{ textAlign: "center" }}>
+          <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 32, color: "#d4af37", marginBottom: 16 }}>Cardly</div>
+          <div style={{ width: 32, height: 32, border: "2px solid #d4af37", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite", margin: "0 auto" }} />
+        </div>
+      </div>
+    );
+  }
+  if (!user) {
+    return (
+      <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "#0a0f1e", fontFamily: "'Lato', sans-serif", gap: 24, padding: 24 }}>
+        <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 32, color: "#d4af37" }}>Cardly</div>
+        <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 28, color: "#f5e6b3", textAlign: "center", margin: 0 }}>Sign in to create your invitation</h2>
+        <p style={{ color: "rgba(245,230,179,0.6)", fontSize: 15, textAlign: "center", maxWidth: 380, margin: 0 }}>You need a free Cardly account to build and manage your digital invitation.</p>
+        <a href={getLoginUrl("/create")}>
+          <button style={{ background: "linear-gradient(135deg, #d4af37 0%, #f5e6b3 50%, #d4af37 100%)", color: "#0a0f1e", border: "none", borderRadius: 8, padding: "14px 36px", fontWeight: 700, fontSize: 15, cursor: "pointer", letterSpacing: "0.06em" }}>
+            Sign in to continue
+          </button>
+        </a>
+        <a href="/" style={{ color: "rgba(245,230,179,0.5)", fontSize: 13, textDecoration: "none" }}>← Back to home</a>
+      </div>
+    );
+  }
+
+  // Persist draft slug across navigation (so post-Stripe-redirect can pick it up)
+  useEffect(() => {
+    try {
+      if (draftSlug) localStorage.setItem("cardly_draft_slug", draftSlug);
+      else localStorage.removeItem("cardly_draft_slug");
+    } catch { /* ignore */ }
+  }, [draftSlug]);
+
+  // Read ?paid=1&slug=... query params after returning from Stripe
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const paid = params.get("paid");
+    const slugFromUrl = params.get("slug");
+    if (paid === "1" && slugFromUrl) {
+      setDraftSlug(slugFromUrl);
+      setPaymentInProgress(true);
+      // Clean URL
+      window.history.replaceState({}, "", window.location.pathname);
+    } else if (paid === "0") {
+      toast.error(formLang === "ar" ? "تم إلغاء الدفع." : "Payment cancelled.");
+      window.history.replaceState({}, "", window.location.pathname);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Poll payment status when there is a draft slug
+  const paymentStatusQuery = trpc.payments.getStatus.useQuery(
+    { invitationSlug: draftSlug || "" },
+    {
+      enabled: !!draftSlug,
+      refetchInterval: paymentInProgress && !isPaid ? 3000 : false,
+      refetchOnWindowFocus: true,
+    }
+  );
+  useEffect(() => {
+    if (paymentStatusQuery.data?.isPaid && !isPaid) {
+      setIsPaid(true);
+      setPaymentInProgress(false);
+      toast.success(formLang === "ar" ? "تم الدفع بنجاح! يمكنك الآن نشر دعوتك." : "Payment confirmed! You can now publish your invitation.");
+    }
+  }, [paymentStatusQuery.data, isPaid, formLang]);
 
   // Auto-save to localStorage on every change
   useEffect(() => {
@@ -736,11 +813,9 @@ export default function Builder() {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const createMutation = trpc.invitations.create.useMutation({
-    onSuccess: ({ slug }) => {
-      setPublishedSlug(slug);
-    },
-  });
+  // Note: "create" creates a DRAFT row in the DB. We only mark `publishedSlug`
+  // after the user has paid and confirms publish.
+  const createMutation = trpc.invitations.create.useMutation();
 
   const uploadPhotoMutation = trpc.invitations.uploadPhoto.useMutation({
     onSuccess: ({ url }) => {
@@ -776,35 +851,80 @@ export default function Builder() {
       sections: { ...d.sections, [key]: !d.sections[key] },
     }));
 
-  const handlePublish = () => {
+  // Mutations: create draft, then create Stripe checkout for that draft
+  const checkoutMutation = trpc.payments.createCheckoutSession.useMutation();
+
+  const validateBeforePublish = (): boolean => {
     if (!data.brideFirstName || !data.groomFirstName || !data.date) {
-      alert("Please fill in at least the names and date before publishing.");
+      toast.error(formLang === "ar" ? "يرجى ملء الأسماء والتاريخ قبل النشر." : "Please fill in names and date before publishing.");
+      return false;
+    }
+    return true;
+  };
+
+  const handlePublish = async () => {
+    if (!validateBeforePublish()) return;
+
+    // Require sign-in
+    if (!user) {
+      toast.message(formLang === "ar" ? "يرجى تسجيل الدخول للمتابعة" : "Please sign in to continue");
+      window.location.href = getLoginUrl("/");
       return;
     }
+
     if (!isPaid) {
-      handlePayment();
+      await handlePayment();
       return;
     }
-    createMutation.mutate({ title: data.title || "Untitled", data });
+    // Already paid → publish (or re-use existing draft slug)
+    if (draftSlug) {
+      setPublishedSlug(draftSlug);
+      try { localStorage.removeItem("cardly_draft_slug"); } catch {}
+    } else {
+      createMutation.mutate({ title: data.title || "Untitled", data });
+    }
   };
 
   const handlePayment = async () => {
+    if (!validateBeforePublish()) return;
+
+    if (!user) {
+      window.location.href = getLoginUrl("/");
+      return;
+    }
+
     try {
-      const tempSlug = `temp-${Date.now()}`;
-      const checkoutSession = await trpc.payments.createCheckoutSession.mutate({
-        invitationId: 0,
-        invitationSlug: tempSlug,
+      // Step 1: create the draft invitation if we don't already have one
+      let slug = draftSlug;
+      if (!slug) {
+        const createResult = await createMutation.mutateAsync({ title: data.title || "Untitled", data });
+        slug = createResult.slug;
+        setDraftSlug(slug);
+      }
+
+      // Step 2: create Stripe checkout session for this slug
+      const checkout = await checkoutMutation.mutateAsync({
+        invitationSlug: slug,
         currency: "AED",
         locale: formLang === "ar" ? "ar-AE" : "en-US",
+        origin: window.location.origin,
       });
 
-      if (checkoutSession.checkoutUrl) {
-        window.open(checkoutSession.checkoutUrl, "_blank");
+      if (checkout.alreadyPaid) {
         setIsPaid(true);
+        toast.success(formLang === "ar" ? "الدعوة مدفوعة بالفعل." : "This invitation is already paid.");
+        return;
       }
-    } catch (error) {
+
+      if (checkout.checkoutUrl) {
+        toast.message(formLang === "ar" ? "جارٍ التحويل إلى صفحة الدفع…" : "Redirecting to checkout…");
+        setPaymentInProgress(true);
+        // Use same-tab redirect so we return cleanly to the same builder draft
+        window.location.href = checkout.checkoutUrl;
+      }
+    } catch (error: any) {
       console.error("Payment error:", error);
-      alert("Failed to initiate payment. Please try again.");
+      toast.error(error?.message || (formLang === "ar" ? "فشل بدء عملية الدفع." : "Failed to start payment."));
     }
   };
 
@@ -876,7 +996,7 @@ export default function Builder() {
 
   // ── Preview mode ──────────────────────────────────────────────────────────
   if (previewing) {
-    return <PreviewWithEnvelope data={data} onEdit={() => setPreviewing(false)} onPublish={handlePublish} isPublishing={createMutation.isPending} onFontScaleChange={(scale) => set("fontScale", scale)} onScriptFontChange={(font) => set("scriptFont", font)} initialLang={formLang} />;
+    return <PreviewWithEnvelope data={data} onEdit={() => setPreviewing(false)} onPublish={handlePublish} isPublishing={createMutation.isPending || checkoutMutation.isPending} onFontScaleChange={(scale) => set("fontScale", scale)} onScriptFontChange={(font) => set("scriptFont", font)} initialLang={formLang} isPaid={isPaid} />;
   }
 
   // ── Builder mode ──────────────────────────────────────────────────────────
@@ -1516,7 +1636,7 @@ export default function Builder() {
           </span>
         </div>
         <div className="builder-preview-body">
-          <LivePreviewContent data={data} lang={formLang} />
+          <LivePreviewContent data={data} lang={formLang} isPaid={isPaid} />
         </div>
       </aside>
 
@@ -1600,7 +1720,7 @@ export default function Builder() {
 
             {/* Live Preview Content */}
             <div style={{ flex: 1, minHeight: 0, overflow: "auto", position: "relative", background: "#1a1424" }}>
-              <LivePreviewContent data={data} lang={formLang} />
+              <LivePreviewContent data={data} lang={formLang} isPaid={isPaid} />
             </div>
           </div>
         </div>
@@ -1641,6 +1761,7 @@ function PreviewWithEnvelope({
   onFontScaleChange,
   onScriptFontChange,
   initialLang = "en",
+  isPaid = false,
 }: {
   data: InvitationData;
   onEdit: () => void;
@@ -1649,6 +1770,7 @@ function PreviewWithEnvelope({
   onFontScaleChange: (scale: number) => void;
   onScriptFontChange: (font: string) => void;
   initialLang?: Lang;
+  isPaid?: boolean;
 }) {
   const [animStage, setAnimStage] = useState<"idle" | "opening" | "expand" | "done">("idle");
   const [showInvitation, setShowInvitation] = useState(false);
@@ -1899,8 +2021,14 @@ function PreviewWithEnvelope({
 
       {/* Invitation content after envelope opens */}
       {showInvitation && (
-        <div className="mobile-container" style={{ "--font-scale": localFontScale, paddingTop: 56 } as React.CSSProperties}>
-          <PreviewContent data={previewData} lang={lang} onToggleLang={toggleLang} />
+        <div
+          className={isPaid ? undefined : "cardly-unpaid-watermark"}
+          onContextMenu={isPaid ? undefined : (e) => e.preventDefault()}
+          style={{ "--font-scale": localFontScale, paddingTop: 56 } as React.CSSProperties}
+        >
+          <div className="mobile-container">
+            <PreviewContent data={previewData} lang={lang} onToggleLang={toggleLang} blurSensitive={!isPaid} />
+          </div>
         </div>
       )}
 
@@ -2000,7 +2128,8 @@ function FloatingPetals() {
 }
 
 // ── Preview Content (shared between preview mode and invitation page) ─────────
-function PreviewContent({ data, lang = "en", onToggleLang }: { data: InvitationData; lang?: Lang; onToggleLang?: () => void; }) {
+function PreviewContent({ data, lang = "en", onToggleLang, blurSensitive = false }: { data: InvitationData; lang?: Lang; onToggleLang?: () => void; blurSensitive?: boolean; }) {
+  const blurClass = blurSensitive ? "cardly-blur-protected" : "";
   const t = translations[lang];
   const isRtl = lang === "ar";
   const scriptFont = data.scriptFont ?? (isRtl ? "Amiri" : "Cormorant Garamond");
@@ -2125,7 +2254,7 @@ function PreviewContent({ data, lang = "en", onToggleLang }: { data: InvitationD
           <p className="font-sans uppercase tracking-widest text-gold opacity-60 mb-2" style={{ fontFamily: bodyFont, fontSize: `calc(clamp(1.1rem, 4vw, 1.3rem) * ${fontScale})` }}>
             {t.dateLabel}
           </p>
-          <p className="font-serif text-cream" style={{ fontFamily: bodyFont, fontSize: `calc(clamp(1.1rem, 4vw, 1.3rem) * ${fontScale})` }}>
+          <p className={`font-serif text-cream ${blurClass}`} style={{ fontFamily: bodyFont, fontSize: `calc(clamp(1.1rem, 4vw, 1.3rem) * ${fontScale})` }}>
             {formattedTime || "9:00 PM"}
           </p>
         </div>
@@ -2143,7 +2272,7 @@ function PreviewContent({ data, lang = "en", onToggleLang }: { data: InvitationD
           <p className="font-serif text-cream" style={{ fontFamily: bodyFont, fontSize: `calc(clamp(1.1rem, 4vw, 1.3rem) * ${fontScale})` }}>
             {displayVenueName || "Grand Ballroom"}
           </p>
-          <p className="font-sans opacity-50 mt-1" style={{ fontFamily: bodyFont, fontSize: `calc(0.875rem * ${fontScale})` }}>
+          <p className={`font-sans opacity-50 mt-1 ${blurClass}`} style={{ fontFamily: bodyFont, fontSize: `calc(0.875rem * ${fontScale})` }}>
             {displayVenueAddress || "123 Rose Avenue, London, UK"}
           </p>
         </div>
@@ -2155,7 +2284,7 @@ function PreviewContent({ data, lang = "en", onToggleLang }: { data: InvitationD
           <div className="divider-ornament mb-3">
             <span className="text-gold text-sm">✦</span>
           </div>
-          <p className="font-serif italic opacity-80 leading-relaxed" style={{ fontFamily: bodyFont, fontSize: `calc(clamp(1.05rem, 3.5vw, 1.2rem) * ${fontScale})` }}>
+          <p className={`font-serif italic opacity-80 leading-relaxed ${blurClass}`} style={{ fontFamily: bodyFont, fontSize: `calc(clamp(1.05rem, 3.5vw, 1.2rem) * ${fontScale})` }}>
             "{displayMessage}"
           </p>
         </div>
@@ -2387,11 +2516,15 @@ function getTimeLeft(targetDate: string) {
 
 
 // ── Live Preview Content (used by floating preview side panel) ──────────────
-function LivePreviewContent({ data, lang }: { data: InvitationData; lang: Lang }) {
+function LivePreviewContent({ data, lang, isPaid = false }: { data: InvitationData; lang: Lang; isPaid?: boolean }) {
   const envStyle = ENVELOPE_STYLES.find((s) => s.id === (data.envelopeStyle ?? "ivory-gold")) ?? ENVELOPE_STYLES[0];
   const fontScale = data.fontScale ?? 1;
+  // Block right-click on unpaid preview
+  const handleContextMenu = isPaid ? undefined : (e: React.MouseEvent) => { e.preventDefault(); };
   return (
     <div
+      className={isPaid ? undefined : "cardly-unpaid-watermark"}
+      onContextMenu={handleContextMenu}
       style={{
         width: "100%",
         minHeight: "100%",
@@ -2402,7 +2535,7 @@ function LivePreviewContent({ data, lang }: { data: InvitationData; lang: Lang }
       dir={lang === "ar" ? "rtl" : "ltr"}
     >
       <div className="mobile-container" style={{ paddingTop: 32, paddingBottom: 64 }}>
-        <PreviewContent data={data} lang={lang} />
+        <PreviewContent data={data} lang={lang} blurSensitive={!isPaid} />
       </div>
     </div>
   );

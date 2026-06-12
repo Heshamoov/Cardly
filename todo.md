@@ -337,3 +337,51 @@
 - [x] Build FallingParticles canvas component (flowers + stars falling gently)
 - [x] Wire FallingParticles into InvitationView (render when showParticles is true)
 - [x] Wire FallingParticles into Builder PreviewContent (render when showParticles is true)
+
+
+## Production Launch — Phase A: Stripe Payment Flow
+- [x] Fix Stripe import in server/paymentRouter.ts
+- [x] Fix `.mutate` → `.mutateAsync` error in Builder.tsx:794
+- [x] Implement /api/stripe/webhook handler with signature verification
+- [x] Register webhook route with express.raw() BEFORE express.json()
+- [x] Handle test events (evt_test_*) returning {verified: true}
+- [x] Handle checkout.session.completed → mark invitation isPaid=true
+- [x] Add getPaymentStatus tRPC query
+- [x] Gate publish behind isPaid check
+- [x] Add vitest for payment flow (44/44 passing)
+- [ ] Test with card 4242 4242 4242 4242 (manual test)
+
+## Production Launch — Phase B: Landing, Legal, Auth Gate, Rebrand
+- [x] Rebrand all "LoveNote" UI text to "Cardly"
+- [x] Build landing page at / (hero, pricing, examples, FAQ, sign-up CTA)
+- [x] Move builder to /create (require auth)
+- [x] Add Terms of Service page
+- [x] Add Privacy Policy page
+- [x] Add Refund Policy page
+- [x] Footer with legal links
+
+## Production Launch — Phase C: Lifecycle + Emails
+- [ ] Invitation auto read-only after event date
+- [ ] Email receipt after payment
+- [ ] Email "invitation published" confirmation
+
+## Production Launch — Phase D: Polish
+- [ ] SEO meta tags + Open Graph image
+- [ ] Favicon + app title to "Cardly"
+- [ ] Analytics setup
+- [ ] 3-5 sample showcase invitations
+- [ ] Support contact (email or WhatsApp)
+
+## Production Launch — Phase E: Launch QA
+- [ ] Full end-to-end test as a new user
+- [ ] Mobile + desktop + RTL pass
+- [ ] Stripe live mode KYC reminder
+- [ ] Final launch checklist
+
+## Production Launch — Phase A.1: Anti-theft Preview Protections
+- [x] Diagonal watermark on all unpaid preview surfaces (CARDLY · UNPAID PREVIEW)
+- [x] Blur sensitive fields (venue address, exact time, personal message) until paid
+- [x] Disable right-click + text-select on preview
+- [x] /invite/:slug returns "Payment pending" view if !isPaid
+- [x] Add noindex meta on unpaid invitation
+- [x] Server-side: reject PPTX export if !isPaid

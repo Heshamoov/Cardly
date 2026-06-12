@@ -1,194 +1,219 @@
 import { protectedProcedure, publicProcedure, router } from "./_core/trpc";
 import { z } from "zod";
+import { eq } from "drizzle-orm";
+import { invitations, payments } from "../drizzle/schema";
+import { getDb } from "./db";
 
-let stripe: any;
+let _stripe: any = null;
 
-async function getStripe() {
-  if (!stripe) {
+export async function getStripe() {
+  if (!_stripe) {
     const Stripe = (await import("stripe")).default;
-    stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
-      apiVersion: "2024-11-20",
-    });
+    _stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "");
   }
-  return stripe;
+  return _stripe;
 }
 
-// AED 500 in fils (1 AED = 100 fils)
-const INVITATION_PRICE_AED = 50000; // 500 AED in fils
+// AED 500 in fils (1 AED = 100 fils) — Stripe expects amount in smallest unit
+const INVITATION_PRICE_AED_FILS = 50000; // 500 AED * 100
 
-// Currency conversion rates (approximate, relative to AED)
+// Approximate currency rates relative to 1 AED
 const CURRENCY_RATES: Record<string, number> = {
   AED: 1,
-  USD: 0.272, // 1 USD ≈ 3.67 AED
-  EUR: 0.296, // 1 EUR ≈ 3.38 AED
-  GBP: 0.341, // 1 GBP ≈ 2.93 AED
-  SAR: 0.0726, // 1 SAR ≈ 13.77 AED
-  QAR: 0.0747, // 1 QAR ≈ 13.38 AED
-  KWD: 0.886, // 1 KWD ≈ 1.13 AED
-  BHD: 0.722, // 1 BHD ≈ 1.39 AED
-  OMR: 0.707, // 1 OMR ≈ 1.41 AED
-  INR: 0.00327, // 1 INR ≈ 0.022 AED
-  PKR: 0.00098, // 1 PKR ≈ 0.001 AED
-  EGP: 0.0055, // 1 EGP ≈ 0.014 AED
-  CAD: 0.195, // 1 CAD ≈ 5.13 AED
-  AUD: 0.179, // 1 AUD ≈ 5.59 AED
-  JPY: 0.00185, // 1 JPY ≈ 0.025 AED
-  CNY: 0.0375, // 1 CNY ≈ 0.037 AED
+  USD: 0.272,
+  EUR: 0.252,
+  GBP: 0.215,
+  SAR: 1.02,
+  QAR: 0.99,
+  KWD: 0.083,
+  BHD: 0.103,
+  OMR: 0.105,
+  INR: 23.0,
+  PKR: 76.0,
+  EGP: 13.5,
+  CAD: 0.37,
+  AUD: 0.42,
+  JPY: 42.0,
+  CNY: 1.97,
 };
 
-/**
- * Convert AED amount to target currency
- * @param amountAED Amount in AED fils (e.g., 50000 for 500 AED)
- * @param targetCurrency Target currency code (e.g., "USD")
- * @returns Amount in smallest unit of target currency
- */
-function convertCurrency(amountAED: number, targetCurrency: string): number {
-  const rate = CURRENCY_RATES[targetCurrency] || CURRENCY_RATES["USD"];
-  const amountInTargetCurrency = (amountAED / 100) * rate; // Convert fils to AED first
-  
-  // Convert to smallest unit (cents for USD/EUR, etc.)
-  const smallestUnit = Math.round(amountInTargetCurrency * 100);
-  return Math.max(smallestUnit, 50); // Stripe minimum is $0.50
+/** Convert AED fils to target currency smallest unit. */
+function convertCurrency(amountAEDFils: number, targetCurrency: string): number {
+  const rate = CURRENCY_RATES[targetCurrency] ?? CURRENCY_RATES.USD;
+  const aed = amountAEDFils / 100; // 500 AED
+  const inTarget = aed * rate;
+  // Most currencies: smallest unit = ×100. Exceptions: JPY/KWD/BHD/OMR.
+  const noDecimal = ["JPY"]; // 0 decimals
+  const threeDecimal = ["KWD", "BHD", "OMR"]; // 3 decimals
+  let smallest: number;
+  if (noDecimal.includes(targetCurrency)) {
+    smallest = Math.round(inTarget);
+  } else if (threeDecimal.includes(targetCurrency)) {
+    smallest = Math.round(inTarget * 1000);
+  } else {
+    smallest = Math.round(inTarget * 100);
+  }
+  // Stripe minimum ~ $0.50 USD equivalent
+  return Math.max(smallest, 50);
 }
 
-/**
- * Get currency from country code or browser locale
- */
 function getCurrencyFromLocale(locale?: string): string {
-  if (!locale) return "USD";
-
-  const currencyMap: Record<string, string> = {
-    "en-AE": "AED",
-    "ar-AE": "AED",
-    "en-US": "USD",
-    "en-GB": "GBP",
-    "en-CA": "CAD",
-    "en-AU": "AUD",
-    "de-DE": "EUR",
-    "fr-FR": "EUR",
-    "ja-JP": "JPY",
-    "zh-CN": "CNY",
-    "en-IN": "INR",
-    "en-SA": "SAR",
-    "en-QA": "QAR",
-    "en-KW": "KWD",
-    "en-BH": "BHD",
-    "en-OM": "OMR",
-    "en-EG": "EGP",
-    "ur-PK": "PKR",
+  if (!locale) return "AED";
+  const map: Record<string, string> = {
+    "en-AE": "AED", "ar-AE": "AED", "en-US": "USD", "en-GB": "GBP",
+    "en-CA": "CAD", "en-AU": "AUD", "de-DE": "EUR", "fr-FR": "EUR",
+    "ja-JP": "JPY", "zh-CN": "CNY", "en-IN": "INR", "en-SA": "SAR",
+    "en-QA": "QAR", "en-KW": "KWD", "en-BH": "BHD", "en-OM": "OMR",
+    "en-EG": "EGP", "ur-PK": "PKR",
   };
-
-  return currencyMap[locale] || "USD";
+  return map[locale] || "AED";
 }
 
 export const paymentRouter = router({
   /**
-   * Create a Stripe Checkout Session for invitation payment
-   * Returns the checkout URL to redirect the user to
+   * Create a Stripe Checkout Session for a specific invitation slug.
+   * The invitation must already exist in the DB (created as a draft).
    */
   createCheckoutSession: protectedProcedure
     .input(
       z.object({
-        invitationId: z.number(),
-        invitationSlug: z.string(),
+        invitationSlug: z.string().min(1),
         currency: z.string().optional(),
         locale: z.string().optional(),
+        origin: z.string().url().optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
-      try {
-        const stripeClient = await getStripe();
-        // Determine currency
-        const currency = input.currency || getCurrencyFromLocale(input.locale) || "USD";
-        const amount = convertCurrency(INVITATION_PRICE_AED, currency);
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
 
-        // Create checkout session
-        const session = await stripeClient.checkout.sessions.create({
-          payment_method_types: ["card"],
-          line_items: [
-            {
-              price_data: {
-                currency: currency.toLowerCase(),
-                product_data: {
-                  name: "Cardly Invitation",
-                  description: `Digital invitation for your event`,
-                  images: [], // Add logo URL if available
-                },
-                unit_amount: amount,
+      // Verify invitation exists and is owned by the caller
+      const rows = await db.select().from(invitations).where(eq(invitations.slug, input.invitationSlug)).limit(1);
+      if (rows.length === 0) throw new Error("Invitation not found");
+      const inv = rows[0];
+      if (inv.ownerOpenId && inv.ownerOpenId !== ctx.user.openId) {
+        throw new Error("You do not own this invitation");
+      }
+      if (inv.isPaid) {
+        return { success: true, alreadyPaid: true, checkoutUrl: null, sessionId: null };
+      }
+
+      const stripe = await getStripe();
+      const currency = (input.currency || getCurrencyFromLocale(input.locale) || "AED").toUpperCase();
+      const amount = convertCurrency(INVITATION_PRICE_AED_FILS, currency);
+      const origin = input.origin || ctx.req.headers.origin || `https://${ctx.req.headers.host}`;
+
+      const session = await stripe.checkout.sessions.create({
+        payment_method_types: ["card"],
+        line_items: [
+          {
+            price_data: {
+              currency: currency.toLowerCase(),
+              product_data: {
+                name: "Cardly Digital Invitation",
+                description: `One published invitation — ${inv.title || "Untitled event"}`,
               },
-              quantity: 1,
+              unit_amount: amount,
             },
-          ],
-          mode: "payment",
-          success_url: `${ctx.req.headers.origin}/invitations/${input.invitationSlug}?payment=success`,
-          cancel_url: `${ctx.req.headers.origin}/builder?payment=cancelled`,
-          customer_email: ctx.user.email,
-          client_reference_id: ctx.user.id.toString(),
-          metadata: {
-            user_id: ctx.user.id.toString(),
-            invitation_id: input.invitationId.toString(),
-            invitation_slug: input.invitationSlug,
-            customer_email: ctx.user.email,
-            customer_name: ctx.user.name || "Guest",
+            quantity: 1,
           },
-          allow_promotion_codes: true,
-        });
+        ],
+        mode: "payment",
+        success_url: `${origin}/create?paid=1&slug=${input.invitationSlug}`,
+        cancel_url: `${origin}/create?paid=0&slug=${input.invitationSlug}`,
+        customer_email: ctx.user.email || undefined,
+        client_reference_id: ctx.user.id.toString(),
+        metadata: {
+          user_id: ctx.user.id.toString(),
+          invitation_id: inv.id.toString(),
+          invitation_slug: input.invitationSlug,
+          customer_email: ctx.user.email || "",
+          customer_name: ctx.user.name || "Guest",
+        },
+        allow_promotion_codes: true,
+      });
 
-        return {
-          success: true,
-          checkoutUrl: session.url,
-          sessionId: session.id,
-        };
-      } catch (error) {
-        console.error("[Payment] Checkout session creation failed:", error);
-        throw new Error("Failed to create checkout session");
-      }
-    }),
-
-  /**
-   * Verify payment status after checkout
-   */
-  verifyPayment: protectedProcedure
-    .input(
-      z.object({
-        sessionId: z.string(),
-        invitationSlug: z.string(),
-      })
-    )
-    .query(async ({ input }) => {
+      // Record a pending payment row
       try {
-        const stripeClient = await getStripe();
-        const session = await stripeClient.checkout.sessions.retrieve(input.sessionId);
-
-        return {
-          success: session.payment_status === "paid",
-          status: session.payment_status,
-          paymentIntentId: session.payment_intent,
-        };
-      } catch (error) {
-        console.error("[Payment] Verification failed:", error);
-        return {
-          success: false,
-          status: "unknown",
-        };
+        await db.insert(payments).values({
+          invitationId: inv.id,
+          stripePaymentIntentId: session.payment_intent || session.id,
+          amount,
+          currency,
+          status: "pending",
+          email: ctx.user.email || null,
+        } as any);
+      } catch (err) {
+        // Duplicate key etc. — ignore, webhook will reconcile
+        console.warn("[Payment] Could not insert pending payment row:", err);
       }
+
+      return {
+        success: true,
+        alreadyPaid: false,
+        checkoutUrl: session.url,
+        sessionId: session.id,
+      };
     }),
 
   /**
-   * Get payment history for a user
+   * Get current payment status for an invitation slug.
+   * Public so that, after returning from Stripe checkout, the Builder can poll
+   * even before re-authenticating completes.
    */
+  getStatus: publicProcedure
+    .input(z.object({ invitationSlug: z.string().min(1) }))
+    .query(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+      const rows = await db.select().from(invitations).where(eq(invitations.slug, input.invitationSlug)).limit(1);
+      if (rows.length === 0) return { found: false, isPaid: false };
+      return {
+        found: true,
+        isPaid: !!rows[0].isPaid,
+        paidAt: rows[0].paidAt,
+      };
+    }),
+
+  /**
+   * Verify a Stripe checkout session & sync DB (used as a fallback if webhook
+   * is delayed). Idempotent.
+   */
+  verifySession: protectedProcedure
+    .input(z.object({ sessionId: z.string(), invitationSlug: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+      const stripe = await getStripe();
+      const session = await stripe.checkout.sessions.retrieve(input.sessionId);
+      const isPaid = session.payment_status === "paid";
+      if (isPaid) {
+        await db
+          .update(invitations)
+          .set({ isPaid: true, paidAt: new Date(), stripePaymentIntentId: session.payment_intent as string })
+          .where(eq(invitations.slug, input.invitationSlug));
+      }
+      return { isPaid };
+    }),
+
   getPaymentHistory: protectedProcedure.query(async ({ ctx }) => {
-    try {
-      // In a real app, this would query the payments table
-      // For now, return empty array
-      return {
-        payments: [],
-      };
-    } catch (error) {
-      console.error("[Payment] History retrieval failed:", error);
-      return {
-        payments: [],
-      };
-    }
+    const db = await getDb();
+    if (!db) return { payments: [] };
+    // Join via invitations.ownerOpenId
+    const rows = await db
+      .select({
+        paymentId: payments.id,
+        invitationId: payments.invitationId,
+        invitationSlug: invitations.slug,
+        title: invitations.title,
+        amount: payments.amount,
+        currency: payments.currency,
+        status: payments.status,
+        createdAt: payments.createdAt,
+      })
+      .from(payments)
+      .leftJoin(invitations, eq(payments.invitationId, invitations.id))
+      .where(eq(invitations.ownerOpenId, ctx.user.openId));
+    return { payments: rows };
   }),
 });

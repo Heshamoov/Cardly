@@ -273,6 +273,29 @@ export default function InvitationView() {
     );
   }
 
+  // ── Payment gate: show lock screen if invitation is not yet paid ─────────────
+  if (!invitation.isPaid) {
+    return (
+      <>
+        {/* noindex for unpaid invitations */}
+        <meta name="robots" content="noindex, nofollow" />
+        <div className="cardly-pending-payment-screen">
+          <div>
+            <div className="lock-icon">🔒</div>
+            <h2>Invitation Pending Payment</h2>
+            <p>
+              This invitation has been created but is not yet active.
+              The couple needs to complete payment before guests can view it.
+            </p>
+            <p style={{ opacity: 0.5, fontSize: 13, marginTop: 16 }}>
+              If you are the couple, please return to your invitation builder and complete the payment.
+            </p>
+          </div>
+        </div>
+      </>
+    );
+  }
+
   const invData = invitation.data as InvitationData;
   const brideName = [invData.brideFirstName, invData.brideLastName].filter(Boolean).join(" ");
   const groomName = [invData.groomFirstName, invData.groomLastName].filter(Boolean).join(" ");

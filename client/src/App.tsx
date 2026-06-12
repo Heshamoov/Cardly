@@ -9,35 +9,37 @@ import Builder from "@/pages/Builder";
 import InvitationView from "@/pages/InvitationView";
 import RsvpDashboard from "@/pages/RsvpDashboard";
 import WishesWall from "@/pages/WishesWall";
+import TermsOfService from "@/pages/TermsOfService";
+import PrivacyPolicy from "@/pages/PrivacyPolicy";
+import RefundPolicy from "@/pages/RefundPolicy";
 
 function Router() {
-  // make sure to consider if you need authentication for certain routes
   return (
     <Switch>
-      <Route path={"/"} component={Builder} />
+      {/* Landing page */}
+      <Route path={"/"} component={Home} />
+      {/* Builder — requires auth (handled inside Builder) */}
+      <Route path={"/create"} component={Builder} />
+      {/* Guest invitation view */}
       <Route path={"/invite/:slug"} component={InvitationView} />
+      {/* Owner dashboards */}
       <Route path={"/rsvp-dashboard"} component={RsvpDashboard} />
       <Route path={"/wall/:slug"} component={WishesWall} />
-      <Route path={"/home"} component={Home} />
+      {/* Legal */}
+      <Route path={"/terms"} component={TermsOfService} />
+      <Route path={"/privacy"} component={PrivacyPolicy} />
+      <Route path={"/refund"} component={RefundPolicy} />
+      {/* Fallback */}
       <Route path={"/404"} component={NotFound} />
-      {/* Final fallback route */}
       <Route component={NotFound} />
     </Switch>
   );
 }
 
-// NOTE: About Theme
-// - First choose a default theme according to your design style (dark or light bg), than change color palette in index.css
-//   to keep consistent foreground/background color across components
-// - If you want to make theme switchable, pass `switchable` ThemeProvider and use `useTheme` hook
-
 function App() {
   return (
     <ErrorBoundary>
-      <ThemeProvider
-        defaultTheme="light"
-        // switchable
-      >
+      <ThemeProvider defaultTheme="dark">
         <TooltipProvider>
           <Toaster />
           <Router />

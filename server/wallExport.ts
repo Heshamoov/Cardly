@@ -290,6 +290,23 @@ export function registerWallExport(app: Express) {
     }
 
     try {
+      // Gate: invitation must be paid before allowing PPTX export
+      const { getDb } = await import("./db");
+      const { invitations } = await import("../drizzle/schema");
+      const { eq } = await import("drizzle-orm");
+      const db = await getDb();
+      if (db) {
+        const invRows = await db.select().from(invitations).where(eq(invitations.slug, slug)).limit(1);
+        if (invRows.length === 0) {
+          res.status(404).json({ error: "Invitation not found." });
+          return;
+        }
+        if (!invRows[0].isPaid) {
+          res.status(402).json({ error: "Payment required. Please complete payment before exporting." });
+          return;
+        }
+      }
+
       const { messages, title, photoUrl } = await getWallData(slug);
 
       if (messages.length === 0) {

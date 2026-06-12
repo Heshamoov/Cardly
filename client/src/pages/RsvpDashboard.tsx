@@ -8,7 +8,7 @@ import { ARABIC_FONT } from "@/lib/i18n";
 const DASH_TRANSLATIONS = {
   en: {
     title: "Guest Responses",
-    subtitle: "LoveNote Dashboard",
+    subtitle: "Cardly Dashboard",
     backToBuilder: "← Back to Builder",
     totalGuests: "Total Confirmed Guests",
     totalResponses: "Total Responses",
@@ -53,7 +53,7 @@ const DASH_TRANSLATIONS = {
   },
   ar: {
     title: "استجابات الضيوف",
-    subtitle: "لوحة تحكم LoveNote",
+    subtitle: "لوحة تحكم Cardly",
     backToBuilder: "العودة إلى المنشئ ←",
     totalGuests: "إجمالي الضيوف المؤكدين",
     totalResponses: "إجمالي الردود",
