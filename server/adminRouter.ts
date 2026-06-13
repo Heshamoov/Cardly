@@ -9,11 +9,10 @@ import { users, subscriptions, invitations, rsvpResponses } from "../drizzle/sch
 import { desc, eq, sql, count } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 
-function getStripeAdmin() {
-  const Stripe = require("stripe");
-  const key = process.env.STRIPE_SECRET_KEY;
-  if (!key) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Stripe key not configured" });
-  return new Stripe(key) as import("stripe").default;
+import { getStripe } from "./paymentRouter";
+
+async function getStripeAdmin() {
+  return getStripe();
 }
 
 export const adminRouter = router({
@@ -112,7 +111,7 @@ export const adminRouter = router({
 
   /** ── Promo Codes ── */
   listPromoCodes: adminProcedure.query(async () => {
-    const stripe = getStripeAdmin();
+    const stripe = await getStripeAdmin();
     // Fetch promotion codes (active + inactive)
     const promoCodes = await stripe.promotionCodes.list({ limit: 100 });
     return promoCodes.data.map((pc: any) => ({
@@ -146,7 +145,7 @@ export const adminRouter = router({
       if (!input.percentOff && !input.amountOffAed) {
         throw new TRPCError({ code: "BAD_REQUEST", message: "Provide either percentOff or amountOffAed" });
       }
-      const stripe = getStripeAdmin();
+      const stripe = await getStripeAdmin();
 
       // Create coupon first
       const couponParams: any = {
@@ -187,7 +186,7 @@ export const adminRouter = router({
   deactivatePromoCode: adminProcedure
     .input(z.object({ promoCodeId: z.string() }))
     .mutation(async ({ input }) => {
-      const stripe = getStripeAdmin();
+      const stripe = await getStripeAdmin();
       await stripe.promotionCodes.update(input.promoCodeId, { active: false });
       return { success: true };
     }),

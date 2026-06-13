@@ -303,7 +303,7 @@ export default function AdminDashboard() {
             <TableSection loading={promoQ.isLoading} noData={!promoQ.data?.length} noDataMsg={t.noData} loadingMsg={t.loading}>
               <TableHead cols={[t.promoCodes.code, t.promoCodes.discount, t.promoCodes.redeemed, t.promoCodes.maxUses, t.promoCodes.expires, t.promoCodes.status, ""]} font={bodyFont} />
               <tbody>
-                {promoQ.data?.map((pc) => (
+                {promoQ.data?.map((pc: any) => (
                   <tr key={pc.id} style={{ borderBottom: "1px solid rgba(212,175,55,0.06)" }}>
                     <Td font={bodyFont}><code style={{ fontSize: 13, color: "#d4af37", fontWeight: 700 }}>{pc.code}</code></Td>
                     <Td font={bodyFont}>{pc.percentOff ? `${pc.percentOff}%` : pc.amountOff ? `AED ${(pc.amountOff / 100).toFixed(0)}` : "—"}</Td>
