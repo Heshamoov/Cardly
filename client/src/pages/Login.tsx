@@ -4,61 +4,70 @@ import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { useLang } from "@/contexts/LangContext";
+import { Heart, Sparkles, Mail, Lock, User } from "lucide-react";
 
 const t = {
   en: {
-    signIn: "Sign In",
-    signUp: "Create Account",
-    emailLabel: "Email",
+    signIn: "Welcome back",
+    signUp: "Create your account",
+    signInSub: "Sign in to manage your invitations",
+    signUpSub: "Start creating beautiful digital invitations",
+    emailLabel: "Email address",
     passwordLabel: "Password",
-    nameLabel: "Full Name",
+    nameLabel: "Full name",
     emailPlaceholder: "you@example.com",
-    passwordPlaceholder: "••••••••",
+    passwordPlaceholder: "At least 6 characters",
     namePlaceholder: "Your name",
     loginBtn: "Sign In",
     registerBtn: "Create Account",
-    googleBtn: "Continue with Google",
     noAccount: "Don't have an account?",
     hasAccount: "Already have an account?",
     switchToRegister: "Create one",
     switchToLogin: "Sign in",
-    tagline: "Your event, beautifully delivered.",
+    tagline: "Your event,\nbeautifully delivered.",
+    subTagline:
+      "Create stunning digital invitations with animated envelopes, bilingual support, live venue maps, and RSVP collection — all in one link.",
     errorInvalid: "Invalid email or password.",
-    errorExists: "An account with this email already exists.",
     errorGeneral: "Something went wrong. Please try again.",
     successLogin: "Welcome back!",
     successRegister: "Account created! Welcome to Cardly.",
     passwordMin: "Password must be at least 6 characters.",
-    googleNotConfigured: "Google Sign-In is not configured yet.",
+    feature1: "Animated envelopes",
+    feature2: "Arabic & English",
+    feature3: "Live RSVP tracking",
+    backHome: "Back to home",
   },
   ar: {
-    signIn: "تسجيل الدخول",
-    signUp: "إنشاء حساب",
+    signIn: "مرحباً بعودتك",
+    signUp: "إنشاء حسابك",
+    signInSub: "سجّل دخولك لإدارة دعواتك",
+    signUpSub: "ابدأ بإنشاء دعوات رقمية جميلة",
     emailLabel: "البريد الإلكتروني",
     passwordLabel: "كلمة المرور",
     nameLabel: "الاسم الكامل",
     emailPlaceholder: "example@email.com",
-    passwordPlaceholder: "••••••••",
+    passwordPlaceholder: "6 أحرف على الأقل",
     namePlaceholder: "اسمك",
     loginBtn: "تسجيل الدخول",
     registerBtn: "إنشاء حساب",
-    googleBtn: "المتابعة مع Google",
     noAccount: "ليس لديك حساب؟",
     hasAccount: "لديك حساب بالفعل؟",
     switchToRegister: "أنشئ حساباً",
     switchToLogin: "تسجيل الدخول",
-    tagline: "مناسبتك، تُقدَّم بجمال.",
+    tagline: "مناسبتك،\nتُقدَّم بجمال.",
+    subTagline:
+      "أنشئ دعوات رقمية مذهلة مع مظاريف متحركة، ودعم ثنائي اللغة، وخرائط حية، وتتبع الحضور — كل ذلك في رابط واحد.",
     errorInvalid: "البريد الإلكتروني أو كلمة المرور غير صحيحة.",
-    errorExists: "يوجد حساب بهذا البريد الإلكتروني بالفعل.",
     errorGeneral: "حدث خطأ ما. يرجى المحاولة مرة أخرى.",
     successLogin: "مرحباً بعودتك!",
     successRegister: "تم إنشاء الحساب! مرحباً بك في Cardly.",
     passwordMin: "يجب أن تكون كلمة المرور 6 أحرف على الأقل.",
-    googleNotConfigured: "لم يتم تكوين تسجيل الدخول عبر Google بعد.",
+    feature1: "مظاريف متحركة",
+    feature2: "عربي وإنجليزي",
+    feature3: "تتبع الحضور مباشرة",
+    backHome: "العودة إلى الرئيسية",
   },
 };
 
@@ -73,7 +82,6 @@ type GoogleGSI = {
         element: HTMLElement,
         config: { theme: string; size: string; width: number; text: string }
       ) => void;
-      prompt: () => void;
     };
   };
 };
@@ -88,6 +96,7 @@ export default function Login() {
   const [, navigate] = useLocation();
   const { lang } = useLang();
   const tr = t[lang] ?? t.en;
+  const isRTL = lang === "ar";
 
   const [mode, setMode] = useState<"login" | "register">("login");
   const [email, setEmail] = useState("");
@@ -95,7 +104,6 @@ export default function Login() {
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Get returnPath from URL query string
   const returnPath = (() => {
     const params = new URLSearchParams(window.location.search);
     return params.get("returnPath") || "/create";
@@ -109,9 +117,7 @@ export default function Login() {
       toast.success(tr.successLogin);
       navigate(returnPath);
     },
-    onError: (err) => {
-      toast.error(err.message || tr.errorInvalid);
-    },
+    onError: (err) => toast.error(err.message || tr.errorInvalid),
   });
 
   const registerMutation = trpc.auth.register.useMutation({
@@ -120,9 +126,7 @@ export default function Login() {
       toast.success(tr.successRegister);
       navigate(returnPath);
     },
-    onError: (err) => {
-      toast.error(err.message || tr.errorGeneral);
-    },
+    onError: (err) => toast.error(err.message || tr.errorGeneral),
   });
 
   const googleSignInMutation = trpc.auth.googleSignIn.useMutation({
@@ -131,16 +135,12 @@ export default function Login() {
       toast.success(tr.successLogin);
       navigate(returnPath);
     },
-    onError: (err) => {
-      toast.error(err.message || tr.errorGeneral);
-    },
+    onError: (err) => toast.error(err.message || tr.errorGeneral),
   });
 
-  // Load Google Sign-In script and render button
   useEffect(() => {
     const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
     if (!googleClientId) return;
-
     const scriptId = "google-gsi-script";
     if (!document.getElementById(scriptId)) {
       const script = document.createElement("script");
@@ -149,7 +149,6 @@ export default function Login() {
       script.async = true;
       script.defer = true;
       script.onload = () => {
-        // Google GSI loads as window.google but we access it via a typed alias
         (window as any).googleGSI = (window as any).google;
         initGoogle();
       };
@@ -158,7 +157,6 @@ export default function Login() {
       (window as any).googleGSI = (window as any).google;
       initGoogle();
     }
-
     function initGoogle() {
       const el = document.getElementById("google-signin-btn");
       if (!window.googleGSI || !el) return;
@@ -180,154 +178,243 @@ export default function Login() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (loading) return;
-
     if (mode === "register") {
-      if (password.length < 6) {
-        toast.error(tr.passwordMin);
-        return;
-      }
+      if (password.length < 6) { toast.error(tr.passwordMin); return; }
       setLoading(true);
-      try {
-        await registerMutation.mutateAsync({ name, email, password });
-      } finally {
-        setLoading(false);
-      }
+      try { await registerMutation.mutateAsync({ name, email, password }); }
+      finally { setLoading(false); }
     } else {
       setLoading(true);
-      try {
-        await loginMutation.mutateAsync({ email, password });
-      } finally {
-        setLoading(false);
-      }
+      try { await loginMutation.mutateAsync({ email, password }); }
+      finally { setLoading(false); }
     }
   };
 
-  const isRTL = lang === "ar";
+  const isBusy = loading || loginMutation.isPending || registerMutation.isPending;
 
   return (
-    <div
-      className="min-h-screen flex items-center justify-center bg-[#0a0f1e] px-4 py-12"
-      dir={isRTL ? "rtl" : "ltr"}
-    >
-      {/* Background gradient */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[600px] rounded-full bg-[#c9a84c]/5 blur-3xl" />
-      </div>
+    <>
+      {/* Responsive CSS */}
+      <style>{`
+        .login-page {
+          min-height: 100vh;
+          display: flex;
+          background: #0a0f1e;
+          direction: ${isRTL ? "rtl" : "ltr"};
+        }
+        .login-left {
+          display: none;
+          width: 50%;
+          flex-direction: column;
+          justify-content: space-between;
+          padding: 3rem;
+          position: relative;
+          overflow: hidden;
+          background: linear-gradient(135deg, #0d1528 0%, #0a0f1e 50%, #12192e 100%);
+          border-right: 1px solid rgba(201,168,76,0.15);
+          flex-shrink: 0;
+        }
+        @media (min-width: 1024px) {
+          .login-left { display: flex; }
+        }
+        .login-right {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          padding: 2rem 1.5rem;
+          min-height: 100vh;
+        }
+        @media (min-width: 1024px) {
+          .login-right { padding: 2rem 5rem; }
+        }
+        .login-form-inner {
+          width: 100%;
+          max-width: 400px;
+        }
+        .login-input {
+          background: rgba(255,255,255,0.04) !important;
+          border: 1px solid rgba(255,255,255,0.1) !important;
+          color: #fff !important;
+        }
+        .login-input::placeholder { color: rgba(255,255,255,0.25) !important; }
+        .login-input:focus { border-color: rgba(201,168,76,0.5) !important; }
+        .login-mobile-logo { display: block; margin-bottom: 2rem; }
+        @media (min-width: 1024px) { .login-mobile-logo { display: none; } }
+      `}</style>
 
-      <div className="w-full max-w-md relative z-10">
-        {/* Logo */}
-        <div className="text-center mb-8">
-          <a href="/" className="inline-block">
-            <img
-              src="/manus-storage/cardly-logo-v4_5f2425c5.png"
-              alt="Cardly"
-              className="h-10 mx-auto"
-            />
-          </a>
-          <p className="text-[#c9a84c]/70 text-sm mt-3">{tr.tagline}</p>
+      <div className="login-page">
+
+        {/* ── Left: Branding ── */}
+        <div className="login-left">
+          {/* Glow */}
+          <div style={{
+            position: "absolute", inset: 0, pointerEvents: "none",
+            background: "radial-gradient(ellipse 60% 50% at 30% 60%, rgba(201,168,76,0.07) 0%, transparent 70%)"
+          }} />
+
+          {/* Logo */}
+          <div style={{ position: "relative", zIndex: 1 }}>
+            <a href="/">
+              <img src="/manus-storage/cardly-logo-v4_5f2425c5.png" alt="Cardly" style={{ height: "34px", width: "auto" }} />
+            </a>
+          </div>
+
+          {/* Tagline */}
+          <div style={{ position: "relative", zIndex: 1 }}>
+            <h1 style={{
+              fontFamily: "Georgia, 'Times New Roman', serif",
+              fontSize: "clamp(1.8rem, 3vw, 2.8rem)",
+              color: "#c9a84c",
+              lineHeight: 1.25,
+              whiteSpace: "pre-line",
+              marginBottom: "1.25rem",
+            }}>
+              {tr.tagline}
+            </h1>
+            <p style={{ color: "rgba(255,255,255,0.45)", fontSize: "0.9rem", lineHeight: 1.75, maxWidth: "360px", marginBottom: "1.5rem" }}>
+              {tr.subTagline}
+            </p>
+            {/* Feature pills */}
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "0.6rem" }}>
+              {[tr.feature1, tr.feature2, tr.feature3].map((f) => (
+                <span key={f} style={{
+                  display: "flex", alignItems: "center", gap: "0.4rem",
+                  padding: "0.35rem 0.75rem", borderRadius: "9999px",
+                  background: "rgba(201,168,76,0.1)", border: "1px solid rgba(201,168,76,0.25)",
+                  color: "#c9a84c", fontSize: "0.75rem", fontWeight: 500,
+                }}>
+                  <Sparkles size={11} />
+                  {f}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          {/* Sample card */}
+          <div style={{ position: "relative", zIndex: 1 }}>
+            <div style={{
+              borderRadius: "1rem", padding: "1.25rem",
+              background: "rgba(201,168,76,0.06)", border: "1px solid rgba(201,168,76,0.15)",
+              maxWidth: "300px",
+            }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.75rem" }}>
+                <Heart size={13} style={{ color: "#c9a84c" }} />
+                <span style={{ color: "rgba(255,255,255,0.35)", fontSize: "0.65rem", letterSpacing: "0.1em" }}>SAMPLE INVITATION</span>
+              </div>
+              <p style={{ color: "rgba(255,255,255,0.8)", fontSize: "0.85rem", marginBottom: "0.25rem" }}>Ahmad & Sara's Wedding</p>
+              <p style={{ color: "rgba(255,255,255,0.4)", fontSize: "0.75rem", marginBottom: "0.75rem" }}>Saturday, 15 November 2025 · Abu Dhabi</p>
+              <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)", paddingTop: "0.75rem", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <span style={{ color: "rgba(255,255,255,0.3)", fontSize: "0.7rem" }}>47 guests confirmed</span>
+                <span style={{ padding: "0.15rem 0.5rem", borderRadius: "9999px", background: "rgba(74,222,128,0.12)", color: "#4ade80", fontSize: "0.7rem" }}>Live</span>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <Card className="border border-white/10 bg-white/5 backdrop-blur-sm shadow-2xl">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-white text-xl">
-              {mode === "login" ? tr.signIn : tr.signUp}
-            </CardTitle>
-            <CardDescription className="text-white/50 text-sm">
-              {mode === "login" ? tr.noAccount : tr.hasAccount}{" "}
-              <button
-                type="button"
-                onClick={() => setMode(mode === "login" ? "register" : "login")}
-                className="text-[#c9a84c] hover:underline font-medium"
-              >
-                {mode === "login" ? tr.switchToRegister : tr.switchToLogin}
-              </button>
-            </CardDescription>
-          </CardHeader>
+        {/* ── Right: Form ── */}
+        <div className="login-right">
+          {/* Mobile logo */}
+          <div className="login-mobile-logo">
+            <a href="/">
+              <img src="/manus-storage/cardly-logo-v4_5f2425c5.png" alt="Cardly" style={{ height: "30px", width: "auto" }} />
+            </a>
+          </div>
 
-          <CardContent className="space-y-4">
-            {/* Google Sign-In button (rendered by Google GSI) */}
+          <div className="login-form-inner">
+            {/* Heading */}
+            <div style={{ marginBottom: "2rem" }}>
+              <h2 style={{ color: "#fff", fontSize: "1.5rem", fontWeight: 600, marginBottom: "0.35rem" }}>
+                {mode === "login" ? tr.signIn : tr.signUp}
+              </h2>
+              <p style={{ color: "rgba(255,255,255,0.4)", fontSize: "0.875rem" }}>
+                {mode === "login" ? tr.signInSub : tr.signUpSub}
+              </p>
+            </div>
+
+            {/* Google Sign-In */}
             {import.meta.env.VITE_GOOGLE_CLIENT_ID && (
-              <>
-                <div id="google-signin-btn" className="flex justify-center" />
-                <div className="flex items-center gap-3">
-                  <Separator className="flex-1 bg-white/10" />
-                  <span className="text-white/30 text-xs">or</span>
-                  <Separator className="flex-1 bg-white/10" />
+              <div style={{ marginBottom: "1.5rem" }}>
+                <div id="google-signin-btn" style={{ display: "flex", justifyContent: "center" }} />
+                <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginTop: "1.25rem" }}>
+                  <div style={{ flex: 1, height: "1px", background: "rgba(255,255,255,0.08)" }} />
+                  <span style={{ color: "rgba(255,255,255,0.25)", fontSize: "0.75rem" }}>or</span>
+                  <div style={{ flex: 1, height: "1px", background: "rgba(255,255,255,0.08)" }} />
                 </div>
-              </>
+              </div>
             )}
 
-            {/* Email / Password form */}
-            <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Form */}
+            <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
               {mode === "register" && (
-                <div className="space-y-1.5">
-                  <Label htmlFor="name" className="text-white/70 text-sm">
+                <div>
+                  <Label htmlFor="name" style={{ color: "rgba(255,255,255,0.55)", fontSize: "0.8rem", display: "block", marginBottom: "0.4rem" }}>
                     {tr.nameLabel}
                   </Label>
-                  <Input
-                    id="name"
-                    type="text"
-                    placeholder={tr.namePlaceholder}
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    required
-                    className="bg-white/5 border-white/10 text-white placeholder:text-white/30 focus:border-[#c9a84c]/50"
-                  />
+                  <div style={{ position: "relative" }}>
+                    <User size={14} style={{ position: "absolute", left: "0.75rem", top: "50%", transform: "translateY(-50%)", color: "rgba(255,255,255,0.25)" }} />
+                    <Input id="name" type="text" placeholder={tr.namePlaceholder} value={name} onChange={(e) => setName(e.target.value)} required className="login-input" style={{ paddingLeft: "2.25rem" }} />
+                  </div>
                 </div>
               )}
 
-              <div className="space-y-1.5">
-                <Label htmlFor="email" className="text-white/70 text-sm">
+              <div>
+                <Label htmlFor="email" style={{ color: "rgba(255,255,255,0.55)", fontSize: "0.8rem", display: "block", marginBottom: "0.4rem" }}>
                   {tr.emailLabel}
                 </Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder={tr.emailPlaceholder}
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  className="bg-white/5 border-white/10 text-white placeholder:text-white/30 focus:border-[#c9a84c]/50"
-                />
+                <div style={{ position: "relative" }}>
+                  <Mail size={14} style={{ position: "absolute", left: "0.75rem", top: "50%", transform: "translateY(-50%)", color: "rgba(255,255,255,0.25)" }} />
+                  <Input id="email" type="email" placeholder={tr.emailPlaceholder} value={email} onChange={(e) => setEmail(e.target.value)} required className="login-input" style={{ paddingLeft: "2.25rem" }} />
+                </div>
               </div>
 
-              <div className="space-y-1.5">
-                <Label htmlFor="password" className="text-white/70 text-sm">
+              <div>
+                <Label htmlFor="password" style={{ color: "rgba(255,255,255,0.55)", fontSize: "0.8rem", display: "block", marginBottom: "0.4rem" }}>
                   {tr.passwordLabel}
                 </Label>
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder={tr.passwordPlaceholder}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  className="bg-white/5 border-white/10 text-white placeholder:text-white/30 focus:border-[#c9a84c]/50"
-                />
+                <div style={{ position: "relative" }}>
+                  <Lock size={14} style={{ position: "absolute", left: "0.75rem", top: "50%", transform: "translateY(-50%)", color: "rgba(255,255,255,0.25)" }} />
+                  <Input id="password" type="password" placeholder={tr.passwordPlaceholder} value={password} onChange={(e) => setPassword(e.target.value)} required className="login-input" style={{ paddingLeft: "2.25rem" }} />
+                </div>
               </div>
 
               <Button
                 type="submit"
-                disabled={loading || loginMutation.isPending || registerMutation.isPending}
-                className="w-full bg-[#c9a84c] hover:bg-[#b8973b] text-[#0a0f1e] font-semibold h-11 transition-all active:scale-[0.97]"
+                disabled={isBusy}
+                style={{
+                  width: "100%", height: "2.75rem", fontWeight: 600, marginTop: "0.25rem",
+                  background: isBusy ? "rgba(201,168,76,0.5)" : "#c9a84c",
+                  color: "#0a0f1e", border: "none", borderRadius: "0.5rem",
+                  cursor: isBusy ? "not-allowed" : "pointer",
+                  transition: "all 0.15s ease",
+                }}
               >
-                {loading || loginMutation.isPending || registerMutation.isPending
-                  ? "..."
-                  : mode === "login"
-                  ? tr.loginBtn
-                  : tr.registerBtn}
+                {isBusy ? "..." : mode === "login" ? tr.loginBtn : tr.registerBtn}
               </Button>
             </form>
-          </CardContent>
-        </Card>
 
-        {/* Back to home */}
-        <p className="text-center mt-6 text-white/30 text-sm">
-          <a href="/" className="hover:text-white/60 transition-colors">
-            ← {lang === "ar" ? "العودة إلى الرئيسية" : "Back to home"}
-          </a>
-        </p>
+            {/* Switch mode */}
+            <p style={{ textAlign: "center", marginTop: "1.5rem", fontSize: "0.875rem", color: "rgba(255,255,255,0.35)" }}>
+              {mode === "login" ? tr.noAccount : tr.hasAccount}{" "}
+              <button
+                type="button"
+                onClick={() => setMode(mode === "login" ? "register" : "login")}
+                style={{ color: "#c9a84c", fontWeight: 500, background: "none", border: "none", cursor: "pointer", textDecoration: "underline" }}
+              >
+                {mode === "login" ? tr.switchToRegister : tr.switchToLogin}
+              </button>
+            </p>
+
+            {/* Back to home */}
+            <p style={{ textAlign: "center", marginTop: "1rem", fontSize: "0.75rem", color: "rgba(255,255,255,0.2)" }}>
+              <a href="/" style={{ color: "inherit", textDecoration: "none" }}>
+                ← {tr.backHome}
+              </a>
+            </p>
+          </div>
+        </div>
       </div>
-    </div>
+    </>
   );
 }
