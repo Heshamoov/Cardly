@@ -729,7 +729,7 @@ export default function Builder() {
   const [copied, setCopied] = useState(false);
   const { lang: formLang, setLang: setFormLang } = useLang();
   const [, navigate] = useLocation();
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, logout } = useAuth();
 
   // ── ALL HOOKS MUST BE DECLARED BEFORE ANY CONDITIONAL RETURNS (Rules of Hooks) ──
 
@@ -980,6 +980,37 @@ export default function Builder() {
       <div className="builder-form-pane mobile-container px-4 pt-8" dir={formLang === "ar" ? "rtl" : "ltr"}>
         {/* Header */}
         <div className="text-center mb-8 animate-fade-in-up">
+          {/* User menu row */}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
+            {/* Home link */}
+            <a href="/" style={{ color: "rgba(201,168,76,0.5)", fontSize: 12, textDecoration: "none", fontFamily: "'Lato', sans-serif", letterSpacing: "0.06em" }}>← {formLang === "ar" ? "الرئيسية" : "Home"}</a>
+            {/* User info + sign out */}
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              {user.role === "admin" && (
+                <a
+                  href="/admin"
+                  style={{ color: "rgba(201,168,76,0.6)", fontSize: 11, textDecoration: "none", fontFamily: "'Lato', sans-serif", letterSpacing: "0.08em", textTransform: "uppercase", border: "1px solid rgba(201,168,76,0.3)", borderRadius: 12, padding: "3px 10px" }}
+                >
+                  {formLang === "ar" ? "لوحة الإدارة" : "Admin"}
+                </a>
+              )}
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <div style={{ width: 28, height: 28, borderRadius: "50%", background: "linear-gradient(135deg, #d4af37, #f5e6b3)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, color: "#0a0f1e", flexShrink: 0 }}>
+                  {user.name?.charAt(0).toUpperCase() || "?"}
+                </div>
+                <span style={{ fontFamily: "'Lato', sans-serif", fontSize: 11, color: "rgba(245,230,179,0.7)", maxWidth: 100, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  {user.name?.split(" ")[0]}
+                </span>
+                <button
+                  onClick={async () => { try { await logout(); } catch {} }}
+                  style={{ background: "transparent", border: "1px solid rgba(201,168,76,0.3)", borderRadius: 12, padding: "3px 10px", color: "rgba(201,168,76,0.6)", fontFamily: "'Lato', sans-serif", fontSize: 11, cursor: "pointer", letterSpacing: "0.06em", whiteSpace: "nowrap" }}
+                >
+                  {formLang === "ar" ? "تسجيل خروج" : "Sign Out"}
+                </button>
+              </div>
+            </div>
+          </div>
+
           <p className="font-sans text-xs uppercase tracking-widest text-gold mb-1 opacity-70" style={formLang === "ar" ? { fontFamily: ARABIC_FONT } : {}}>
             {ft.createYour}
           </p>
