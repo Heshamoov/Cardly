@@ -213,8 +213,12 @@ export const paymentRouter = router({
         .where(eq(subscriptions.ownerOpenId, ctx.user.openId))
         .limit(1);
 
-      const periodEnd = typeof stripeSub === "object"
-        ? new Date(stripeSub.current_period_end * 1000)
+      // In Stripe SDK v22, current_period_end moved from Subscription to SubscriptionItem
+      const periodEndTs = typeof stripeSub === "object"
+        ? ((stripeSub.items?.data?.[0]?.current_period_end) ?? (stripeSub.current_period_end))
+        : null;
+      const periodEnd = periodEndTs
+        ? new Date(periodEndTs * 1000)
         : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
 
       if (existing.length > 0) {

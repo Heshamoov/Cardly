@@ -731,7 +731,79 @@ export default function Builder() {
   const [, navigate] = useLocation();
   const { user, loading: authLoading } = useAuth();
 
-  // ── Auth gate: redirect unauthenticated users to sign in ───────────────────────
+  // ── ALL HOOKS MUST BE DECLARED BEFORE ANY CONDITIONAL RETURNS (Rules of Hooks) ──
+
+  // Persist draft slug across navigation (so post-Stripe-redirect can pick it up)
+  useEffect(() => {
+    try {
+      if (draftSlug) localStorage.setItem("cardly_draft_slug", draftSlug);
+      else localStorage.removeItem("cardly_draft_slug");
+    } catch { /* ignore */ }
+  }, [draftSlug]);
+
+  // Read ?subscribed=1 query params after returning from Stripe subscription checkout
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const subscribed = params.get("subscribed");
+    if (subscribed === "1") {
+      setPaymentInProgress(true);
+      window.history.replaceState({}, "", window.location.pathname);
+    } else if (subscribed === "0") {
+      toast.error(formLang === "ar" ? "تم إلغاء الاشتراك." : "Subscription cancelled.");
+      window.history.replaceState({}, "", window.location.pathname);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Subscription status query — only runs when user is authenticated
+  const subscriptionQuery = trpc.payments.getSubscriptionStatus.useQuery(undefined, {
+    refetchInterval: paymentInProgress ? 3000 : false,
+    refetchOnWindowFocus: true,
+    enabled: !!user,
+  });
+  const subscription = subscriptionQuery.data;
+  const isSubscribed = !!subscription?.isActive;
+
+  useEffect(() => {
+    if (paymentInProgress && isSubscribed) {
+      setPaymentInProgress(false);
+      setSubscriptionChecked(true);
+      toast.success(formLang === "ar" ? "مرحباً بك! اشتراكك نشط الآن." : "Welcome! Your subscription is now active.");
+    }
+  }, [paymentInProgress, isSubscribed, formLang]);
+
+  // Auto-save to localStorage on every change
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    } catch {
+      // ignore storage errors
+    }
+  }, [data]);
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Note: "create" creates a DRAFT row in the DB. We only mark `publishedSlug`
+  // after the user has paid and confirms publish.
+  const createMutation = trpc.invitations.create.useMutation();
+
+  const uploadPhotoMutation = trpc.invitations.uploadPhoto.useMutation({
+    onSuccess: ({ url }) => {
+      setData((d) => ({ ...d, couplePhotoUrl: url }));
+    },
+  });
+
+  const uploadMusicMutation = trpc.invitations.uploadMusic.useMutation({
+    onSuccess: ({ url }) => {
+      setData((d) => ({ ...d, musicUrl: url }));
+    },
+  });
+
+  // Subscription checkout mutation
+  const subscribeCheckoutMutation = trpc.payments.createSubscriptionCheckout.useMutation();
+  const portalSessionMutation = trpc.payments.createPortalSession.useMutation();
+
+  // ── Auth gate: conditional returns AFTER all hooks ───────────────────────
   if (authLoading) {
     return (
       <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#0a0f1e" }}>
@@ -758,73 +830,9 @@ export default function Builder() {
     );
   }
 
-  // Persist draft slug across navigation (so post-Stripe-redirect can pick it up)
-  useEffect(() => {
-    try {
-      if (draftSlug) localStorage.setItem("cardly_draft_slug", draftSlug);
-      else localStorage.removeItem("cardly_draft_slug");
-    } catch { /* ignore */ }
-  }, [draftSlug]);
-
-  // Read ?subscribed=1 query params after returning from Stripe subscription checkout
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const subscribed = params.get("subscribed");
-    if (subscribed === "1") {
-      setPaymentInProgress(true);
-      window.history.replaceState({}, "", window.location.pathname);
-    } else if (subscribed === "0") {
-      toast.error(formLang === "ar" ? "تم إلغاء الاشتراك." : "Subscription cancelled.");
-      window.history.replaceState({}, "", window.location.pathname);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // Subscription status query
-  const subscriptionQuery = trpc.payments.getSubscriptionStatus.useQuery(undefined, {
-    refetchInterval: paymentInProgress ? 3000 : false,
-    refetchOnWindowFocus: true,
-  });
-  const subscription = subscriptionQuery.data;
-  const isSubscribed = !!subscription?.isActive;
-
-  useEffect(() => {
-    if (paymentInProgress && isSubscribed) {
-      setPaymentInProgress(false);
-      setSubscriptionChecked(true);
-      toast.success(formLang === "ar" ? "مرحباً بك! اشتراكك نشط الآن." : "Welcome! Your subscription is now active.");
-    }
-  }, [paymentInProgress, isSubscribed, formLang]);
-
-  // Auto-save to localStorage on every change
-  useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-    } catch {
-      // ignore storage errors
-    }
-  }, [data]);
-
+  // ── Helpers and derived state (safe to use after hooks) ──────────────────
   const set = (field: keyof InvitationData, value: string | number) =>
     setData((d) => ({ ...d, [field]: value }));
-
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  // Note: "create" creates a DRAFT row in the DB. We only mark `publishedSlug`
-  // after the user has paid and confirms publish.
-  const createMutation = trpc.invitations.create.useMutation();
-
-  const uploadPhotoMutation = trpc.invitations.uploadPhoto.useMutation({
-    onSuccess: ({ url }) => {
-      setData((d) => ({ ...d, couplePhotoUrl: url }));
-    },
-  });
-
-  const uploadMusicMutation = trpc.invitations.uploadMusic.useMutation({
-    onSuccess: ({ url }) => {
-      setData((d) => ({ ...d, musicUrl: url }));
-    },
-  });
 
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -847,10 +855,6 @@ export default function Builder() {
       ...d,
       sections: { ...d.sections, [key]: !d.sections[key] },
     }));
-
-  // Subscription checkout mutation
-  const subscribeCheckoutMutation = trpc.payments.createSubscriptionCheckout.useMutation();
-  const portalSessionMutation = trpc.payments.createPortalSession.useMutation();
 
   const validateBeforePublish = (): boolean => {
     if (!data.brideFirstName || !data.groomFirstName || !data.date) {

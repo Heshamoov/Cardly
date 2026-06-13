@@ -72,9 +72,14 @@ export function registerStripeWebhook(app: Express) {
             }
 
             // Fetch subscription details to get period end
+            // NOTE: In Stripe SDK v22, current_period_end moved from Subscription to SubscriptionItem
             const stripe = await getStripe();
-            const stripeSub = await stripe.subscriptions.retrieve(stripeSubscriptionId);
-            const periodEnd = new Date(stripeSub.current_period_end * 1000);
+            const stripeSub = await stripe.subscriptions.retrieve(stripeSubscriptionId, {
+              expand: ['items.data'],
+            });
+            const periodEndTs = (stripeSub.items?.data?.[0] as any)?.current_period_end
+              ?? (stripeSub as any).current_period_end;
+            const periodEnd = periodEndTs ? new Date(periodEndTs * 1000) : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
 
             // Upsert subscription row
             const existing = await db
@@ -130,9 +135,14 @@ export function registerStripeWebhook(app: Express) {
             if (!stripeSubscriptionId) break;
 
             // Fetch updated period end from Stripe
+            // NOTE: In Stripe SDK v22, current_period_end moved from Subscription to SubscriptionItem
             const stripe = await getStripe();
-            const stripeSub = await stripe.subscriptions.retrieve(stripeSubscriptionId);
-            const periodEnd = new Date(stripeSub.current_period_end * 1000);
+            const stripeSub = await stripe.subscriptions.retrieve(stripeSubscriptionId, {
+              expand: ['items.data'],
+            });
+            const periodEndTs = (stripeSub.items?.data?.[0] as any)?.current_period_end
+              ?? (stripeSub as any).current_period_end;
+            const periodEnd = periodEndTs ? new Date(periodEndTs * 1000) : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
 
             await db
               .update(subscriptions)
@@ -152,7 +162,10 @@ export function registerStripeWebhook(app: Express) {
             const stripeSub = event.data.object;
             const stripeSubscriptionId = stripeSub.id;
             const newStatus = stripeSub.status;
-            const periodEnd = new Date(stripeSub.current_period_end * 1000);
+            // In Stripe SDK v22, current_period_end moved to SubscriptionItem level
+            const periodEndTs2 = (stripeSub.items?.data?.[0] as any)?.current_period_end
+              ?? (stripeSub as any).current_period_end;
+            const periodEnd = periodEndTs2 ? new Date(periodEndTs2 * 1000) : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
 
             await db
               .update(subscriptions)
