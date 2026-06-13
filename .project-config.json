@@ -15,10 +15,10 @@
   ],
   "git_remote": {
     "repo_url": "s3://vida-prod-gitrepo/webdev-git/310419663029094267/cwkwQE2ZytYK5D22sZcWLW",
-    "access_key_id": "ASIAZV3A2ECZLIVG5XXI",
-    "secret_access_key": "qvtKO80lZJX41jZA6smm7chZMcfZkelFIrq9q6Ua",
-    "session_token": "IQoJb3JpZ2luX2VjENT//////////wEaCXVzLWVhc3QtMSJGMEQCIFEeLoSuf14kt0dpFp8/H3aUs9vNYLNUH8FPVX6F2WOgAiABQvOEdtMMpmuUmA3u6CyWgqWX9yrNWRYp67ayWatrHir/Awic//////////8BEAQaDDY2NTM4NjA5ODg2NiIMmi4zlPhkgPlJbb/BKtMD0xANAbwI5yAnxEFTtHLHraZWiFx3xo2BQJvb9tOsslXF2KXc1rqZJVPlfkTAP6e8ZTsyah0/0hNECkQI/3Lzghf9A8K9TimP2OntOPH1tSLUgmeqxzeszpIXr4NsQMSCjCANJgx9W+yTpAOwMcP1DBh9+E4bkOjucx7MHXsZqY35A1d5noa0r9gzJ5TJasgzXidsYLhC9CODL7JYiZz22rnB/2D0bZrAnSafrB/xWmScOZUV1R+ICKiuwGyIndDnaQt372nu9PdJiolgfy5qlpQadVs5TY3/2PNMk3kZp5o3v/KH1vKpjjMAGZLLnRMpkDgVWbRB8Yw+gJRiDHuGqFoP4VBgs8lsQvSajtIqZY5r3bmMuGj1HMOo9uh2yDNGlVOfFZsvNRwdUB6q1kHhNLmDbp92r9iaNF6bXeGqCNHQ1wSSe4CORaqeMD3bH7TuLzR9zIlmmvJoYtJOcLGQu3A9hUu9lda2JDZrXUC6irheJl3nj7cM7P7+UPduLpleyv8XYJPsBtB9S3eR3KrK8lQLWcM4WhIwarBYY9u3yBwBP/03kGJ1ARKDgWEBUdDkBpXZ45kKiCSAygwZd5605CB1jRW2q7TSyELnWC1GFLCstCcw04Ld0AY6ngEMccJabkX1RLtn80U0h5hij2DY45owBlWlWsbyIq72Ftx2W5e+/GDrU0bQEjb1/+LNJyKxP+/HprKtKnLOcLNEVG2PMR+mIT7SJUWMGhqEV2N+kc6h1K3LMsx/Y/o6rtPsXII64UYUZvf0a2XX62WVTx+7d/KSsuI6MIhstb8vapSZ1X0tvLqy1baIErstP32bVlOlFBLSS2imvZR6Ww==",
-    "expiration": "2026-05-28T07:09:07.000Z"
+    "access_key_id": "ASIAZV3A2ECZCFMSADMY",
+    "secret_access_key": "0OApRR58/90h3zgf901J4dthsplvzGVFgaLzYBLW",
+    "session_token": "IQoJb3JpZ2luX2VjEG4aCXVzLWVhc3QtMSJHMEUCIQDN5Sw1+Hs4HGlNRWu1CLnzFn+y5r2Qqo8aAgx/I8ROtQIgKAt3ODsdj+JOpgACyUzb02JPSiGIqsCJqjSncMwLa8oq9gMINxAEGgw2NjUzODYwOTg4NjYiDPWbVOEq8YzBhlJnLyrTA0OUbzA/dojxGRRfRbSAQhsVH1LljCquH0UuzqduWRblVd18gcco3/2EtOSQ991IN8pgdzjjYzwjZiOf1lXx8nd94sRTTMg2VMbdWMm1fEzqhkS4B3aMYPtQsFvTEz3HEpvY0rY/GAp8gZXZ9VFf3lfWH0Zf4pO+1eW+i6NnGjPoQFTh/qFqez93RZte9IIvOm48RX5UkXQKg848lVgIynbpzM2QMJzd0D7/xyE+D54i/ksvw2jgpcXHRWY5MHPf48KeGSS+/UpqD1FYgr1rXWW/dbfrSbqnBA3z1JiD7pU8NVAd1+c1du2wCaD7FArlT57edele639u7UiAxYxu+UJSLIUrCCXRNkT2Skc4hNOnePm9X0Y9oPkNlSVVi40dAEEjLfKk+Qdg3HLeSGiVF/4x9+UvdNB2YUHemqRN53jnJ+SqXrQjCDRrQwj2gx4q5ofkPMR2eyA5JKC7KVvELJEJoCoUFHhchP24WozlmQLkAE1MuWd4Iev7lLvy71YtradR12i5xwvr5QGQa7grX1yncHMRXMfDQMt7eIILaoNRECpLKc5dFQY2eSdPPZwHXzlTYgOumZEwBNNGoQKD+7C4fLcGGy5mL2cfJImSANWoY4C5MKyat9EGOp0BnlvNMxJ6F82ryFt1WkZH9jXlh3+oY0OgUDRmD3uXrv8dzxsjjFo//w2eL1iQOIXeMfqNw5jtl1Yy1GqBFCGp57PrJilVV8yJEUE7k3+Egn2RTJiosetRzs/sIQdFWRiPxQGmXUEoHKum4kMriCKdrN8TOMvMgkOJySLgMYxY5AQCoa56n1HyoDPE2pNc1mwRUWd76Mf7rrCYSCQ4BA==",
+    "expiration": "2026-06-14T09:35:40.000Z"
   },
   "name": "wedding-invite-builder",
   "path": "/home/ubuntu/wedding-invite-builder",
@@ -26,6 +26,7 @@
   "secrets": {
     "BUILT_IN_FORGE_API_KEY": "Uo9QiiZRwdHrnrFDkWhGaT",
     "BUILT_IN_FORGE_API_URL": "https://forge.manus.ai",
+    "GOOGLE_CLIENT_ID": "185271764911-36h69s2ejo6untldnsm7ovbk64j8eciv.apps.googleusercontent.com",
     "JWT_SECRET": "87sLPUgbBptTvPR5ULsZbR",
     "OAUTH_SERVER_URL": "https://api.manus.im",
     "OWNER_NAME": "hesham alatrash",
@@ -36,9 +37,10 @@
     "VITE_ANALYTICS_WEBSITE_ID": "368e4fed-c65f-478c-a968-d9439dbb036a",
     "VITE_APP_ID": "cwkwQE2ZytYK5D22sZcWLW",
     "VITE_APP_LOGO": "https://files.manuscdn.com/user_upload_by_module/web_dev_logo/310419663029094267/BBAoaWnSFFXNwtjS.png",
-    "VITE_APP_TITLE": "LoveNote — Digital Wedding Invitation Builder",
+    "VITE_APP_TITLE": "Cardly",
     "VITE_FRONTEND_FORGE_API_KEY": "hyfeBXbfjyFwRdhzXH2fXB",
     "VITE_FRONTEND_FORGE_API_URL": "https://forge.manus.ai",
+    "VITE_GOOGLE_CLIENT_ID": "185271764911-36h69s2ejo6untldnsm7ovbk64j8eciv.apps.googleusercontent.com",
     "VITE_OAUTH_PORTAL_URL": "https://manus.im",
     "VITE_STRIPE_PUBLISHABLE_KEY": "pk_test_51TbbgHDJogCK23JwF1VLkUPVsUhPHHYHBo3YO8r6yVBGbYc3IVzgyZRoQ2gSJINrrAvlUuUIhIsAoAXuVRc73cTU00SaBda7T7"
   },
