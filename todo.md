@@ -408,11 +408,30 @@
 
 ## Global EN/AR Language Toggle
 
-- [ ] Create global LangContext (React context + localStorage persistence)
-- [ ] Wire LangContext into main.tsx provider tree
-- [ ] Update Home.tsx: full EN/AR translations + use global lang
-- [ ] Update Builder.tsx: use global lang instead of internal formLang state
-- [ ] Update RsvpDashboard.tsx: full EN/AR translations
-- [ ] Update TermsOfService, PrivacyPolicy, RefundPolicy: EN/AR translations
-- [ ] Add persistent EN/AR toggle to nav on all pages
-- [ ] Tests + checkpoint
+- [x] Create global LangContext (React context + localStorage persistence)
+- [x] Wire LangContext into main.tsx provider tree
+- [x] Update Home.tsx: full EN/AR translations + use global lang
+- [x] Update Builder.tsx: use global lang instead of internal formLang state
+- [x] Update RsvpDashboard.tsx: full EN/AR translations
+- [x] Update TermsOfService, PrivacyPolicy, RefundPolicy: EN/AR translations
+- [x] Add persistent EN/AR toggle to nav on all pages
+- [x] Tests + checkpoint (44/44 passing, version 9ae1aaa3)
+
+## Admin Dashboard
+
+- [x] adminProcedure middleware (role === 'admin' gate) — already in _core/trpc.ts
+- [x] Promote owner (Hesham) to admin in DB — auto-promoted on login via db.ts upsertUser
+- [x] Admin router: getStats (total subscribers, MRR, active/canceled, total invitations)
+- [x] Admin router: getAllSubscribers (user, email, status, plan, renewsAt, invitationsUsed)
+- [x] Admin router: getAllInvitations (all invitations across all users with owner info)
+- [x] Admin router: listPromoCodes (fetch from Stripe)
+- [x] Admin router: createPromoCode (create Stripe coupon + promotion code)
+- [x] Admin router: deactivatePromoCode (deactivate Stripe promotion code)
+- [x] /admin route with auth + role guard (redirect non-admins)
+- [x] Admin page: Overview tab (KPI cards: MRR, subscribers, invitations, RSVPs, users)
+- [x] Admin page: Subscribers tab (table with status badge, renewal date, quota)
+- [x] Admin page: Invitations tab (all invitations with owner, slug, created date, views)
+- [x] Admin page: Promo Codes tab (list, create new with % or AED off, deactivate)
+- [x] Admin page: Users tab (all users with roles, join date, last seen)
+- [x] EN/AR support on admin page
+- [x] Tests + checkpoint (44/44 passing)

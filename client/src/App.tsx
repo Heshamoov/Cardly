@@ -12,6 +12,7 @@ import WishesWall from "@/pages/WishesWall";
 import TermsOfService from "@/pages/TermsOfService";
 import PrivacyPolicy from "@/pages/PrivacyPolicy";
 import RefundPolicy from "@/pages/RefundPolicy";
+import AdminDashboard from "@/pages/AdminDashboard";
 
 function Router() {
   return (
@@ -29,6 +30,8 @@ function Router() {
       <Route path={"/terms"} component={TermsOfService} />
       <Route path={"/privacy"} component={PrivacyPolicy} />
       <Route path={"/refund"} component={RefundPolicy} />
+      {/* Admin */}
+      <Route path={"/admin"} component={AdminDashboard} />
       {/* Fallback */}
       <Route path={"/404"} component={NotFound} />
       <Route component={NotFound} />
