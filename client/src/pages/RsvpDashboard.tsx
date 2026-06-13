@@ -4,6 +4,7 @@ import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { getLoginUrl } from "@/const";
 import { ARABIC_FONT } from "@/lib/i18n";
+import { useLang, LangToggle as GlobalLangToggle } from "@/contexts/LangContext";
 
 const DASH_TRANSLATIONS = {
   en: {
@@ -128,7 +129,7 @@ export default function RsvpDashboard() {
   const [selectedSlug, setSelectedSlug] = useState<string | null>(null);
   const [deletingSlug, setDeletingSlug] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
-  const [lang, setLang] = useState<DashLang>("en");
+  const { lang, isAr, dir, bodyFont: globalBodyFont, scriptFont: globalScriptFont } = useLang();
   const [duplicatingSlug, setDuplicatingSlug] = useState<string | null>(null);
   const [confirmClear, setConfirmClear] = useState<string | null>(null);
   const [clearingSlug, setClearingSlug] = useState<string | null>(null);
@@ -192,11 +193,9 @@ export default function RsvpDashboard() {
     });
   };
 
-  const isAr = lang === "ar";
-  const t = DASH_TRANSLATIONS[lang];
-  const bodyFont = isAr ? ARABIC_FONT : "'Lato', sans-serif";
-  const scriptFont = isAr ? ARABIC_FONT : "'Cormorant Garamond', serif";
-  const dir = isAr ? "rtl" : "ltr";
+  const t = DASH_TRANSLATIONS[lang as DashLang] ?? DASH_TRANSLATIONS.en;
+  const bodyFont = globalBodyFont;
+  const scriptFont = globalScriptFont;
 
   const utils = trpc.useUtils();
   const [, navigate] = useLocation();
@@ -266,46 +265,8 @@ export default function RsvpDashboard() {
     deleteMutation.mutate({ slug });
   };
 
-  // Language toggle button
-  const LangToggle = () => (
-    <div style={{ display: "flex", gap: 6 }}>
-      <button
-        onClick={() => setLang("en")}
-        style={{
-          padding: "4px 14px",
-          borderRadius: 20,
-          border: `1px solid ${lang === "en" ? "rgba(212,175,55,0.9)" : "rgba(212,175,55,0.3)"}`,
-          background: lang === "en" ? "rgba(212,175,55,0.15)" : "transparent",
-          color: lang === "en" ? "#D4AF37" : "rgba(212,175,55,0.5)",
-          fontFamily: "'Lato', sans-serif",
-          fontSize: 11,
-          fontWeight: lang === "en" ? 700 : 400,
-          letterSpacing: "0.1em",
-          cursor: "pointer",
-          transition: "all 0.2s",
-        }}
-      >
-        EN
-      </button>
-      <button
-        onClick={() => setLang("ar")}
-        style={{
-          padding: "4px 14px",
-          borderRadius: 20,
-          border: `1px solid ${lang === "ar" ? "rgba(212,175,55,0.9)" : "rgba(212,175,55,0.3)"}`,
-          background: lang === "ar" ? "rgba(212,175,55,0.15)" : "transparent",
-          color: lang === "ar" ? "#D4AF37" : "rgba(212,175,55,0.5)",
-          fontFamily: ARABIC_FONT,
-          fontSize: 13,
-          fontWeight: lang === "ar" ? 700 : 400,
-          cursor: "pointer",
-          transition: "all 0.2s",
-        }}
-      >
-        عربي
-      </button>
-    </div>
-  );
+  // Language toggle — uses global LangContext
+  const LangToggle = () => <GlobalLangToggle />;
 
   if (authLoading) {
     return (

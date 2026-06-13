@@ -6,6 +6,7 @@ import FallingParticles from "@/components/FallingParticles";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { getLoginUrl } from "@/const";
 import { toast } from "sonner";
+import { useLang, LangToggle } from "@/contexts/LangContext";
 
 interface InvitationData {
   title: string;
@@ -726,7 +727,7 @@ export default function Builder() {
   const [subscriptionChecked, setSubscriptionChecked] = useState(false);
   const [paymentInProgress, setPaymentInProgress] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [formLang, setFormLang] = useState<Lang>("en");
+  const { lang: formLang, setLang: setFormLang } = useLang();
   const [, navigate] = useLocation();
   const { user, loading: authLoading } = useAuth();
 
@@ -984,43 +985,9 @@ export default function Builder() {
           <p className="font-sans text-xs opacity-40 mt-2" style={formLang === "ar" ? { fontFamily: ARABIC_FONT } : {}}>
             {ft.builderSubtitle}
           </p>
-          {/* Language toggle */}
-          <div style={{ display: "flex", justifyContent: "center", gap: 8, marginTop: 16 }}>
-            <button
-              onClick={() => setFormLang("en")}
-              style={{
-                padding: "6px 20px",
-                borderRadius: 20,
-                border: `1px solid ${formLang === "en" ? "rgba(201,168,76,0.9)" : "rgba(201,168,76,0.3)"}`,
-                background: formLang === "en" ? "rgba(201,168,76,0.15)" : "transparent",
-                color: formLang === "en" ? "rgba(201,168,76,1)" : "rgba(201,168,76,0.5)",
-                fontFamily: "'Lato', sans-serif",
-                fontSize: 12,
-                fontWeight: formLang === "en" ? 700 : 400,
-                letterSpacing: "0.1em",
-                cursor: "pointer",
-                transition: "all 0.2s",
-              }}
-            >
-              EN
-            </button>
-            <button
-              onClick={() => setFormLang("ar")}
-              style={{
-                padding: "6px 20px",
-                borderRadius: 20,
-                border: `1px solid ${formLang === "ar" ? "rgba(201,168,76,0.9)" : "rgba(201,168,76,0.3)"}`,
-                background: formLang === "ar" ? "rgba(201,168,76,0.15)" : "transparent",
-                color: formLang === "ar" ? "rgba(201,168,76,1)" : "rgba(201,168,76,0.5)",
-                fontFamily: `'Noto Naskh Arabic', 'Amiri', serif`,
-                fontSize: 14,
-                fontWeight: formLang === "ar" ? 700 : 400,
-                cursor: "pointer",
-                transition: "all 0.2s",
-              }}
-            >
-              عربي
-            </button>
+          {/* Language toggle — uses global LangContext so choice persists across all pages */}
+          <div style={{ display: "flex", justifyContent: "center", marginTop: 16 }}>
+            <LangToggle />
           </div>
           {formLang === "ar" && (
             <p style={{ fontFamily: `'Noto Naskh Arabic', 'Amiri', serif`, fontSize: 11, color: "rgba(201,168,76,0.5)", marginTop: 6 }}>

@@ -391,17 +391,28 @@
 
 ## Subscription Migration — AED 200/month
 
-- [ ] Create Stripe recurring price (AED 200/month) via API or products.ts
-- [ ] Rewrite paymentRouter: createCheckoutSession → createSubscriptionCheckout (mode: subscription)
-- [ ] Add subscriptions table to DB schema (userId, stripeSubscriptionId, stripeCustomerId, status, currentPeriodEnd, invitationsUsed)
-- [ ] Add invitation quota check: max 10 per active subscription period
-- [ ] Webhook: handle customer.subscription.created/updated/deleted → sync subscription status
-- [ ] Webhook: handle invoice.paid → reset invitationsUsed counter each billing cycle
-- [ ] Add getSubscriptionStatus tRPC query (isActive, invitationsUsed, invitationsRemaining, renewsAt)
-- [ ] Update invitations.create to check active subscription + quota before allowing creation
-- [ ] Remove per-invitation isPaid gate — replace with subscription gate
-- [ ] Update Builder UI: show subscription status + quota counter
-- [ ] Update landing page pricing section to AED 200/month
-- [ ] Update Terms of Service pricing reference
-- [ ] Update all tests for new subscription model
-- [ ] Checkpoint + delivery
+- [x] Create Stripe recurring price (AED 200/month) via API or products.ts (defined in paymentRouter.ts)
+- [x] Rewrite paymentRouter: createCheckoutSession → createSubscriptionCheckout (mode: subscription)
+- [x] Add subscriptions table to DB schema (ownerOpenId, stripeSubscriptionId, stripeCustomerId, status, currentPeriodEnd, invitationsUsed)
+- [x] Add invitation quota check: max 10 per active subscription period
+- [x] Webhook: handle customer.subscription.created/updated/deleted → sync subscription status
+- [x] Webhook: handle invoice.paid → reset invitationsUsed counter each billing cycle
+- [x] Add getSubscriptionStatus tRPC query (isActive, invitationsUsed, invitationsRemaining, renewsAt)
+- [x] Update invitations.create to check active subscription + quota before allowing creation
+- [x] Remove per-invitation isPaid gate — replaced with subscription gate (invitations created with isPaid=true)
+- [x] Update Builder UI: show subscription status + quota counter + Manage portal link
+- [x] Update landing page pricing section to AED 200/month
+- [x] Update Terms of Service pricing reference (legal pages reference subscription model)
+- [x] Update all tests for new subscription model (44/44 passing)
+- [x] Checkpoint + delivery (version c5d9ea20)
+
+## Global EN/AR Language Toggle
+
+- [ ] Create global LangContext (React context + localStorage persistence)
+- [ ] Wire LangContext into main.tsx provider tree
+- [ ] Update Home.tsx: full EN/AR translations + use global lang
+- [ ] Update Builder.tsx: use global lang instead of internal formLang state
+- [ ] Update RsvpDashboard.tsx: full EN/AR translations
+- [ ] Update TermsOfService, PrivacyPolicy, RefundPolicy: EN/AR translations
+- [ ] Add persistent EN/AR toggle to nav on all pages
+- [ ] Tests + checkpoint
