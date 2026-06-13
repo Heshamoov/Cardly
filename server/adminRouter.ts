@@ -161,9 +161,9 @@ export const adminRouter = router({
 
       const coupon = await stripe.coupons.create(couponParams);
 
-      // Create promotion code
+      // Create promotion code — Stripe v22 uses { promotion: { type: 'coupon', coupon: id } }
       const promoParams: any = {
-        coupon: coupon.id,
+        promotion: { type: "coupon", coupon: coupon.id },
         code: input.code,
       };
       if (input.maxRedemptions) promoParams.max_redemptions = input.maxRedemptions;
