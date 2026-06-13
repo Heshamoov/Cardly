@@ -163,9 +163,11 @@ export default function Home() {
         padding: "0 24px", height: 60,
         display: "flex", alignItems: "center", justifyContent: "space-between",
       }}>
-        <span style={{ fontFamily: scriptFont, fontSize: 22, fontWeight: 700, color: "#d4af37", letterSpacing: isAr ? 0 : "0.06em" }}>
-          Cardly
-        </span>
+        <img
+          src="/manus-storage/cardly-logo-v4_5f2425c5.png"
+          alt="Cardly"
+          style={{ height: 36, objectFit: "contain", filter: "brightness(0) invert(1)" }}
+        />
         <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
           <a href="#features" style={{ color: "rgba(245,230,179,0.7)", fontSize: 13, textDecoration: "none", fontFamily: bodyFont }}>{t.navFeatures}</a>
           <a href="#pricing" style={{ color: "rgba(245,230,179,0.7)", fontSize: 13, textDecoration: "none", fontFamily: bodyFont }}>{t.navPricing}</a>
@@ -336,7 +338,11 @@ export default function Home() {
         display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center",
         gap: 16, maxWidth: 900, margin: "0 auto",
       }}>
-        <span style={{ fontFamily: scriptFont, fontSize: 18, color: "#d4af37" }}>Cardly</span>
+        <img
+          src="/manus-storage/cardly-logo-v4_5f2425c5.png"
+          alt="Cardly"
+          style={{ height: 28, objectFit: "contain", filter: "brightness(0) invert(1)" }}
+        />
         <div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
           <Link href="/terms" style={{ ...footerLink, fontFamily: bodyFont }}>{t.footerTerms}</Link>
           <Link href="/privacy" style={{ ...footerLink, fontFamily: bodyFont }}>{t.footerPrivacy}</Link>

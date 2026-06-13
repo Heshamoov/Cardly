@@ -808,7 +808,7 @@ export default function Builder() {
     return (
       <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#0a0f1e" }}>
         <div style={{ textAlign: "center" }}>
-          <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 32, color: "#d4af37", marginBottom: 16 }}>Cardly</div>
+          <img src="/manus-storage/cardly-logo-v4_5f2425c5.png" alt="Cardly" style={{ height: 32, objectFit: "contain", filter: "brightness(0) invert(1)", marginBottom: 16 }} />
           <div style={{ width: 32, height: 32, border: "2px solid #d4af37", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite", margin: "0 auto" }} />
         </div>
       </div>
@@ -817,7 +817,7 @@ export default function Builder() {
   if (!user) {
     return (
       <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "#0a0f1e", fontFamily: "'Lato', sans-serif", gap: 24, padding: 24 }}>
-        <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 32, color: "#d4af37" }}>Cardly</div>
+        <img src="/manus-storage/cardly-logo-v4_5f2425c5.png" alt="Cardly" style={{ height: 32, objectFit: "contain", filter: "brightness(0) invert(1)" }} />
         <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 28, color: "#f5e6b3", textAlign: "center", margin: 0 }}>Sign in to create your invitation</h2>
         <p style={{ color: "rgba(245,230,179,0.6)", fontSize: 15, textAlign: "center", maxWidth: 380, margin: 0 }}>You need a free Cardly account to build and manage your digital invitation.</p>
         <a href={getLoginUrl("/create")}>
@@ -1011,6 +1011,11 @@ export default function Builder() {
             </div>
           </div>
 
+          <img
+            src="/manus-storage/cardly-logo-v4_5f2425c5.png"
+            alt="Cardly"
+            style={{ height: 32, objectFit: "contain", filter: "brightness(0) invert(1)", margin: "0 auto 16px", display: "block" }}
+          />
           <p className="font-sans text-xs uppercase tracking-widest text-gold mb-1 opacity-70" style={formLang === "ar" ? { fontFamily: ARABIC_FONT } : {}}>
             {ft.createYour}
           </p>
