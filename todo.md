@@ -450,5 +450,12 @@
 - [x] Update client/src/const.ts: replace getLoginUrl() to return /login
 - [x] Update client/src/main.tsx: redirect to /login instead of Manus portal
 - [x] Update Home.tsx, Builder.tsx, RsvpDashboard.tsx auth redirect links
-- [ ] Add Google OAuth client ID secret via webdev_request_secrets
+- [x] Add Google OAuth client ID secret via webdev_request_secrets
 - [x] Run all tests and save checkpoint
+
+## E2E Test & Bug Fixes (Jun 13)
+
+- [x] Fix publish bug: createMutation had no onSuccess handler, so success screen with share link never appeared
+- [x] Verify full flow: register -> create -> subscribe (Stripe test card) -> publish -> guest view -> RSVP -> saved to DB
+- [ ] (Pre-live, optional) Stripe sandbox shows price in SGD by default; configure AED as primary display currency before going live
+- [ ] (Optional) Renewal/reply-deadline dates display in US M/D/YYYY format; consider DD/MM/YYYY for UAE audience

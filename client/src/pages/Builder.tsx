@@ -783,9 +783,19 @@ export default function Builder() {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Note: "create" creates a DRAFT row in the DB. We only mark `publishedSlug`
-  // after the user has paid and confirms publish.
-  const createMutation = trpc.invitations.create.useMutation();
+  // "create" inserts the invitation row and returns its public slug.
+  // On success we show the published success screen with the shareable link.
+  const createMutation = trpc.invitations.create.useMutation({
+    onSuccess: ({ slug }) => {
+      setPublishedSlug(slug);
+      setDraftSlug(null);
+      try { localStorage.removeItem(STORAGE_KEY); } catch { /* ignore */ }
+      subscriptionQuery.refetch();
+    },
+    onError: (err) => {
+      toast.error(err?.message || (formLang === "ar" ? "تعذر النشر. حاول مرة أخرى." : "Could not publish. Please try again."));
+    },
+  });
 
   const uploadPhotoMutation = trpc.invitations.uploadPhoto.useMutation({
     onSuccess: ({ url }) => {
