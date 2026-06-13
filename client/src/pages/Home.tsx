@@ -1,4 +1,5 @@
 import { useAuth } from "@/_core/hooks/useAuth";
+import React, { useState } from "react";
 import { getLoginUrl } from "@/const";
 import { useLang, LangToggle } from "@/contexts/LangContext";
 import { Link } from "wouter";
@@ -151,6 +152,7 @@ export default function Home() {
   const { lang, isAr, dir, bodyFont, scriptFont } = useLang();
   const t = T[lang];
   const ctaHref = user ? "/create" : getLoginUrl("/create");
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
     <div dir={dir} style={{ background: "#0a0f1e", color: "#f5e6b3", minHeight: "100vh", fontFamily: bodyFont }}>
@@ -158,31 +160,68 @@ export default function Home() {
       {/* ── Nav ── */}
       <nav style={{
         position: "sticky", top: 0, zIndex: 100,
-        background: "rgba(10,15,30,0.92)", backdropFilter: "blur(12px)",
+        background: "rgba(10,15,30,0.95)", backdropFilter: "blur(12px)",
         borderBottom: "1px solid rgba(212,175,55,0.15)",
-        padding: "0 24px", height: 60,
-        display: "flex", alignItems: "center", justifyContent: "space-between",
+        padding: "0 20px",
       }}>
-        <img
-          src="/manus-storage/cardly-logo-v4_5f2425c5.png"
-          alt="Cardly"
-          style={{ height: 36, objectFit: "contain", filter: "brightness(0) invert(1)" }}
-        />
-        <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
-          <a href="#features" style={{ color: "rgba(245,230,179,0.7)", fontSize: 13, textDecoration: "none", fontFamily: bodyFont }}>{t.navFeatures}</a>
-          <a href="#pricing" style={{ color: "rgba(245,230,179,0.7)", fontSize: 13, textDecoration: "none", fontFamily: bodyFont }}>{t.navPricing}</a>
-          <a href="#faq" style={{ color: "rgba(245,230,179,0.7)", fontSize: 13, textDecoration: "none", fontFamily: bodyFont }}>{t.navFaq}</a>
-          <LangToggle />
-          {loading ? null : user ? (
-            <Link href="/create">
-              <button style={{ ...btnGold, fontFamily: bodyFont }}>{t.navCreate}</button>
-            </Link>
-          ) : (
-            <a href={getLoginUrl("/create")}>
-              <button style={{ ...btnGold, fontFamily: bodyFont }}>{t.navSignIn}</button>
-            </a>
-          )}
+        {/* Main nav row */}
+        <div style={{ height: 56, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <img
+            src="/manus-storage/cardly-logo-v4_5f2425c5.png"
+            alt="Cardly"
+            style={{ height: 30, objectFit: "contain", filter: "brightness(0) invert(1)", flexShrink: 0 }}
+          />
+          {/* Desktop links */}
+          <div style={{ display: "flex", gap: 20, alignItems: "center", flex: 1, justifyContent: "flex-end" }} className="nav-desktop">
+            <a href="#features" style={{ color: "rgba(245,230,179,0.7)", fontSize: 13, textDecoration: "none", fontFamily: bodyFont, whiteSpace: "nowrap" }}>{t.navFeatures}</a>
+            <a href="#pricing" style={{ color: "rgba(245,230,179,0.7)", fontSize: 13, textDecoration: "none", fontFamily: bodyFont, whiteSpace: "nowrap" }}>{t.navPricing}</a>
+            <a href="#faq" style={{ color: "rgba(245,230,179,0.7)", fontSize: 13, textDecoration: "none", fontFamily: bodyFont, whiteSpace: "nowrap" }}>{t.navFaq}</a>
+            <LangToggle />
+            {loading ? null : user ? (
+              <Link href="/create">
+                <button style={{ ...btnGold, fontFamily: bodyFont, whiteSpace: "nowrap" }}>{t.navCreate}</button>
+              </Link>
+            ) : (
+              <a href={getLoginUrl("/create")}>
+                <button style={{ ...btnGold, fontFamily: bodyFont, whiteSpace: "nowrap" }}>{t.navSignIn}</button>
+              </a>
+            )}
+          </div>
+          {/* Mobile right side: lang toggle + hamburger */}
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }} className="nav-mobile">
+            <LangToggle />
+            <button
+              onClick={() => setMobileMenuOpen(o => !o)}
+              style={{ background: "none", border: "1px solid rgba(212,175,55,0.4)", borderRadius: 6, padding: "6px 10px", cursor: "pointer", color: "#d4af37", fontSize: 18, lineHeight: 1 }}
+              aria-label="Menu"
+            >
+              {mobileMenuOpen ? "✕" : "☰"}
+            </button>
+          </div>
         </div>
+        {/* Mobile dropdown */}
+        {mobileMenuOpen && (
+          <div className="nav-mobile" style={{
+            borderTop: "1px solid rgba(212,175,55,0.15)",
+            padding: "12px 0 16px",
+            display: "flex", flexDirection: "column", gap: 4,
+          }}>
+            <a href="#features" onClick={() => setMobileMenuOpen(false)} style={{ color: "rgba(245,230,179,0.8)", fontSize: 15, textDecoration: "none", fontFamily: bodyFont, padding: "10px 4px", borderBottom: "1px solid rgba(212,175,55,0.08)" }}>{t.navFeatures}</a>
+            <a href="#pricing" onClick={() => setMobileMenuOpen(false)} style={{ color: "rgba(245,230,179,0.8)", fontSize: 15, textDecoration: "none", fontFamily: bodyFont, padding: "10px 4px", borderBottom: "1px solid rgba(212,175,55,0.08)" }}>{t.navPricing}</a>
+            <a href="#faq" onClick={() => setMobileMenuOpen(false)} style={{ color: "rgba(245,230,179,0.8)", fontSize: 15, textDecoration: "none", fontFamily: bodyFont, padding: "10px 4px", borderBottom: "1px solid rgba(212,175,55,0.08)" }}>{t.navFaq}</a>
+            <div style={{ paddingTop: 8 }}>
+              {loading ? null : user ? (
+                <Link href="/create">
+                  <button style={{ ...btnGold, fontFamily: bodyFont, width: "100%", textAlign: "center" }}>{t.navCreate}</button>
+                </Link>
+              ) : (
+                <a href={getLoginUrl("/create")} style={{ display: "block" }}>
+                  <button style={{ ...btnGold, fontFamily: bodyFont, width: "100%", textAlign: "center" }}>{t.navSignIn}</button>
+                </a>
+              )}
+            </div>
+          </div>
+        )}
       </nav>
 
       {/* ── Hero ── */}

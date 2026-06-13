@@ -864,3 +864,12 @@ html, body {
   opacity: 0.85;
   line-height: 1.6;
 }
+
+/* ── Responsive nav ─────────────────────────────────────────────────────── */
+.nav-desktop { display: flex !important; }
+.nav-mobile  { display: none !important; }
+
+@media (max-width: 700px) {
+  .nav-desktop { display: none !important; }
+  .nav-mobile  { display: flex !important; }
+}
