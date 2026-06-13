@@ -103,7 +103,7 @@ const statusColor = (s: string) => {
 
 const fmt = (d: Date | string | null | undefined) => {
   if (!d) return "—";
-  return new Date(d).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
+  return new Date(d).toLocaleDateString("en-GB", { year: "numeric", month: "short", day: "numeric" });
 };
 
 // ── Main Component ─────────────────────────────────────────────────────────

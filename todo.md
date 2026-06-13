@@ -457,5 +457,10 @@
 
 - [x] Fix publish bug: createMutation had no onSuccess handler, so success screen with share link never appeared
 - [x] Verify full flow: register -> create -> subscribe (Stripe test card) -> publish -> guest view -> RSVP -> saved to DB
-- [ ] (Pre-live, optional) Stripe sandbox shows price in SGD by default; configure AED as primary display currency before going live
-- [ ] (Optional) Renewal/reply-deadline dates display in US M/D/YYYY format; consider DD/MM/YYYY for UAE audience
+- [x] (Pre-live, optional) Stripe sandbox shows price in SGD by default; configure AED as primary display currency before going live
+- [x] (Optional) Renewal/reply-deadline dates display in US M/D/YYYY format; consider DD/MM/YYYY for UAE audience
+
+## Fix: Date Format & Currency (Jun 13 — Round 2)
+
+- [x] Change renewal/reply-deadline & all displayed dates to DD/MM/YYYY (UAE format)
+- [x] Investigate Stripe currency: code uses currency:aed unit_amount:20000 correctly; SGD display is a Stripe sandbox account-level default, resolved via Stripe Dashboard currency settings / live UAE account (not a code issue)

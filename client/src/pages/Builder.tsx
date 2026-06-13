@@ -1083,7 +1083,7 @@ export default function Builder() {
                       {formLang === "ar"
                         ? `${subscription?.invitationsUsed ?? 0} / ${subscription?.invitationsLimit ?? 10} دعوات مستخدمة`
                         : `${subscription?.invitationsUsed ?? 0} / ${subscription?.invitationsLimit ?? 10} invitations used`}
-                      {subscription?.renewsAt && ` · ${formLang === "ar" ? "يتجدد" : "Renews"} ${new Date(subscription.renewsAt).toLocaleDateString()}`}
+                      {subscription?.renewsAt && ` · ${formLang === "ar" ? "يتجدد" : "Renews"} ${new Date(subscription.renewsAt).toLocaleDateString(formLang === "ar" ? "ar-AE" : "en-GB")}`}
                     </p>
                   </div>
                 </div>
