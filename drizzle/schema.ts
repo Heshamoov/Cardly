@@ -10,6 +10,10 @@ export const users = mysqlTable("users", {
   email: varchar("email", { length: 320 }),
   loginMethod: varchar("loginMethod", { length: 64 }),
   role: mysqlEnum("role", ["user", "admin"]).default("user").notNull(),
+  /** Hashed password for email/password auth — null for Google-only accounts */
+  passwordHash: varchar("passwordHash", { length: 255 }),
+  /** Google account ID for Google Sign-In — null for email/password accounts */
+  googleId: varchar("googleId", { length: 128 }),
   /** Stripe Customer ID — set on first subscription checkout */
   stripeCustomerId: varchar("stripeCustomerId", { length: 128 }),
   createdAt: timestamp("createdAt").defaultNow().notNull(),

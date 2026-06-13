@@ -13,6 +13,7 @@ import TermsOfService from "@/pages/TermsOfService";
 import PrivacyPolicy from "@/pages/PrivacyPolicy";
 import RefundPolicy from "@/pages/RefundPolicy";
 import AdminDashboard from "@/pages/AdminDashboard";
+import Login from "@/pages/Login";
 
 function Router() {
   return (
@@ -30,6 +31,8 @@ function Router() {
       <Route path={"/terms"} component={TermsOfService} />
       <Route path={"/privacy"} component={PrivacyPolicy} />
       <Route path={"/refund"} component={RefundPolicy} />
+      {/* Auth */}
+      <Route path={"/login"} component={Login} />
       {/* Admin */}
       <Route path={"/admin"} component={AdminDashboard} />
       {/* Fallback */}

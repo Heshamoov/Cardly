@@ -57,6 +57,13 @@
       "when": 1779909001264,
       "tag": "0007_whole_pandemic",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "5",
+      "when": 1781374924382,
+      "tag": "0008_lucky_ezekiel",
+      "breakpoints": true
     }
   ]
 }

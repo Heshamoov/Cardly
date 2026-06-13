@@ -1,20 +1,11 @@
 export { COOKIE_NAME, ONE_YEAR_MS } from "@shared/const";
 
-// Generate login URL at runtime so redirect URI reflects the current origin.
-// Pass an optional returnPath (e.g. "/rsvp-dashboard") to redirect there after login.
+/**
+ * Returns the URL for the custom login page.
+ * Pass an optional returnPath so the user is redirected back after sign-in.
+ * This replaces the old Manus OAuth portal redirect.
+ */
 export const getLoginUrl = (returnPath?: string) => {
-  const oauthPortalUrl = import.meta.env.VITE_OAUTH_PORTAL_URL;
-  const appId = import.meta.env.VITE_APP_ID;
-  const redirectUri = `${window.location.origin}/api/oauth/callback`;
-  // Encode both the redirectUri and the returnPath in state so the server can redirect back
-  const statePayload = JSON.stringify({ redirectUri, returnPath: returnPath ?? "/" });
-  const state = btoa(statePayload);
-
-  const url = new URL(`${oauthPortalUrl}/app-auth`);
-  url.searchParams.set("appId", appId);
-  url.searchParams.set("redirectUri", redirectUri);
-  url.searchParams.set("state", state);
-  url.searchParams.set("type", "signIn");
-
-  return url.toString();
+  const path = returnPath ? `/login?returnPath=${encodeURIComponent(returnPath)}` : "/login";
+  return path;
 };

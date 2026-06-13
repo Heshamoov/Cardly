@@ -435,3 +435,20 @@
 - [x] Admin page: Users tab (all users with roles, join date, last seen)
 - [x] EN/AR support on admin page
 - [x] Tests + checkpoint (44/44 passing)
+
+## Custom Auth (Replace Manus OAuth — Syria Accessibility Fix)
+
+- [x] Add passwordHash column to users table (schema + migration)
+- [x] Add googleId column to users table (schema + migration)
+- [x] Install bcrypt and google-auth-library packages
+- [x] Create server/authRouter.ts with register, login, googleSignIn, logout, me procedures
+- [x] Replace server/_core/oauth.ts with custom Google OAuth callback handler
+- [x] Update server/_core/env.ts to expose GOOGLE_CLIENT_ID
+- [x] Update server/_core/index.ts to register new auth routes
+- [x] Update server/routers.ts to merge authRouter
+- [x] Create client/src/pages/Login.tsx with email/password form + Google Sign-In button
+- [x] Update client/src/const.ts: replace getLoginUrl() to return /login
+- [x] Update client/src/main.tsx: redirect to /login instead of Manus portal
+- [x] Update Home.tsx, Builder.tsx, RsvpDashboard.tsx auth redirect links
+- [ ] Add Google OAuth client ID secret via webdev_request_secrets
+- [x] Run all tests and save checkpoint
