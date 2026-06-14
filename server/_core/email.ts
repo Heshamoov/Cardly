@@ -18,6 +18,8 @@ export type SendEmailParams = {
 export type SendEmailResult = {
   sent: boolean;
   reason?: string;
+  /** Raw error detail from Resend, useful for owner diagnostics. */
+  detail?: string;
 };
 
 export async function sendEmail(params: SendEmailParams): Promise<SendEmailResult> {
@@ -44,10 +46,13 @@ export async function sendEmail(params: SendEmailParams): Promise<SendEmailResul
 
     if (!response.ok) {
       const detail = await response.text().catch(() => "");
-      console.warn(`[Email] Resend failed (${response.status} ${response.statusText}): ${detail}`);
-      return { sent: false, reason: `http_${response.status}` };
+      console.error(`[Email] Resend send FAILED (${response.status} ${response.statusText}) to=${params.to}: ${detail}`);
+      // 403 in Resend test mode = no verified domain; can only send to the account owner.
+      const reason = response.status === 403 ? "test_mode_unverified_domain" : `http_${response.status}`;
+      return { sent: false, reason, detail };
     }
 
+    console.log(`[Email] Sent "${params.subject}" to ${params.to}`);
     return { sent: true };
   } catch (error) {
     console.warn("[Email] Error calling Resend:", error);

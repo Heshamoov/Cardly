@@ -12,6 +12,7 @@ import { z } from "zod";
 import * as db from "./db";
 import { ENV } from "./_core/env";
 import { sendEmail, buildResetEmailHtml } from "./_core/email";
+import { notifyOwner } from "./_core/notification";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { sdk } from "./_core/sdk";
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
@@ -244,6 +245,17 @@ export const authRouter = router({
       // Always log the link server-side for owner diagnostics.
       console.log(`[PasswordReset] Reset link for ${input.email}: ${resetUrl}`);
 
+      // Send failed. Alert the owner so the problem is never silent — especially
+      // the Resend test-mode case (no verified domain), which silently rejects
+      // any recipient other than the account owner.
+      const isTestModeBlock = emailResult.reason === "test_mode_unverified_domain";
+      void notifyOwner({
+        title: "Cardly: password reset email failed to send",
+        content: isTestModeBlock
+          ? `A user (${input.email}) requested a password reset but Resend rejected the send because no domain is verified (test mode). Verify a domain at resend.com/domains and set RESEND_FROM_EMAIL to that domain so emails reach all users. Reset link (share manually if needed): ${resetUrl}`
+          : `A password reset email to ${input.email} failed (${emailResult.reason ?? "unknown"}). Detail: ${emailResult.detail ?? "n/a"}. Reset link: ${resetUrl}`,
+      }).catch(() => {});
+
       // SECURITY: only surface the link to the client when NO email provider is
       // configured at all (pure dev/testing fallback so the flow is never a dead
       // end). Once RESEND_API_KEY exists, a failed send must NOT leak the token
@@ -251,7 +263,9 @@ export const authRouter = router({
       if (!ENV.resendApiKey) {
         return { success: true as const, emailed: false, resetUrl };
       }
-      return { success: true as const, emailed: false, resetUrl: undefined };
+      // Signal to the client that delivery did not succeed (without leaking the
+      // token) so the UI can show an honest fallback message.
+      return { success: true as const, emailed: false, resetUrl: undefined, deliveryFailed: true };
     }),
 
   /** Complete a password reset using a token from the email link. */

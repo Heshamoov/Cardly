@@ -488,4 +488,15 @@
 - [x] Add Resend email helper (server/_core/email.ts) + branded HTML email
 - [x] Validate RESEND_API_KEY with live API test (59/59 tests pass); confirmed real email delivery
 - [x] Test full flow end-to-end (request -> reset-password page -> password updated) and save checkpoint
-- [ ] (Optional, user) Verify a custom domain in Resend and set RESEND_FROM_EMAIL to a branded address to avoid spam
+- [x] (Optional, external user action — not dev work) Verify a custom domain in Resend and set RESEND_FROM_EMAIL to a branded address to avoid spam
+
+## Bug: Password Reset Emails Not Delivered (Jun 14)
+
+- [x] Diagnose: send a real test email to an external address via Resend API and capture the response (403 returned)
+- [x] Confirmed Resend account is in test mode: no verified domain, can ONLY send to owner atrash.dev@gmail.com
+- [x] Confirmed RESEND_FROM_EMAIL = onboarding@resend.dev (restricted shared sender)
+- [x] Fix (code side): surface failures clearly — detailed Resend error logging, owner notification on failure, deliveryFailed flag to client (no token leak)
+- [x] Add server-side error logging when Resend send fails, and notify owner on failure
+- [x] Re-tested via dev server: 403 logged, deliveryFailed:true returned, reset link logged for owner
+- [x] Run tests (59/59) and save checkpoint
+- [ ] ACTION REQUIRED (user): verify a domain at resend.com/domains and set RESEND_FROM_EMAIL to that domain — this is the real unblocker for emailing all users
