@@ -52,8 +52,9 @@ export const subscriptions = mysqlTable("subscriptions", {
   id: int("id").autoincrement().primaryKey(),
   /** FK to users.openId */
   ownerOpenId: varchar("ownerOpenId", { length: 64 }).notNull().unique(),
-  /** Null for comp (lifetime) accounts that never went through Stripe. */
-  stripeSubscriptionId: varchar("stripeSubscriptionId", { length: 128 }).unique(),
+  /** Null for comp (lifetime) accounts that never went through Stripe.
+   * Not unique: comp rows store NULL and lookups go through ownerOpenId (unique). */
+  stripeSubscriptionId: varchar("stripeSubscriptionId", { length: 128 }),
   stripeCustomerId: varchar("stripeCustomerId", { length: 128 }),
   /** "stripe" for paid subscriptions, "comp" for admin-granted lifetime access. */
   plan: varchar("plan", { length: 16 }).notNull().default("stripe"),

@@ -528,3 +528,10 @@
 - [x] Admin UI: per-user Grant/Revoke lifetime access button + status badge
 - [x] Tests for comp access + admin grant/revoke (lifetimeAccess.test.ts, 67 tests pass)
 - [x] Verify build/types healthy + checkpoint
+
+## Bugfix: Grant lifetime access failed
+- [x] Root cause: comp expiry date 2999 exceeds MySQL TIMESTAMP max (2038) -> ER_TRUNCATED_WRONG_VALUE
+- [x] Fix: use 2037-12-31 expiry for comp grants
+- [x] Removed UNIQUE index on stripeSubscriptionId (safety for multiple NULL comp rows)
+- [x] Regression test added; 69 tests pass
+- [ ] Checkpoint + user must Publish for live site

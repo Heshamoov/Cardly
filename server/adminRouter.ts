@@ -239,8 +239,9 @@ export const adminRouter = router({
         .limit(1);
       if (!user) throw new TRPCError({ code: "NOT_FOUND", message: "User not found" });
 
-      // Far-future expiry (year 2999) so getActiveSubscription never expires it.
-      const farFuture = new Date("2999-12-31T00:00:00Z");
+      // Far-future expiry. MySQL TIMESTAMP maxes out at 2038-01-19 (the
+      // "Year 2038" limit), so we use 2037-12-31 — effectively lifetime.
+      const farFuture = new Date("2037-12-31T00:00:00Z");
 
       const existing = await db
         .select()

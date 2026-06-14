@@ -86,3 +86,22 @@ describe("admin lifetime-access flag", () => {
     expect(hasLifetimeAccess(null, null)).toBe(false);
   });
 });
+
+/**
+ * Regression: the comp expiry date must be storable by MySQL TIMESTAMP,
+ * which overflows after 2038-01-19 (the "Year 2038" limit). A date of 2999
+ * caused ER_TRUNCATED_WRONG_VALUE and failed the grant insert.
+ */
+describe("comp expiry date is within MySQL TIMESTAMP range", () => {
+  const MYSQL_TIMESTAMP_MAX = new Date("2038-01-19T03:14:07Z");
+  const COMP_EXPIRY = new Date("2037-12-31T00:00:00Z");
+
+  it("is before the MySQL 2038 limit", () => {
+    expect(COMP_EXPIRY.getTime()).toBeLessThan(MYSQL_TIMESTAMP_MAX.getTime());
+  });
+
+  it("is still far enough in the future to act as lifetime", () => {
+    const tenYears = Date.now() + 10 * 365 * 24 * 60 * 60 * 1000;
+    expect(COMP_EXPIRY.getTime()).toBeGreaterThan(tenYears);
+  });
+});
