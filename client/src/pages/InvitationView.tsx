@@ -296,6 +296,9 @@ export default function InvitationView() {
     );
   }
 
+  const DEMO_SLUGS = ["demo-royal", "demo-blush", "demo-ivory"];
+  const isDemo = DEMO_SLUGS.includes(slug);
+
   const invData = invitation.data as InvitationData;
   const brideName = [invData.brideFirstName, invData.brideLastName].filter(Boolean).join(" ");
   const groomName = [invData.groomFirstName, invData.groomLastName].filter(Boolean).join(" ");
@@ -347,6 +350,26 @@ export default function InvitationView() {
   if (showInvitation) {
     return (
       <div ref={invitationRef}>
+        {isDemo && (
+          <div style={{
+            position: "fixed", top: 0, left: 0, right: 0, zIndex: 9999,
+            background: "rgba(10,15,30,0.95)",
+            borderBottom: "1px solid rgba(212,175,55,0.35)",
+            padding: "10px 20px",
+            display: "flex", alignItems: "center", justifyContent: "space-between",
+            flexWrap: "wrap", gap: 10,
+          }}>
+            <span style={{ color: "#d4af37", fontSize: 13, fontFamily: "Lato, sans-serif", letterSpacing: "0.05em" }}>
+              ✨ <strong>Demo Invitation</strong> — This is a sample. RSVP is disabled.
+            </span>
+            <a href="/create" style={{
+              background: "linear-gradient(135deg, #d4af37 0%, #f5e6b3 50%, #d4af37 100%)",
+              color: "#0a0f1e", fontWeight: 700, fontSize: 12,
+              padding: "7px 18px", borderRadius: 6, textDecoration: "none",
+              letterSpacing: "0.06em", whiteSpace: "nowrap",
+            }}>Create Yours →</a>
+          </div>
+        )}
         <InvitationPage
           data={invData}
           slug={slug}
@@ -357,6 +380,7 @@ export default function InvitationView() {
           onToggleMute={togglePlayPause}
           showVolumeHint={showVolumeHint}
           hasMusicUrl={!!(invData as InvitationData).musicUrl}
+          isDemo={isDemo}
         />
       </div>
     );
@@ -512,9 +536,9 @@ function LangToggle({ lang, onToggle, onBackToEnvelope, theme }: {
 }
 
 // ── Full Invitation Page ──────────────────────────────────────────────────────
-function InvitationPage({ data, slug, lang, onToggleLang, onBackToEnvelope, isMuted, onToggleMute, showVolumeHint, hasMusicUrl }: {
+function InvitationPage({ data, slug, lang, onToggleLang, onBackToEnvelope, isMuted, onToggleMute, showVolumeHint, hasMusicUrl, isDemo }: {
   data: InvitationData; slug: string; lang: Lang; onToggleLang: () => void; onBackToEnvelope: () => void;
-  isMuted?: boolean; onToggleMute?: () => void; showVolumeHint?: boolean; hasMusicUrl?: boolean;
+  isMuted?: boolean; onToggleMute?: () => void; showVolumeHint?: boolean; hasMusicUrl?: boolean; isDemo?: boolean;
 }) {
   const isRtl = lang === "ar";
   const brideName = isRtl
@@ -823,7 +847,7 @@ function InvitationPage({ data, slug, lang, onToggleLang, onBackToEnvelope, isMu
         )}
 
         {/* RSVP Section */}
-        <RsvpSection slug={slug} theme={theme} t={t} isRtl={isRtl} bodyFont={bodyFont} rsvpDeadline={data.rsvpDeadline} />
+        <RsvpSection slug={slug} theme={theme} t={t} isRtl={isRtl} bodyFont={bodyFont} rsvpDeadline={data.rsvpDeadline} isDemo={isDemo} />
 
         {/* Footer */}
         <div className="invitation-section py-8">
@@ -845,7 +869,7 @@ function InvitationPage({ data, slug, lang, onToggleLang, onBackToEnvelope, isMu
 
 // ── RSVP Section ─────────────────────────────────────────────────────────────
 function RsvpSection({
-  slug, theme, t, isRtl, bodyFont, rsvpDeadline,
+  slug, theme, t, isRtl, bodyFont, rsvpDeadline, isDemo,
 }: {
   slug: string;
   theme: Theme;
@@ -853,6 +877,7 @@ function RsvpSection({
   isRtl: boolean;
   bodyFont?: string;
   rsvpDeadline?: string;
+  isDemo?: boolean;
 }) {
   // Check if deadline has passed
   const deadlinePassed = rsvpDeadline
@@ -931,6 +956,45 @@ function RsvpSection({
     const id = setInterval(() => setDeadlineTimeLeft(calcDeadlineTimeLeft(rsvpDeadline)), 60000);
     return () => clearInterval(id);
   }, [rsvpDeadline]);
+
+  if (isDemo) {
+    return (
+      <div className="invitation-section" style={{ paddingTop: 32, paddingBottom: 40, textAlign: "center" }}>
+        <div className="divider-ornament mb-6">
+          <span style={{ color: theme.accent, fontSize: 20 }}>✉</span>
+        </div>
+        <p className="font-sans uppercase tracking-widest mb-4" style={{ fontSize: 11, color: theme.accent, opacity: 0.7, fontFamily: bodyFont }}>
+          {t.rsvpLabel}
+        </p>
+        <div style={{
+          background: `${theme.bgSecondary}cc`,
+          border: `1px solid ${theme.accent}44`,
+          borderRadius: 12,
+          padding: "28px 24px",
+          maxWidth: 380,
+          margin: "0 auto",
+        }}>
+          <p style={{ fontSize: 28, marginBottom: 12 }}>✨</p>
+          <p style={{ fontFamily: bodyFont, fontSize: 15, color: theme.text, opacity: 0.9, lineHeight: 1.7, marginBottom: 20 }}>
+            This is a <strong>demo invitation</strong>. RSVP is disabled on samples.
+          </p>
+          <a href="/create" style={{
+            display: "inline-block",
+            background: `linear-gradient(135deg, ${theme.accent} 0%, ${theme.accentLight} 50%, ${theme.accent} 100%)`,
+            color: theme.bg,
+            fontWeight: 700,
+            fontSize: 13,
+            padding: "12px 28px",
+            borderRadius: 8,
+            textDecoration: "none",
+            letterSpacing: "0.06em",
+          }}>
+            Create Your Own Invitation →
+          </a>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="invitation-section" style={{ paddingTop: 32, paddingBottom: 40 }}>

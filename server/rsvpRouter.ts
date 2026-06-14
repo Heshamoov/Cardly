@@ -20,6 +20,11 @@ export const rsvpRouter = router({
       })
     )
     .mutation(async ({ input }) => {
+      // ── Demo slug guard ──────────────────────────────────────────────────────────────────────────────
+      const DEMO_SLUGS = ["demo-royal", "demo-blush", "demo-ivory"];
+      if (DEMO_SLUGS.includes(input.slug)) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "RSVP is disabled on demo invitations." });
+      }
       // ── Event-date read-only guard ──────────────────────────────────────────────────────────────────
       // Fetch the invitation to check event date and payment status
       try {

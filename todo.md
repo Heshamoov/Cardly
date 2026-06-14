@@ -464,3 +464,12 @@
 
 - [x] Change renewal/reply-deadline & all displayed dates to DD/MM/YYYY (UAE format)
 - [x] Investigate Stripe currency: code uses currency:aed unit_amount:20000 correctly; SGD display is a Stripe sandbox account-level default, resolved via Stripe Dashboard currency settings / live UAE account (not a code issue)
+
+## Feature: Live Demo Section on Landing Page (Jun 13)
+
+- [x] Inspect Home page structure, InvitationData shape, and envelope styles
+- [x] Create 3 sample invitations (varied envelope styles, EN + AR content) seeded into DB with stable demo slugs (demo-royal, demo-blush, demo-ivory)
+- [x] Ensure demo invitations are read-only (RSVP disabled, demo banner shown, server-side RSVP guard)
+- [x] Build "See it in action" section on landing page with 3 cards linking to each demo
+- [x] Test all demo links open the full invitation experience (envelope + content + demo notice)
+- [x] Run tests (52/52) and save checkpoint

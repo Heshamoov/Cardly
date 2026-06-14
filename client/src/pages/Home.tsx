@@ -63,6 +63,14 @@ const T = {
       { q: "Is payment secure?", a: "Yes. Payments are processed by Stripe, the world's most trusted payment platform. We never store your card details." },
       { q: "What languages are supported?", a: "English and Arabic are fully supported, including right-to-left layout and Arabic calligraphy fonts." },
     ],
+    demoTitle: "See it in action",
+    demoSub: "Open a live sample invitation — no sign-up needed.",
+    demoLabel: "Open Demo →",
+    demoCards: [
+      { slug: "demo-royal", style: "Navy Gold", names: "Omar & Layla", event: "Wedding · Abu Dhabi", badge: "Most Popular" },
+      { slug: "demo-blush", style: "Blush Rose", names: "Sami & Hind", event: "Engagement · Abu Dhabi", badge: "Romantic" },
+      { slug: "demo-ivory", style: "Classic Ivory", names: "Yusuf & Mariam", event: "Wedding · Dubai", badge: "Elegant" },
+    ],
     ctaTitle: "Ready to create yours?",
     ctaSub: "Join couples across the UAE and beyond who chose Cardly for their special day.",
     ctaBtn: "Create Your Invitation →",
@@ -128,6 +136,14 @@ const T = {
       { q: "هل يحتاج الضيوف لتنزيل تطبيق؟", a: "لا. يفتح الضيوف الرابط في أي متصفح — دون تطبيق أو حساب أو تعقيدات." },
       { q: "هل الدفع آمن؟", a: "نعم. تتم معالجة المدفوعات عبر Stripe، أكثر منصات الدفع موثوقية في العالم. لا نخزن بيانات بطاقتك أبدًا." },
       { q: "ما اللغات المدعومة؟", a: "العربية والإنجليزية مدعومتان بالكامل، بما في ذلك تخطيط من اليمين لليسار وخطوط الخط العربي." },
+    ],
+    demoTitle: "شاهد النتيجة بنفسك",
+    demoSub: "افتح نموذج دعوة حية — دون تسجيل.",
+    demoLabel: "افتح النموذج ←",
+    demoCards: [
+      { slug: "demo-royal", style: "أزرق ذهبي", names: "عمر وليلى", event: "زفاف · أبوظبي", badge: "الأكثر طلبًا" },
+      { slug: "demo-blush", style: "وردي رومانسي", names: "سامي وهند", event: "خطوبة · أبوظبي", badge: "رومانسي" },
+      { slug: "demo-ivory", style: "عاجي كلاسيكي", names: "يوسف ومريم", event: "زفاف · دبي", badge: "أنيق" },
     ],
     ctaTitle: "مستعد لإنشاء دعوتك؟",
     ctaSub: "انضم إلى المضيفين في الإمارات وخارجها ممن اختاروا Cardly لمناسباتهم الخاصة.",
@@ -307,6 +323,101 @@ export default function Home() {
                   <p style={{ fontSize: 15, opacity: 0.75, lineHeight: 1.7, fontFamily: bodyFont }}>{step.desc}</p>
                 </div>
               </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Live Examples ── */}
+      <section id="demos" style={{ padding: "60px 24px", background: "rgba(255,255,255,0.02)" }}>
+        <div style={{ maxWidth: 900, margin: "0 auto" }}>
+          <h2 style={{ ...sectionTitle, fontFamily: scriptFont }}>{t.demoTitle}</h2>
+          <p style={{ ...sectionSubtitle, fontFamily: bodyFont, marginBottom: 48 }}>{t.demoSub}</p>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 24 }}>
+            {t.demoCards.map((card) => (
+              <a
+                key={card.slug}
+                href={`/invite/${card.slug}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ textDecoration: "none" }}
+              >
+                <div
+                  style={{
+                    background: "rgba(212,175,55,0.05)",
+                    border: "1px solid rgba(212,175,55,0.2)",
+                    borderRadius: 14,
+                    padding: "28px 24px",
+                    cursor: "pointer",
+                    transition: "transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease",
+                    position: "relative",
+                    overflow: "hidden",
+                  }}
+                  onMouseEnter={e => {
+                    const el = e.currentTarget as HTMLDivElement;
+                    el.style.transform = "translateY(-5px)";
+                    el.style.boxShadow = "0 20px 60px rgba(212,175,55,0.15)";
+                    el.style.borderColor = "rgba(212,175,55,0.5)";
+                  }}
+                  onMouseLeave={e => {
+                    const el = e.currentTarget as HTMLDivElement;
+                    el.style.transform = "";
+                    el.style.boxShadow = "";
+                    el.style.borderColor = "rgba(212,175,55,0.2)";
+                  }}
+                >
+                  {/* Badge */}
+                  <span style={{
+                    position: "absolute", top: 14, insetInlineEnd: 14,
+                    background: "rgba(212,175,55,0.15)",
+                    border: "1px solid rgba(212,175,55,0.35)",
+                    borderRadius: 20,
+                    padding: "3px 10px",
+                    fontSize: 10,
+                    color: "#d4af37",
+                    letterSpacing: isAr ? 0 : "0.08em",
+                    fontFamily: bodyFont,
+                    textTransform: isAr ? "none" : "uppercase" as const,
+                  }}>
+                    {card.badge}
+                  </span>
+
+                  {/* Envelope icon */}
+                  <div style={{ fontSize: 36, marginBottom: 16 }}>💌</div>
+
+                  {/* Style name */}
+                  <p style={{ fontSize: 11, letterSpacing: isAr ? 0 : "0.14em", textTransform: isAr ? "none" : "uppercase" as const, color: "#d4af37", opacity: 0.7, marginBottom: 6, fontFamily: bodyFont }}>
+                    {card.style}
+                  </p>
+
+                  {/* Couple names */}
+                  <h3 style={{ fontFamily: scriptFont, fontSize: 24, color: "#f5e6b3", marginBottom: 4, lineHeight: 1.2 }}>
+                    {card.names}
+                  </h3>
+
+                  {/* Event info */}
+                  <p style={{ fontSize: 13, opacity: 0.55, marginBottom: 20, fontFamily: bodyFont }}>
+                    {card.event}
+                  </p>
+
+                  {/* CTA */}
+                  <span style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 6,
+                    background: "linear-gradient(135deg, #d4af37 0%, #f5e6b3 50%, #d4af37 100%)",
+                    color: "#0a0f1e",
+                    fontWeight: 700,
+                    fontSize: 12,
+                    padding: "9px 20px",
+                    borderRadius: 7,
+                    letterSpacing: "0.06em",
+                    fontFamily: bodyFont,
+                  }}>
+                    {t.demoLabel}
+                  </span>
+                </div>
+              </a>
             ))}
           </div>
         </div>
