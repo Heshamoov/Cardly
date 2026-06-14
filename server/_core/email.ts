@@ -69,12 +69,12 @@ export function buildResetEmailHtml(resetUrl: string, name?: string | null): str
     <div style="max-width:520px;margin:0 auto;padding:40px 24px;">
       <div style="background:#fffdf8;border-radius:16px;padding:40px 32px;border:1px solid #e8dcc0;">
         <div style="text-align:center;margin-bottom:24px;">
-          <span style="font-size:26px;letter-spacing:2px;color:#b8860b;font-weight:bold;">CARDLY</span>
+          <span style="font-size:26px;letter-spacing:2px;color:#b8860b;font-weight:bold;">YALAINVITE</span>
         </div>
         <h1 style="font-size:22px;color:#1a1a1a;margin:0 0 16px;text-align:center;">Reset your password</h1>
         <p style="font-size:15px;line-height:1.6;color:#444;">${greeting}</p>
         <p style="font-size:15px;line-height:1.6;color:#444;">
-          We received a request to reset the password for your Cardly account.
+          We received a request to reset the password for your YalaInvite account.
           Click the button below to choose a new password. This link expires in 1 hour.
         </p>
         <div style="text-align:center;margin:32px 0;">
@@ -91,7 +91,7 @@ export function buildResetEmailHtml(resetUrl: string, name?: string | null): str
         </p>
       </div>
       <p style="text-align:center;font-size:12px;color:#666;margin-top:20px;">
-        Cardly — Digital Wedding Invitations
+        YalaInvite — Digital Invitations
       </p>
     </div>
   </body>

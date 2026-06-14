@@ -818,7 +818,7 @@ export default function Builder() {
     return (
       <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#0a0f1e" }}>
         <div style={{ textAlign: "center" }}>
-          <img src="/manus-storage/cardly-logo-v4_5f2425c5.png" alt="Cardly" style={{ height: 32, objectFit: "contain", filter: "brightness(0) invert(1)", marginBottom: 16 }} />
+          <img src="/manus-storage/yalainvite-logo-gold-trim_d719ffba.png" alt="YalaInvite" style={{ height: 32, objectFit: "contain", marginBottom: 16 }} />
           <div style={{ width: 32, height: 32, border: "2px solid #d4af37", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite", margin: "0 auto" }} />
         </div>
       </div>
@@ -827,9 +827,9 @@ export default function Builder() {
   if (!user) {
     return (
       <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "#0a0f1e", fontFamily: "'Lato', sans-serif", gap: 24, padding: 24 }}>
-        <img src="/manus-storage/cardly-logo-v4_5f2425c5.png" alt="Cardly" style={{ height: 32, objectFit: "contain", filter: "brightness(0) invert(1)" }} />
+        <img src="/manus-storage/yalainvite-logo-gold-trim_d719ffba.png" alt="YalaInvite" style={{ height: 32, objectFit: "contain" }} />
         <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 28, color: "#f5e6b3", textAlign: "center", margin: 0 }}>Sign in to create your invitation</h2>
-        <p style={{ color: "rgba(245,230,179,0.6)", fontSize: 15, textAlign: "center", maxWidth: 380, margin: 0 }}>You need a free Cardly account to build and manage your digital invitation.</p>
+        <p style={{ color: "rgba(245,230,179,0.6)", fontSize: 15, textAlign: "center", maxWidth: 380, margin: 0 }}>You need a free YalaInvite account to build and manage your digital invitation.</p>
         <a href={getLoginUrl("/create")}>
           <button style={{ background: "linear-gradient(135deg, #d4af37 0%, #f5e6b3 50%, #d4af37 100%)", color: "#0a0f1e", border: "none", borderRadius: 8, padding: "14px 36px", fontWeight: 700, fontSize: 15, cursor: "pointer", letterSpacing: "0.06em" }}>
             Sign in to continue
@@ -1022,9 +1022,9 @@ export default function Builder() {
           </div>
 
           <img
-            src="/manus-storage/cardly-logo-v4_5f2425c5.png"
-            alt="Cardly"
-            style={{ height: 32, objectFit: "contain", filter: "brightness(0) invert(1)", margin: "0 auto 16px", display: "block" }}
+            src="/manus-storage/yalainvite-logo-gold-trim_d719ffba.png"
+            alt="YalaInvite"
+            style={{ height: 32, objectFit: "contain", margin: "0 auto 16px", display: "block" }}
           />
           <p className="font-sans text-xs uppercase tracking-widest text-gold mb-1 opacity-70" style={formLang === "ar" ? { fontFamily: ARABIC_FONT } : {}}>
             {ft.createYour}

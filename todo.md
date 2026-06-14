@@ -500,3 +500,20 @@
 - [x] Re-tested via dev server: 403 logged, deliveryFailed:true returned, reset link logged for owner
 - [x] Run tests (59/59) and save checkpoint
 - [ ] ACTION REQUIRED (user): verify a domain at resend.com/domains and set RESEND_FROM_EMAIL to that domain — this is the real unblocker for emailing all users
+
+## Rebrand Cardly -> YalaInvite (yalainvite.com)
+- [x] Verify yalainvite.com domain in Resend
+- [x] Set RESEND_FROM_EMAIL to YalaInvite <no-reply@yalainvite.com>
+- [x] index.html: title + og/twitter meta tags
+- [x] Home.tsx: copy (EN/AR), logo alt, footer, support email
+- [x] Login.tsx / ResetPassword.tsx: copy (EN/AR), logo alt
+- [x] Builder.tsx: copy, logo alt, watermark visible text
+- [x] RsvpDashboard.tsx / AdminDashboard.tsx: subtitle + logo text
+- [x] Terms / Privacy / Refund pages: brand name + support email (EN/AR)
+- [x] index.css: visible watermark text CARDLY -> YALAINVITE
+- [x] server email.ts: header wordmark + body copy
+- [x] server env.ts / paymentRouter.ts / stripeWebhook.ts / authRouter.ts: brand strings
+- [x] auth.reset.test.ts: update origin/assertions
+- [x] Replace logo image with YalaInvite text logo
+- [x] Run tests + live email delivery test
+- [x] Trim logo (green chroma key + tight crop) and use gold logo on dark backgrounds

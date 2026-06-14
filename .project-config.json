@@ -15,10 +15,10 @@
   ],
   "git_remote": {
     "repo_url": "s3://vida-prod-gitrepo/webdev-git/310419663029094267/cwkwQE2ZytYK5D22sZcWLW",
-    "access_key_id": "ASIAZV3A2ECZJMOWMCDL",
-    "secret_access_key": "+nh7otO4EKD0Jb1iVe1rva8tGz+58NsIbiecz8Pq",
-    "session_token": "IQoJb3JpZ2luX2VjEHgaCXVzLWVhc3QtMSJIMEYCIQCtAuljfMK2aP7Tqa9qG3f+HtjZVrGT4ny7Ju77XOcDrwIhALiQbmirfdIt8/1hshA1e6ZxvtHXWugNWlRel2iZHPXoKvYDCEEQBBoMNjY1Mzg2MDk4ODY2IgxQFsslNrEbsZf+2wcq0wNyxg0BrG1fef8DHrtJerd8xI0eK1+AWMJS2dEHH1BTTULMtgG2otSJXILlOiQRn/f1+zEN5YdWn53SNVBzcRkfzxQ9zvZtrDZTapRdeCZS8fVY+USNDJrc7n7gQM4pkoTKuIS4P6HQz91DySR+RNb4FglV/rccoukdXflLvF7G51exo2tFLn+PaHJPcwIAx20aEy6bDCQjASN4ULFQS7Hvl4fMP3h1gsSz3apnls7hp9B3zwaCpMVfz7czuLEcagV3ZTstm3MBzUu9I6LKMtz3UtxyQn8/+E0IbiGJjvHuBcA7WGjMo2ZMfgXAlC8AB9B4uTB8DyL/NUhw0dgAO+yKo25zt4r4T05suICzL+IXspfA+6HE/clllvPDiyB0yFlz63eBJViNapDPVH2LKpBn3tQwQd0GOeFRQqEhPh33+apXsXqJ8ZTS3QFOu80MHbP+3A3SxRIqHRV4gAw0WSCtr6+s0pLsef+lcrtdvGp1P+kKHDLg7N6tjHq4Ntke7zwsGk5iGYb0Z4uSjGdixYl/jSTaLxCdI4Os2YbUOUUCVh9VbCCkRKG0HnlHS/0QhqBU6533KptpAgDmoMWOfFRQYYC571jcMQgiYxJYQUxYSINW1DDIs7nRBjqcASfX8546mhMMmcdU54fC/QVeSze02luVTBW3ppwOd3NFpToj88mo+YVdonG+klCs0nWQSPECM870rDKF4aiNYdaMIWgkyTl6LmYag887+/ERTo7pgfRHmImt0u8aYJGFeraSS1rMNJzXbVtNHbsGLVzof8gOXH/Iwl8KtPkaw0oi1aWmSb+2JHKqBYkKUXdHMrbHz8lpKNoD2BUaMQ==",
-    "expiration": "2026-06-14T19:35:36.000Z"
+    "access_key_id": "ASIAZV3A2ECZPZGLZTPL",
+    "secret_access_key": "Olq9Fjr3Hy8KfgJnvtV8WqjzBwUhmrKNoUick9Qh",
+    "session_token": "IQoJb3JpZ2luX2VjEIX//////////wEaCXVzLWVhc3QtMSJHMEUCIQDrd//XSuZxmz3OoS7YVnyfLYD+7e9hrWGdFx2JClYanQIgbHDmVcQJURxztMfP1TsboBjjXLuVZHp0h1X4bA+1FyYq9gMIThAEGgw2NjUzODYwOTg4NjYiDPgzzqIEfs9ZJz5lGirTA7drEAnuEgwcthndsLo4wjgljP7hX7szRHQRP1pFipfZ+K+cKyov2u1EKVWPglspj2gi1x209gniP+RYn/oXhDU5d1Fq/rvUgD8jgeVcs8BUF1UR5WFN6QamCIqwn98SZX5ALMSDR2t8wAH2gjP9z1SrFklC0l5w20WG6C0Plf02H1M3iOJB++UvQ+9pZmHECMECvIfROTV4VzEwthQ9LF6Rc5jH5PfSU8M0vYE3AuxumRQUYsV4oFb/lSHTPRUoNTPpLMyBNF/fQdvOHJmNwjQ2UCg3Zhu2o6aQaynrjSQzHE3GAUxYt/5tIEsJzC+YOYmeIELSwVleXSCScbYArH6vppKwtw+O/x1rWBCcZUYMuzy9FLlEydiPKzj6ku+MECYM/9aQBsgNsua9achFdnnXqpgD0M/HZg7ig08wasLUefFxbwVqG1uVPtlq5DSpkyLrMSLTZebl18Dx1u24fwofQNmcaD2Rek329/HudR4uTjnxJ6hb0qqAKAdpqTwO3YJjNYadY0THVS8MJrQtXy8EeHetf1LwIs2J0BTTLlpnoR7NLza8kPyTLBdus2jhEX7/+o7Dy9hwX5bvFNhIo59yjsXDcXxV2WOu+jAdrLieg+lhMMOrvNEGOp0Bs9yLOAQPzP7CMlLUrQ5GWKXvWz/yPY95wFtvm+X2AUrKucOZKQSqoeBJoQjJNDsMgj77cLFCupimcrJUOCor7JGyIUQeYjzZqaPhPB0KFrPWWO0tbXicBGsg63bEIcGL5wnblhkLMaxpjaPWgXiZENEHosuywG3Gf+HIV9OyOeOXBSd0ESlgpy9//4knDyn6gTylEb/jyx3lo5BW4A==",
+    "expiration": "2026-06-15T08:57:39.000Z"
   },
   "name": "wedding-invite-builder",
   "path": "/home/ubuntu/wedding-invite-builder",
@@ -32,7 +32,7 @@
     "OWNER_NAME": "hesham alatrash",
     "OWNER_OPEN_ID": "jMW9QPknopPRiRnw6M3ifT",
     "RESEND_API_KEY": "re_Jw3uePzo_2FEaow2UfiU1df3A26isMKfe",
-    "RESEND_FROM_EMAIL": "Cardly \u003conboarding@resend.dev\u003e",
+    "RESEND_FROM_EMAIL": "YalaInvite \u003cno-reply@yalainvite.com\u003e",
     "STRIPE_SECRET_KEY": "sk_test_51TbbgHDJogCK23JwfX17UNUdo23VqyI5UcBXQ7lHulWoRmAKHv3LZZoo9wHZZOlpZ2TWC962rlKhH8REfC0emF7g00N8IkYyPC",
     "STRIPE_WEBHOOK_SECRET": "whsec_hyUpbINMf3kawt3GdZ2hqOWRrSXciXXW",
     "VITE_ANALYTICS_ENDPOINT": "https://manus-analytics.com",

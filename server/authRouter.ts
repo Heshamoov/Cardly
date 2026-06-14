@@ -233,9 +233,9 @@ export const authRouter = router({
 
       const emailResult = await sendEmail({
         to: input.email,
-        subject: "Reset your Cardly password",
+        subject: "Reset your YalaInvite password",
         html: buildResetEmailHtml(resetUrl, user.name),
-        text: `Reset your Cardly password using this link (valid for 1 hour): ${resetUrl}`,
+        text: `Reset your YalaInvite password using this link (valid for 1 hour): ${resetUrl}`,
       });
 
       if (emailResult.sent) {
@@ -250,7 +250,7 @@ export const authRouter = router({
       // any recipient other than the account owner.
       const isTestModeBlock = emailResult.reason === "test_mode_unverified_domain";
       void notifyOwner({
-        title: "Cardly: password reset email failed to send",
+        title: "YalaInvite: password reset email failed to send",
         content: isTestModeBlock
           ? `A user (${input.email}) requested a password reset but Resend rejected the send because no domain is verified (test mode). Verify a domain at resend.com/domains and set RESEND_FROM_EMAIL to that domain so emails reach all users. Reset link (share manually if needed): ${resetUrl}`
           : `A password reset email to ${input.email} failed (${emailResult.reason ?? "unknown"}). Detail: ${emailResult.detail ?? "n/a"}. Reset link: ${resetUrl}`,

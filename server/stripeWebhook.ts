@@ -120,7 +120,7 @@ export function registerStripeWebhook(app: Express) {
             const customerName = session.metadata?.customer_name || "A user";
             const customerEmail = session.metadata?.customer_email || "";
             await notifyOwner({
-              title: "💳 New Cardly Subscription",
+              title: "💳 New YalaInvite Subscription",
               content: `${customerName} (${customerEmail}) subscribed to the AED 200/month plan.\nPeriod ends: ${periodEnd.toLocaleDateString()}.`,
             }).catch(() => {});
 

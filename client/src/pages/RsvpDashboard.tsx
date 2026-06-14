@@ -9,7 +9,7 @@ import { useLang, LangToggle as GlobalLangToggle } from "@/contexts/LangContext"
 const DASH_TRANSLATIONS = {
   en: {
     title: "Guest Responses",
-    subtitle: "Cardly Dashboard",
+    subtitle: "YalaInvite Dashboard",
     backToBuilder: "← Back to Builder",
     totalGuests: "Total Confirmed Guests",
     totalResponses: "Total Responses",
@@ -54,7 +54,7 @@ const DASH_TRANSLATIONS = {
   },
   ar: {
     title: "استجابات الضيوف",
-    subtitle: "لوحة تحكم Cardly",
+    subtitle: "لوحة تحكم YalaInvite",
     backToBuilder: "العودة إلى المنشئ ←",
     totalGuests: "إجمالي الضيوف المؤكدين",
     totalResponses: "إجمالي الردود",

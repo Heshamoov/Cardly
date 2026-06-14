@@ -11,7 +11,7 @@ import { Lock, CheckCircle2, AlertTriangle } from "lucide-react";
 const t = {
   en: {
     title: "Choose a new password",
-    sub: "Enter a new password for your Cardly account.",
+    sub: "Enter a new password for your YalaInvite account.",
     newPassword: "New password",
     confirmPassword: "Confirm password",
     placeholder: "At least 6 characters",
@@ -27,7 +27,7 @@ const t = {
   },
   ar: {
     title: "اختر كلمة مرور جديدة",
-    sub: "أدخل كلمة مرور جديدة لحسابك في Cardly.",
+    sub: "أدخل كلمة مرور جديدة لحسابك في YalaInvite.",
     newPassword: "كلمة المرور الجديدة",
     confirmPassword: "تأكيد كلمة المرور",
     placeholder: "6 أحرف على الأقل",
@@ -106,7 +106,7 @@ export default function ResetPassword() {
         <div className="reset-card">
           <div style={{ textAlign: "center", marginBottom: "1.5rem" }}>
             <a href="/">
-              <img src="/manus-storage/cardly-logo-v4_5f2425c5.png" alt="Cardly" style={{ height: "30px", width: "auto" }} />
+              <img src="/manus-storage/yalainvite-logo-gold-trim_d719ffba.png" alt="YalaInvite" style={{ height: "30px", width: "auto" }} />
             </a>
           </div>
 

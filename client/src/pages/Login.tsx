@@ -32,7 +32,7 @@ const t = {
     errorInvalid: "Invalid email or password.",
     errorGeneral: "Something went wrong. Please try again.",
     successLogin: "Welcome back!",
-    successRegister: "Account created! Welcome to Cardly.",
+    successRegister: "Account created! Welcome to YalaInvite.",
     passwordMin: "Password must be at least 6 characters.",
     feature1: "Animated envelopes",
     feature2: "Arabic & English",
@@ -71,7 +71,7 @@ const t = {
     errorInvalid: "البريد الإلكتروني أو كلمة المرور غير صحيحة.",
     errorGeneral: "حدث خطأ ما. يرجى المحاولة مرة أخرى.",
     successLogin: "مرحباً بعودتك!",
-    successRegister: "تم إنشاء الحساب! مرحباً بك في Cardly.",
+    successRegister: "تم إنشاء الحساب! مرحباً بك في YalaInvite.",
     passwordMin: "يجب أن تكون كلمة المرور 6 أحرف على الأقل.",
     feature1: "مظاريف متحركة",
     feature2: "عربي وإنجليزي",
@@ -290,7 +290,7 @@ export default function Login() {
           {/* Logo */}
           <div style={{ position: "relative", zIndex: 1 }}>
             <a href="/">
-              <img src="/manus-storage/cardly-logo-v4_5f2425c5.png" alt="Cardly" style={{ height: "34px", width: "auto" }} />
+              <img src="/manus-storage/yalainvite-logo-gold-trim_d719ffba.png" alt="YalaInvite" style={{ height: "34px", width: "auto" }} />
             </a>
           </div>
 
@@ -351,7 +351,7 @@ export default function Login() {
           {/* Mobile logo */}
           <div className="login-mobile-logo">
             <a href="/">
-              <img src="/manus-storage/cardly-logo-v4_5f2425c5.png" alt="Cardly" style={{ height: "30px", width: "auto" }} />
+              <img src="/manus-storage/yalainvite-logo-gold-trim_d719ffba.png" alt="YalaInvite" style={{ height: "30px", width: "auto" }} />
             </a>
           </div>
 

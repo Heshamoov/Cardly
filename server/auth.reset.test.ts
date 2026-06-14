@@ -51,7 +51,7 @@ describe("auth.requestPasswordReset", () => {
 
     const result = await caller.auth.requestPasswordReset({
       email: "unknown@example.com",
-      origin: "https://cardly.manus.space",
+      origin: "https://yalainvite.com",
     });
 
     expect(result.success).toBe(true);
@@ -71,7 +71,7 @@ describe("auth.requestPasswordReset", () => {
 
     const result = await caller.auth.requestPasswordReset({
       email: "g@example.com",
-      origin: "https://cardly.manus.space",
+      origin: "https://yalainvite.com",
     });
 
     expect(result.success).toBe(true);
@@ -93,7 +93,7 @@ describe("auth.requestPasswordReset", () => {
 
     const result = await caller.auth.requestPasswordReset({
       email: "test@example.com",
-      origin: "https://cardly.manus.space",
+      origin: "https://yalainvite.com",
     });
 
     expect(result.success).toBe(true);
@@ -125,7 +125,7 @@ describe("auth.requestPasswordReset", () => {
 
     const result = await caller.auth.requestPasswordReset({
       email: "test@example.com",
-      origin: "https://cardly.manus.space",
+      origin: "https://yalainvite.com",
     });
 
     expect(result.success).toBe(true);
@@ -136,7 +136,7 @@ describe("auth.requestPasswordReset", () => {
     if (process.env.RESEND_API_KEY) {
       expect(result.resetUrl).toBeUndefined();
     } else {
-      expect(result.resetUrl).toContain("https://cardly.manus.space/reset-password?token=");
+      expect(result.resetUrl).toContain("https://yalainvite.com/reset-password?token=");
     }
   });
 });

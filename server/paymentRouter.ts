@@ -109,8 +109,8 @@ export const paymentRouter = router({
             price_data: {
               currency: "aed",
               product_data: {
-                name: "Cardly Monthly Plan",
-                description: "Create up to 10 digital wedding invitations per month",
+                name: "YalaInvite Monthly Plan",
+                description: "Create up to 10 digital invitations per month",
               },
               unit_amount: SUBSCRIPTION_PRICE_AED_FILS,
               recurring: { interval: "month" },

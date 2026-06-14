@@ -173,7 +173,7 @@ export default function AdminDashboard() {
       {/* Nav */}
       <nav style={{ padding: "0 24px", height: 60, display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "1px solid rgba(212,175,55,0.18)", position: "sticky", top: 0, background: "#0a0f1e", zIndex: 50 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-          <Link href="/" style={{ fontFamily: scriptFont, fontSize: 22, fontWeight: 700, color: "#d4af37", textDecoration: "none" }}>Cardly</Link>
+          <Link href="/" style={{ fontFamily: scriptFont, fontSize: 22, fontWeight: 700, color: "#d4af37", textDecoration: "none" }}>YalaInvite</Link>
           <span style={{ opacity: 0.3, fontSize: 18 }}>|</span>
           <span style={{ fontSize: 13, opacity: 0.6, fontFamily: bodyFont }}>{t.title}</span>
         </div>

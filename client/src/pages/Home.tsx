@@ -72,13 +72,13 @@ const T = {
       { slug: "demo-ivory", style: "Classic Ivory", names: "Yusuf & Mariam", event: "Wedding · Dubai", badge: "Elegant" },
     ],
     ctaTitle: "Ready to create yours?",
-    ctaSub: "Join couples across the UAE and beyond who chose Cardly for their special day.",
+    ctaSub: "Join hosts everywhere who chose YalaInvite for their special occasions.",
     ctaBtn: "Create Your Invitation →",
     footerTerms: "Terms of Service",
     footerPrivacy: "Privacy Policy",
     footerRefund: "Refund Policy",
     footerContact: "Contact",
-    footerCopyright: `© ${new Date().getFullYear()} Cardly. All rights reserved.`,
+    footerCopyright: `© ${new Date().getFullYear()} YalaInvite. All rights reserved.`,
   },
   ar: {
     navFeatures: "المميزات",
@@ -146,13 +146,13 @@ const T = {
       { slug: "demo-ivory", style: "عاجي كلاسيكي", names: "يوسف ومريم", event: "زفاف · دبي", badge: "أنيق" },
     ],
     ctaTitle: "مستعد لإنشاء دعوتك؟",
-    ctaSub: "انضم إلى المضيفين في الإمارات وخارجها ممن اختاروا Cardly لمناسباتهم الخاصة.",
+    ctaSub: "انضم إلى المضيفين حول العالم ممن اختاروا YalaInvite لمناسباتهم الخاصة.",
     ctaBtn: "أنشئ دعوتك ←",
     footerTerms: "شروط الخدمة",
     footerPrivacy: "سياسة الخصوصية",
     footerRefund: "سياسة الاسترداد",
     footerContact: "تواصل معنا",
-    footerCopyright: `© ${new Date().getFullYear()} Cardly. جميع الحقوق محفوظة.`,
+    footerCopyright: `© ${new Date().getFullYear()} YalaInvite. جميع الحقوق محفوظة.`,
   },
 };
 
@@ -183,9 +183,9 @@ export default function Home() {
         {/* Main nav row */}
         <div style={{ height: 56, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <img
-            src="/manus-storage/cardly-logo-v4_5f2425c5.png"
-            alt="Cardly"
-            style={{ height: 30, objectFit: "contain", filter: "brightness(0) invert(1)", flexShrink: 0 }}
+            src="/manus-storage/yalainvite-logo-gold-trim_d719ffba.png"
+            alt="YalaInvite"
+            style={{ height: 30, objectFit: "contain", flexShrink: 0 }}
           />
           {/* Desktop links */}
           <div style={{ display: "flex", gap: 20, alignItems: "center", flex: 1, justifyContent: "flex-end" }} className="nav-desktop">
@@ -489,15 +489,15 @@ export default function Home() {
         gap: 16, maxWidth: 900, margin: "0 auto",
       }}>
         <img
-          src="/manus-storage/cardly-logo-v4_5f2425c5.png"
-          alt="Cardly"
-          style={{ height: 28, objectFit: "contain", filter: "brightness(0) invert(1)" }}
+          src="/manus-storage/yalainvite-logo-gold-trim_d719ffba.png"
+          alt="YalaInvite"
+          style={{ height: 28, objectFit: "contain" }}
         />
         <div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
           <Link href="/terms" style={{ ...footerLink, fontFamily: bodyFont }}>{t.footerTerms}</Link>
           <Link href="/privacy" style={{ ...footerLink, fontFamily: bodyFont }}>{t.footerPrivacy}</Link>
           <Link href="/refund" style={{ ...footerLink, fontFamily: bodyFont }}>{t.footerRefund}</Link>
-          <a href="mailto:support@cardly.app" style={{ ...footerLink, fontFamily: bodyFont }}>{t.footerContact}</a>
+          <a href="mailto:support@yalainvite.com" style={{ ...footerLink, fontFamily: bodyFont }}>{t.footerContact}</a>
         </div>
         <p style={{ fontSize: 12, opacity: 0.35, fontFamily: bodyFont }}>{t.footerCopyright}</p>
       </footer>
