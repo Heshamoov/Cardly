@@ -52,8 +52,11 @@ export const subscriptions = mysqlTable("subscriptions", {
   id: int("id").autoincrement().primaryKey(),
   /** FK to users.openId */
   ownerOpenId: varchar("ownerOpenId", { length: 64 }).notNull().unique(),
-  stripeSubscriptionId: varchar("stripeSubscriptionId", { length: 128 }).notNull().unique(),
-  stripeCustomerId: varchar("stripeCustomerId", { length: 128 }).notNull(),
+  /** Null for comp (lifetime) accounts that never went through Stripe. */
+  stripeSubscriptionId: varchar("stripeSubscriptionId", { length: 128 }).unique(),
+  stripeCustomerId: varchar("stripeCustomerId", { length: 128 }),
+  /** "stripe" for paid subscriptions, "comp" for admin-granted lifetime access. */
+  plan: varchar("plan", { length: 16 }).notNull().default("stripe"),
   /** active | past_due | canceled | unpaid | trialing | paused */
   status: varchar("status", { length: 32 }).notNull().default("active"),
   /** UTC timestamp when current billing period ends */

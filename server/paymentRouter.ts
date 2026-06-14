@@ -51,6 +51,10 @@ export async function hasSubscriptionQuota(ownerOpenId: string): Promise<{
 }> {
   const sub = await getActiveSubscription(ownerOpenId);
   if (!sub) return { allowed: false, reason: "no_subscription" };
+  // Comp (lifetime) accounts have unlimited invitations — never quota-limited.
+  if (sub.plan === "comp") {
+    return { allowed: true, subscription: sub };
+  }
   if (sub.invitationsUsed >= sub.invitationsLimit) {
     return { allowed: false, reason: "quota_exceeded", subscription: sub };
   }

@@ -163,8 +163,8 @@ export const invitationsRouter = router({
         isPaid: true, // subscription covers all invitations
       } as any);
 
-      // Increment usage counter on the subscription
-      if (quotaResult.subscription) {
+      // Increment usage counter on the subscription (comp accounts are unlimited, skip)
+      if (quotaResult.subscription && quotaResult.subscription.plan !== "comp") {
         await db
           .update(subscriptions)
           .set({ invitationsUsed: quotaResult.subscription.invitationsUsed + 1 })

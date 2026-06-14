@@ -6,7 +6,8 @@ import { z } from "zod";
 import { adminProcedure, router } from "./_core/trpc";
 import { getDb } from "./db";
 import { users, subscriptions, invitations, rsvpResponses } from "../drizzle/schema";
-import { desc, eq, sql, count } from "drizzle-orm";
+import { desc, eq, sql, count, and } from "drizzle-orm";
+import { notifyOwner } from "./_core/notification";
 import { TRPCError } from "@trpc/server";
 
 import { getStripe } from "./paymentRouter";
@@ -206,10 +207,102 @@ export const adminRouter = router({
         stripeCustomerId: users.stripeCustomerId,
         createdAt: users.createdAt,
         lastSignedIn: users.lastSignedIn,
+        // Subscription info (joined) — used to show lifetime/comp status
+        subPlan: subscriptions.plan,
+        subStatus: subscriptions.status,
       })
       .from(users)
+      .leftJoin(subscriptions, eq(subscriptions.ownerOpenId, users.openId))
       .orderBy(desc(users.createdAt));
 
-    return rows;
+    return rows.map((r) => ({
+      ...r,
+      // True only when an active comp subscription exists for this user.
+      hasLifetimeAccess: r.subPlan === "comp" && r.subStatus === "active",
+    }));
   }),
+
+  /** ── Grant lifetime (comp) access ──
+   * Creates or converts the user's subscription row to an unlimited comp plan
+   * with a far-future period end. Clears any Stripe IDs so the Stripe webhook
+   * can never touch this row. */
+  grantLifetimeAccess: adminProcedure
+    .input(z.object({ openId: z.string().min(1) }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
+
+      const [user] = await db
+        .select({ openId: users.openId, name: users.name, email: users.email })
+        .from(users)
+        .where(eq(users.openId, input.openId))
+        .limit(1);
+      if (!user) throw new TRPCError({ code: "NOT_FOUND", message: "User not found" });
+
+      // Far-future expiry (year 2999) so getActiveSubscription never expires it.
+      const farFuture = new Date("2999-12-31T00:00:00Z");
+
+      const existing = await db
+        .select()
+        .from(subscriptions)
+        .where(eq(subscriptions.ownerOpenId, input.openId))
+        .limit(1);
+
+      if (existing.length > 0) {
+        await db
+          .update(subscriptions)
+          .set({
+            plan: "comp",
+            status: "active",
+            stripeSubscriptionId: null,
+            stripeCustomerId: null,
+            currentPeriodEnd: farFuture,
+            invitationsUsed: 0,
+          })
+          .where(eq(subscriptions.ownerOpenId, input.openId));
+      } else {
+        await db.insert(subscriptions).values({
+          ownerOpenId: input.openId,
+          plan: "comp",
+          status: "active",
+          stripeSubscriptionId: null,
+          stripeCustomerId: null,
+          currentPeriodEnd: farFuture,
+          invitationsUsed: 0,
+          invitationsLimit: 999999,
+        });
+      }
+
+      await notifyOwner({
+        title: "🎁 Lifetime access granted",
+        content: `${user.name || "A user"} (${user.email || user.openId}) now has free lifetime access to YalaInvite.`,
+      }).catch(() => {});
+
+      return { success: true };
+    }),
+
+  /** ── Revoke lifetime (comp) access ──
+   * Only revokes comp rows. Removes the subscription row entirely so the user
+   * reverts to needing a paid subscription. Never touches Stripe subscriptions. */
+  revokeLifetimeAccess: adminProcedure
+    .input(z.object({ openId: z.string().min(1) }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
+
+      const existing = await db
+        .select()
+        .from(subscriptions)
+        .where(and(eq(subscriptions.ownerOpenId, input.openId), eq(subscriptions.plan, "comp")))
+        .limit(1);
+      if (existing.length === 0) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "This user does not have lifetime access." });
+      }
+
+      await db
+        .delete(subscriptions)
+        .where(and(eq(subscriptions.ownerOpenId, input.openId), eq(subscriptions.plan, "comp")));
+
+      return { success: true };
+    }),
 });

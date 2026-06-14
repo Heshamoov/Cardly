@@ -43,6 +43,11 @@ const T = {
     },
     users: {
       name: "Name", email: "Email", role: "Role", joined: "Joined", lastSeen: "Last Seen",
+      access: "Access", lifetime: "Lifetime", paid: "Paid", free: "Free",
+      grant: "Grant lifetime", revoke: "Revoke",
+      grantConfirm: "Grant free lifetime (unlimited) access to this user?",
+      revokeConfirm: "Revoke lifetime access from this user? They will need a paid subscription afterwards.",
+      granted: "Lifetime access granted", revoked: "Lifetime access revoked",
     },
     noData: "No data yet.",
     loading: "Loading...",
@@ -83,7 +88,12 @@ const T = {
       inactive: "غير نشط",
     },
     users: {
-      name: "الاسم", email: "البريد", role: "الدور", joined: "تاريخ الانضمام", lastSeen: "آخر ظيارة",
+      name: "الاسم", email: "البريد", role: "الدور", joined: "تاريخ الانضمام", lastSeen: "آخر زيارة",
+      access: "الوصول", lifetime: "مدى الحياة", paid: "مدفوع", free: "مجاني",
+      grant: "منح وصول دائم", revoke: "إلغاء",
+      grantConfirm: "منح هذا المستخدم وصولاً مجانياً دائماً (غير محدود)؟",
+      revokeConfirm: "إلغاء الوصول الدائم لهذا المستخدم؟ سيحتاج إلى اشتراك مدفوع بعد ذلك.",
+      granted: "تم منح الوصول الدائم", revoked: "تم إلغاء الوصول الدائم",
     },
     noData: "لا توجد بيانات بعد.",
     loading: "جارٍ التحميل...",
@@ -142,6 +152,18 @@ export default function AdminDashboard() {
     onSuccess: () => { toast.success("Promo code deactivated"); promoQ.refetch(); },
     onError: (e) => toast.error(e.message),
   });
+
+  const grantLifetimeMut = trpc.admin.grantLifetimeAccess.useMutation({
+    onSuccess: () => { toast.success(t.users.granted); usersQ.refetch(); },
+    onError: (e) => toast.error(e.message),
+  });
+  const revokeLifetimeMut = trpc.admin.revokeLifetimeAccess.useMutation({
+    onSuccess: () => { toast.success(t.users.revoked); usersQ.refetch(); },
+    onError: (e) => toast.error(e.message),
+  });
+  const pendingOpenId =
+    (grantLifetimeMut.isPending ? grantLifetimeMut.variables?.openId : undefined) ??
+    (revokeLifetimeMut.isPending ? revokeLifetimeMut.variables?.openId : undefined);
 
   if (authLoading) return <LoadingScreen font={bodyFont} msg={t.loading} dir={dir} />;
   if (!user || user.role !== "admin") {
@@ -331,9 +353,11 @@ export default function AdminDashboard() {
         {/* ── Users ── */}
         {tab === "users" && (
           <TableSection loading={usersQ.isLoading} noData={!usersQ.data?.length} noDataMsg={t.noData} loadingMsg={t.loading}>
-            <TableHead cols={[t.users.name, t.users.email, t.users.role, t.users.joined, t.users.lastSeen]} font={bodyFont} />
+            <TableHead cols={[t.users.name, t.users.email, t.users.role, t.users.access, t.users.joined, t.users.lastSeen, ""]} font={bodyFont} />
             <tbody>
-              {usersQ.data?.map((u) => (
+              {usersQ.data?.map((u) => {
+                const busy = pendingOpenId === u.openId;
+                return (
                 <tr key={u.id} style={{ borderBottom: "1px solid rgba(212,175,55,0.06)" }}>
                   <Td font={bodyFont}>{u.name ?? "—"}</Td>
                   <Td font={bodyFont}>{u.email ?? "—"}</Td>
@@ -342,10 +366,40 @@ export default function AdminDashboard() {
                       {u.role}
                     </span>
                   </Td>
+                  <Td font={bodyFont}>
+                    {u.hasLifetimeAccess ? (
+                      <span style={{ fontSize: 11, padding: "2px 8px", borderRadius: 4, background: "rgba(212,175,55,0.18)", color: "#d4af37", fontFamily: bodyFont }}>
+                        ★ {t.users.lifetime}
+                      </span>
+                    ) : (
+                      <span style={{ fontSize: 11, padding: "2px 8px", borderRadius: 4, background: "rgba(148,163,184,0.1)", color: "#94a3b8", fontFamily: bodyFont }}>
+                        {t.users.free}
+                      </span>
+                    )}
+                  </Td>
                   <Td font={bodyFont}>{fmt(u.createdAt)}</Td>
                   <Td font={bodyFont}>{fmt(u.lastSignedIn)}</Td>
+                  <Td font={bodyFont}>
+                    {u.hasLifetimeAccess ? (
+                      <button
+                        disabled={busy}
+                        onClick={() => { if (window.confirm(t.users.revokeConfirm)) revokeLifetimeMut.mutate({ openId: u.openId }); }}
+                        style={{ fontSize: 12, padding: "5px 12px", borderRadius: 6, border: "1px solid rgba(248,113,113,0.4)", background: "transparent", color: "#f87171", cursor: busy ? "default" : "pointer", fontFamily: bodyFont, opacity: busy ? 0.5 : 1 }}
+                      >
+                        {busy ? "…" : t.users.revoke}
+                      </button>
+                    ) : (
+                      <button
+                        disabled={busy}
+                        onClick={() => { if (window.confirm(t.users.grantConfirm)) grantLifetimeMut.mutate({ openId: u.openId }); }}
+                        style={{ fontSize: 12, padding: "5px 12px", borderRadius: 6, border: "1px solid rgba(212,175,55,0.5)", background: "rgba(212,175,55,0.12)", color: "#d4af37", cursor: busy ? "default" : "pointer", fontFamily: bodyFont, opacity: busy ? 0.5 : 1 }}
+                      >
+                        {busy ? "…" : t.users.grant}
+                      </button>
+                    )}
+                  </Td>
                 </tr>
-              ))}
+              );})}
             </tbody>
           </TableSection>
         )}

@@ -517,3 +517,14 @@
 - [x] Replace logo image with YalaInvite text logo
 - [x] Run tests + live email delivery test
 - [x] Trim logo (green chroma key + tight crop) and use gold logo on dark backgrounds
+- [x] Save checkpoint + summarize results to user
+
+## Lifetime Comp Access (admin-granted free unlimited access)
+- [x] Schema: make stripeSubscriptionId/stripeCustomerId nullable, add `plan` column (stripe|comp) on subscriptions
+- [x] Migration generated + applied via webdev_execute_sql
+- [x] Access logic: comp plan = always allowed + unlimited invitations (bypass quota)
+- [x] Stripe webhook: never overwrite/cancel a comp subscription (keyed on stripeSubscriptionId which is NULL for comp)
+- [x] Admin procedures: grantLifetimeAccess + revokeLifetimeAccess (adminProcedure, by user openId)
+- [x] Admin UI: per-user Grant/Revoke lifetime access button + status badge
+- [x] Tests for comp access + admin grant/revoke (lifetimeAccess.test.ts, 67 tests pass)
+- [x] Verify build/types healthy + checkpoint
