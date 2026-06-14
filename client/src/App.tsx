@@ -14,6 +14,7 @@ import PrivacyPolicy from "@/pages/PrivacyPolicy";
 import RefundPolicy from "@/pages/RefundPolicy";
 import AdminDashboard from "@/pages/AdminDashboard";
 import Login from "@/pages/Login";
+import ResetPassword from "@/pages/ResetPassword";
 
 function Router() {
   return (
@@ -33,6 +34,7 @@ function Router() {
       <Route path={"/refund"} component={RefundPolicy} />
       {/* Auth */}
       <Route path={"/login"} component={Login} />
+      <Route path={"/reset-password"} component={ResetPassword} />
       {/* Admin */}
       <Route path={"/admin"} component={AdminDashboard} />
       {/* Fallback */}

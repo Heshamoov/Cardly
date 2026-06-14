@@ -10,4 +10,8 @@ export const ENV = {
   forgeApiKey: process.env.BUILT_IN_FORGE_API_KEY ?? "",
   googleClientId: process.env.GOOGLE_CLIENT_ID ?? "",
   googleClientSecret: process.env.GOOGLE_CLIENT_SECRET ?? "",
+  // Resend email (for password reset emails). When unset, the reset link is
+  // returned to the caller / logged instead of emailed.
+  resendApiKey: process.env.RESEND_API_KEY ?? "",
+  resendFromEmail: process.env.RESEND_FROM_EMAIL ?? "Cardly <onboarding@resend.dev>",
 };

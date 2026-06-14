@@ -473,3 +473,19 @@
 - [x] Build "See it in action" section on landing page with 3 cards linking to each demo
 - [x] Test all demo links open the full invitation experience (envelope + content + demo notice)
 - [x] Run tests (52/52) and save checkpoint
+
+## Feature: Forgot Password / Reset Flow (Jun 14)
+
+- [x] Determine email-sending approach (no built-in user email; integrated Resend REST API, Node-only friendly)
+- [x] Add password_reset_tokens table to schema (token hash, userId, expiresAt, used) + migration applied
+- [x] Backend: requestPasswordReset procedure (generate token, store hash, send email; generic response to avoid account enumeration)
+- [x] Backend: resetPassword procedure (validate token, update passwordHash, mark used)
+- [x] Add 'Forgot password?' link + request-reset view on Login page
+- [x] Create /reset-password page (reads token from URL, sets new password)
+- [x] Register /reset-password route in App.tsx
+- [x] Write vitest tests for requestPasswordReset and resetPassword
+- [x] Security: only surface reset link to client when NO RESEND_API_KEY is set (prevent token leak in prod)
+- [x] Add Resend email helper (server/_core/email.ts) + branded HTML email
+- [x] Validate RESEND_API_KEY with live API test (59/59 tests pass); confirmed real email delivery
+- [x] Test full flow end-to-end (request -> reset-password page -> password updated) and save checkpoint
+- [ ] (Optional, user) Verify a custom domain in Resend and set RESEND_FROM_EMAIL to a branded address to avoid spam

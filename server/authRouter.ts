@@ -5,17 +5,24 @@
  */
 import { TRPCError } from "@trpc/server";
 import bcrypt from "bcryptjs";
+import crypto from "crypto";
 import { OAuth2Client } from "google-auth-library";
 import { nanoid } from "nanoid";
 import { z } from "zod";
 import * as db from "./db";
 import { ENV } from "./_core/env";
+import { sendEmail, buildResetEmailHtml } from "./_core/email";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { sdk } from "./_core/sdk";
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import { COOKIE_NAME, ONE_YEAR_MS } from "@shared/const";
 
 const SALT_ROUNDS = 10;
+const RESET_TOKEN_TTL_MS = 60 * 60 * 1000; // 1 hour
+
+function hashToken(raw: string): string {
+  return crypto.createHash("sha256").update(raw).digest("hex");
+}
 
 function generateOpenId(prefix: string): string {
   return `${prefix}_${nanoid(20)}`;
@@ -190,6 +197,91 @@ export const authRouter = router({
 
       await issueSession(ctx.res, ctx.req, user.openId, user.name ?? "");
       return { success: true, user };
+    }),
+
+  /**
+   * Request a password reset. Always returns success (does not reveal whether
+   * an account exists). When the user exists with a password, generates a
+   * single-use token, emails a reset link, and (in dev / when email isn't
+   * configured) returns the link directly so it can be tested.
+   */
+  requestPasswordReset: publicProcedure
+    .input(
+      z.object({
+        email: z.string().email(),
+        origin: z.string().url(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      const genericResponse = { success: true as const, emailed: false, resetUrl: undefined as string | undefined };
+
+      const user = await db.getUserByEmail(input.email);
+      // Only proceed for accounts that actually have a password set.
+      if (!user || !user.passwordHash) {
+        return genericResponse;
+      }
+
+      // Invalidate previous outstanding tokens, then issue a fresh one.
+      await db.invalidateResetTokensForUser(user.openId);
+      const rawToken = `${nanoid(32)}${nanoid(32)}`;
+      const tokenHash = hashToken(rawToken);
+      const expiresAt = new Date(Date.now() + RESET_TOKEN_TTL_MS);
+      await db.createPasswordResetToken(user.openId, tokenHash, expiresAt);
+
+      const resetUrl = `${input.origin.replace(/\/$/, "")}/reset-password?token=${rawToken}`;
+
+      const emailResult = await sendEmail({
+        to: input.email,
+        subject: "Reset your Cardly password",
+        html: buildResetEmailHtml(resetUrl, user.name),
+        text: `Reset your Cardly password using this link (valid for 1 hour): ${resetUrl}`,
+      });
+
+      if (emailResult.sent) {
+        return { success: true as const, emailed: true, resetUrl: undefined };
+      }
+
+      // Always log the link server-side for owner diagnostics.
+      console.log(`[PasswordReset] Reset link for ${input.email}: ${resetUrl}`);
+
+      // SECURITY: only surface the link to the client when NO email provider is
+      // configured at all (pure dev/testing fallback so the flow is never a dead
+      // end). Once RESEND_API_KEY exists, a failed send must NOT leak the token
+      // to the caller — otherwise anyone could reset any account's password.
+      if (!ENV.resendApiKey) {
+        return { success: true as const, emailed: false, resetUrl };
+      }
+      return { success: true as const, emailed: false, resetUrl: undefined };
+    }),
+
+  /** Complete a password reset using a token from the email link. */
+  resetPassword: publicProcedure
+    .input(
+      z.object({
+        token: z.string().min(10),
+        newPassword: z.string().min(6).max(128),
+      })
+    )
+    .mutation(async ({ input }) => {
+      const tokenHash = hashToken(input.token);
+      const record = await db.getValidResetToken(tokenHash);
+      if (!record) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "This reset link is invalid or has expired. Please request a new one.",
+        });
+      }
+
+      const user = await db.getUserByOpenId(record.ownerOpenId);
+      if (!user) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Account not found." });
+      }
+
+      const passwordHash = await bcrypt.hash(input.newPassword, SALT_ROUNDS);
+      await db.upsertUser({ openId: user.openId, passwordHash });
+      await db.markResetTokenUsed(tokenHash);
+
+      return { success: true as const };
     }),
 
   /** Logout — clear session cookie */

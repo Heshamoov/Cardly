@@ -1,6 +1,6 @@
-import { eq, sql } from "drizzle-orm";
+import { and, eq, gt, isNull, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, InsertRsvpResponse, rsvpResponses, users, invitations } from "../drizzle/schema";
+import { InsertUser, InsertRsvpResponse, rsvpResponses, users, invitations, passwordResetTokens } from "../drizzle/schema";
 import { ENV } from './_core/env';
 let _db: ReturnType<typeof drizzle> | null = null;
 // Lazily create the drizzle instance so local tooling can run without a DB.
@@ -129,6 +129,62 @@ export async function getRsvpSummaryBySlug(slug: string) {
     .from(rsvpResponses)
     .where(eq(rsvpResponses.invitationSlug, slug));
   return { totalGuests: Number(rows[0]?.total ?? 0), responseCount: Number(rows[0]?.count ?? 0) };
+}
+
+// ── Password reset token helpers ─────────────────────────────────────────────
+
+/** Persist a single-use reset token (stores only the hash). */
+export async function createPasswordResetToken(
+  ownerOpenId: string,
+  tokenHash: string,
+  expiresAt: Date
+) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.insert(passwordResetTokens).values({ ownerOpenId, tokenHash, expiresAt });
+}
+
+/** Look up a valid (unused, unexpired) reset token by its hash. */
+export async function getValidResetToken(tokenHash: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const rows = await db
+    .select()
+    .from(passwordResetTokens)
+    .where(
+      and(
+        eq(passwordResetTokens.tokenHash, tokenHash),
+        isNull(passwordResetTokens.usedAt),
+        gt(passwordResetTokens.expiresAt, new Date())
+      )
+    )
+    .limit(1);
+  return rows.length > 0 ? rows[0] : undefined;
+}
+
+/** Mark a reset token as consumed. */
+export async function markResetTokenUsed(tokenHash: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db
+    .update(passwordResetTokens)
+    .set({ usedAt: new Date() })
+    .where(eq(passwordResetTokens.tokenHash, tokenHash));
+}
+
+/** Invalidate any outstanding tokens for a user (called before issuing a new one). */
+export async function invalidateResetTokensForUser(ownerOpenId: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db
+    .update(passwordResetTokens)
+    .set({ usedAt: new Date() })
+    .where(
+      and(
+        eq(passwordResetTokens.ownerOpenId, ownerOpenId),
+        isNull(passwordResetTokens.usedAt)
+      )
+    );
 }
 
 /** Atomically increment the view counter for an invitation by slug. */

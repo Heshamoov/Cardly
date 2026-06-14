@@ -38,6 +38,15 @@ const t = {
     feature2: "Arabic & English",
     feature3: "Live RSVP tracking",
     backHome: "Back to home",
+    forgot: "Forgot password?",
+    forgotTitle: "Reset your password",
+    forgotSub: "Enter your email and we'll send you a link to reset your password.",
+    sendReset: "Send reset link",
+    backToLogin: "Back to sign in",
+    resetSentTitle: "Check your email",
+    resetSentSub: "If an account exists for that email, we've sent a password reset link. It expires in 1 hour.",
+    devLinkNote: "Email delivery isn't configured yet, so here is your reset link for testing:",
+    openResetLink: "Open reset link",
   },
   ar: {
     signIn: "مرحباً بعودتك",
@@ -68,6 +77,15 @@ const t = {
     feature2: "عربي وإنجليزي",
     feature3: "تتبع الحضور مباشرة",
     backHome: "العودة إلى الرئيسية",
+    forgot: "نسيت كلمة المرور؟",
+    forgotTitle: "إعادة تعيين كلمة المرور",
+    forgotSub: "أدخل بريدك الإلكتروني وسنرسل لك رابطاً لإعادة تعيين كلمة المرور.",
+    sendReset: "إرسال رابط الإعادة",
+    backToLogin: "العودة لتسجيل الدخول",
+    resetSentTitle: "تحقق من بريدك الإلكتروني",
+    resetSentSub: "إذا كان هناك حساب مرتبط بهذا البريد، فقد أرسلنا رابط إعادة تعيين كلمة المرور. ينتهي خلال ساعة واحدة.",
+    devLinkNote: "لم يتم إعداد إرسال البريد بعد، إليك رابط إعادة التعيين للاختبار:",
+    openResetLink: "فتح رابط إعادة التعيين",
   },
 };
 
@@ -98,11 +116,12 @@ export default function Login() {
   const tr = t[lang] ?? t.en;
   const isRTL = lang === "ar";
 
-  const [mode, setMode] = useState<"login" | "register">("login");
+  const [mode, setMode] = useState<"login" | "register" | "forgot" | "sent">("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
+  const [devResetUrl, setDevResetUrl] = useState<string | null>(null);
 
   const returnPath = (() => {
     const params = new URLSearchParams(window.location.search);
@@ -174,6 +193,20 @@ export default function Login() {
       });
     }
   }, []);
+
+  const requestResetMutation = trpc.auth.requestPasswordReset.useMutation({
+    onSuccess: (data) => {
+      setDevResetUrl(data.resetUrl ?? null);
+      setMode("sent");
+    },
+    onError: (err) => toast.error(err.message || tr.errorGeneral),
+  });
+
+  const handleForgotSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (requestResetMutation.isPending) return;
+    await requestResetMutation.mutateAsync({ email, origin: window.location.origin });
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -326,15 +359,56 @@ export default function Login() {
             {/* Heading */}
             <div style={{ marginBottom: "2rem" }}>
               <h2 style={{ color: "#fff", fontSize: "1.5rem", fontWeight: 600, marginBottom: "0.35rem" }}>
-                {mode === "login" ? tr.signIn : tr.signUp}
+                {mode === "login" ? tr.signIn : mode === "register" ? tr.signUp : mode === "forgot" ? tr.forgotTitle : tr.resetSentTitle}
               </h2>
               <p style={{ color: "rgba(255,255,255,0.4)", fontSize: "0.875rem" }}>
-                {mode === "login" ? tr.signInSub : tr.signUpSub}
+                {mode === "login" ? tr.signInSub : mode === "register" ? tr.signUpSub : mode === "forgot" ? tr.forgotSub : tr.resetSentSub}
               </p>
             </div>
 
+            {/* ── Forgot password: request form ── */}
+            {mode === "forgot" && (
+              <form onSubmit={handleForgotSubmit} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+                <div>
+                  <Label htmlFor="forgot-email" style={{ color: "rgba(255,255,255,0.55)", fontSize: "0.8rem", display: "block", marginBottom: "0.4rem" }}>
+                    {tr.emailLabel}
+                  </Label>
+                  <div style={{ position: "relative" }}>
+                    <Mail size={14} style={{ position: "absolute", left: "0.75rem", top: "50%", transform: "translateY(-50%)", color: "rgba(255,255,255,0.25)" }} />
+                    <Input id="forgot-email" type="email" placeholder={tr.emailPlaceholder} value={email} onChange={(e) => setEmail(e.target.value)} required className="login-input" style={{ paddingLeft: "2.25rem" }} />
+                  </div>
+                </div>
+                <Button type="submit" disabled={requestResetMutation.isPending} style={{ width: "100%", height: "2.75rem", fontWeight: 600, marginTop: "0.25rem", background: requestResetMutation.isPending ? "rgba(201,168,76,0.5)" : "#c9a84c", color: "#0a0f1e", border: "none", borderRadius: "0.5rem", cursor: requestResetMutation.isPending ? "not-allowed" : "pointer" }}>
+                  {requestResetMutation.isPending ? "..." : tr.sendReset}
+                </Button>
+                <button type="button" onClick={() => setMode("login")} style={{ color: "rgba(255,255,255,0.45)", fontSize: "0.8rem", background: "none", border: "none", cursor: "pointer", marginTop: "0.25rem" }}>
+                  ← {tr.backToLogin}
+                </button>
+              </form>
+            )}
+
+            {/* ── Forgot password: confirmation ── */}
+            {mode === "sent" && (
+              <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+                <div style={{ display: "flex", justifyContent: "center", marginBottom: "0.5rem" }}>
+                  <div style={{ width: "56px", height: "56px", borderRadius: "9999px", background: "rgba(201,168,76,0.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <Mail size={26} style={{ color: "#c9a84c" }} />
+                  </div>
+                </div>
+                {devResetUrl && (
+                  <div style={{ background: "rgba(201,168,76,0.08)", border: "1px solid rgba(201,168,76,0.2)", borderRadius: "0.5rem", padding: "0.9rem" }}>
+                    <p style={{ color: "rgba(255,255,255,0.55)", fontSize: "0.75rem", marginBottom: "0.6rem", lineHeight: 1.5 }}>{tr.devLinkNote}</p>
+                    <a href={devResetUrl} style={{ display: "inline-block", color: "#c9a84c", fontSize: "0.8rem", fontWeight: 600, textDecoration: "underline", wordBreak: "break-all" }}>{tr.openResetLink} →</a>
+                  </div>
+                )}
+                <button type="button" onClick={() => { setMode("login"); setDevResetUrl(null); }} style={{ color: "#c9a84c", fontSize: "0.85rem", background: "none", border: "none", cursor: "pointer", fontWeight: 500 }}>
+                  ← {tr.backToLogin}
+                </button>
+              </div>
+            )}
+
             {/* Google Sign-In */}
-            {import.meta.env.VITE_GOOGLE_CLIENT_ID && (
+            {(mode === "login" || mode === "register") && import.meta.env.VITE_GOOGLE_CLIENT_ID && (
               <div style={{ marginBottom: "1.5rem" }}>
                 <div id="google-signin-btn" style={{ display: "flex", justifyContent: "center" }} />
                 <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginTop: "1.25rem" }}>
@@ -346,6 +420,7 @@ export default function Login() {
             )}
 
             {/* Form */}
+            {(mode === "login" || mode === "register") && (
             <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
               {mode === "register" && (
                 <div>
@@ -377,6 +452,13 @@ export default function Login() {
                   <Lock size={14} style={{ position: "absolute", left: "0.75rem", top: "50%", transform: "translateY(-50%)", color: "rgba(255,255,255,0.25)" }} />
                   <Input id="password" type="password" placeholder={tr.passwordPlaceholder} value={password} onChange={(e) => setPassword(e.target.value)} required className="login-input" style={{ paddingLeft: "2.25rem" }} />
                 </div>
+                {mode === "login" && (
+                  <div style={{ textAlign: isRTL ? "left" : "right", marginTop: "0.5rem" }}>
+                    <button type="button" onClick={() => { setMode("forgot"); setPassword(""); }} style={{ color: "rgba(201,168,76,0.85)", fontSize: "0.78rem", background: "none", border: "none", cursor: "pointer" }}>
+                      {tr.forgot}
+                    </button>
+                  </div>
+                )}
               </div>
 
               <Button
@@ -393,8 +475,10 @@ export default function Login() {
                 {isBusy ? "..." : mode === "login" ? tr.loginBtn : tr.registerBtn}
               </Button>
             </form>
+            )}
 
             {/* Switch mode */}
+            {(mode === "login" || mode === "register") && (
             <p style={{ textAlign: "center", marginTop: "1.5rem", fontSize: "0.875rem", color: "rgba(255,255,255,0.35)" }}>
               {mode === "login" ? tr.noAccount : tr.hasAccount}{" "}
               <button
@@ -405,6 +489,7 @@ export default function Login() {
                 {mode === "login" ? tr.switchToRegister : tr.switchToLogin}
               </button>
             </p>
+            )}
 
             {/* Back to home */}
             <p style={{ textAlign: "center", marginTop: "1rem", fontSize: "0.75rem", color: "rgba(255,255,255,0.2)" }}>

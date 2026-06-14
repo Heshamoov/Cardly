@@ -25,6 +25,26 @@ export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
 
 /**
+ * Password reset tokens. We store only the SHA-256 hash of the token,
+ * never the raw token. Tokens are single-use and expire after 1 hour.
+ */
+export const passwordResetTokens = mysqlTable("password_reset_tokens", {
+  id: int("id").autoincrement().primaryKey(),
+  /** FK to users.openId */
+  ownerOpenId: varchar("ownerOpenId", { length: 64 }).notNull(),
+  /** SHA-256 hash (hex) of the raw reset token */
+  tokenHash: varchar("tokenHash", { length: 64 }).notNull().unique(),
+  /** UTC expiry timestamp */
+  expiresAt: timestamp("expiresAt").notNull(),
+  /** Set once the token has been consumed */
+  usedAt: timestamp("usedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type PasswordResetToken = typeof passwordResetTokens.$inferSelect;
+export type InsertPasswordResetToken = typeof passwordResetTokens.$inferInsert;
+
+/**
  * Subscription table — one active row per user.
  * status mirrors Stripe subscription statuses.
  */
